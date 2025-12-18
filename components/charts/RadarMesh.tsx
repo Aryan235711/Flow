@@ -3,15 +3,18 @@ import { ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, Radar, Tool
 import { MetricEntry } from '../../types.ts';
 
 export const RadarMesh = memo(({ latest }: { latest?: MetricEntry }) => {
+  const data = useMemo(() => {
+    if (!latest) return [];
+    return [
+      { subject: 'Sleep', A: latest.processedState?.sleep === 'GREEN' ? 100 : latest.processedState?.sleep === 'YELLOW' ? 70 : 40, fullMark: 100 },
+      { subject: 'Sun', A: latest.processedState?.sun === 'GREEN' ? 100 : latest.processedState?.sun === 'YELLOW' ? 70 : 40, fullMark: 100 },
+      { subject: 'HRV', A: latest.processedState?.hrv === 'GREEN' ? 100 : latest.processedState?.hrv === 'YELLOW' ? 70 : 40, fullMark: 100 },
+      { subject: 'Gut', A: latest.processedState?.gut === 'GREEN' ? 100 : latest.processedState?.gut === 'YELLOW' ? 70 : 40, fullMark: 100 },
+      { subject: 'Move', A: latest.processedState?.exercise === 'GREEN' ? 100 : latest.processedState?.exercise === 'YELLOW' ? 70 : 40, fullMark: 100 },
+    ];
+  }, [latest]);
+
   if (!latest) return <div className="h-full flex items-center justify-center text-white/10 text-xs">NO MESH DATA</div>;
-  
-  const data = useMemo(() => [
-    { subject: 'Sleep', A: latest.processedState?.sleep === 'GREEN' ? 100 : latest.processedState?.sleep === 'YELLOW' ? 70 : 40, fullMark: 100 },
-    { subject: 'Sun', A: latest.processedState?.sun === 'GREEN' ? 100 : latest.processedState?.sun === 'YELLOW' ? 70 : 40, fullMark: 100 },
-    { subject: 'HRV', A: latest.processedState?.hrv === 'GREEN' ? 100 : latest.processedState?.hrv === 'YELLOW' ? 70 : 40, fullMark: 100 },
-    { subject: 'Gut', A: latest.processedState?.gut === 'GREEN' ? 100 : latest.processedState?.gut === 'YELLOW' ? 70 : 40, fullMark: 100 },
-    { subject: 'Move', A: latest.processedState?.exercise === 'GREEN' ? 100 : latest.processedState?.exercise === 'YELLOW' ? 70 : 40, fullMark: 100 },
-  ], [latest]);
 
   return (
     <ResponsiveContainer width="100%" height="100%">

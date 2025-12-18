@@ -48,6 +48,22 @@ export const setSafeStorage = (key: string, value: any) => {
   }
 };
 
+export const clearAppStorage = () => {
+  try {
+    const keys = [
+      STORAGE_KEYS.HISTORY,
+      STORAGE_KEYS.CONFIG,
+      STORAGE_KEYS.STAGE,
+      STORAGE_KEYS.USER,
+      STORAGE_KEYS.NOTIFS,
+      'last_upsell'
+    ];
+    keys.forEach(k => localStorage.removeItem(k));
+  } catch (e) {
+    console.warn('Flow: Storage clear issue', e);
+  }
+};
+
 export const calculateFlag = (value: number, baseline: number, inverse = false): Flag => {
   const ratio = inverse ? baseline / value : value / baseline;
   if (ratio >= 0.95) return 'GREEN';
