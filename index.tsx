@@ -24,7 +24,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { AppStage, AppView, UserProfile, MetricEntry, UserConfig, Notification } from './types.ts';
-import { STORAGE_KEYS, DEFAULT_CONFIG, getSafeStorage, setSafeStorage, generateMockData, triggerHaptic, generateFreezeEntry, getLocalDate } from './utils.ts';
+import { STORAGE_KEYS, DEFAULT_CONFIG, getSafeStorage, setSafeStorage, generateMockData, triggerHaptic, generateFreezeEntry, getLocalDate, clearAppStorage } from './utils.ts';
 import { BackgroundOrbs } from './components/BackgroundOrbs.tsx';
 import { Dashboard } from './components/Dashboard.tsx';
 import { LogInput } from './components/LogInput.tsx';
@@ -208,7 +208,7 @@ const App = () => {
     setUser({ name: '', email: '', picture: '', avatarSeed: 'Felix', isAuthenticated: false, isPremium: false });
     setStage('AUTH');
     setShowProfile(false);
-    localStorage.clear();
+    clearAppStorage();
     setHistory([]);
     setNotifications([]);
   }, []);

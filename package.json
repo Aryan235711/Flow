@@ -6,14 +6,16 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "lint": "npm run typecheck"
   },
   "dependencies": {
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "lucide-react": "0.303.0",
     "recharts": "2.12.0",
-    "@google/genai": "latest",
+    "@google/genai": "0.11.0",
     "framer-motion": "11.0.8"
   },
   "devDependencies": {
