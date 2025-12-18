@@ -19,6 +19,14 @@ View your app in AI Studio: https://ai.studio/apps/drive/1y2a1ni1pLS1n59-9z-bTjv
 3. Run the app:
    `npm run dev`
 
+Env variables (see .env.example)
+
+- `PORT` (default 4000)
+- `GEMINI_API_KEY`
+- `SESSION_SECRET`
+- `GOOGLE_CLIENT_ID`
+- `GOOGLE_CLIENT_SECRET`
+
 ### API server (Gemini proxy)
 
 - Start the proxy: `npm run api` (requires GEMINI_API_KEY in your env)

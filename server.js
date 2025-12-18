@@ -1,19 +1,45 @@
 import express from 'express';
 import cors from 'cors';
+import crypto from 'node:crypto';
 import { GoogleGenAI } from '@google/genai';
 
 const app = express();
 const port = process.env.PORT || 4000;
-const apiKey = process.env.GEMINI_API_KEY;
-
-if (!apiKey) {
-  console.warn('GEMINI_API_KEY is not set. /api/insight will return 500.');
-}
+const sessionSecret = process.env.SESSION_SECRET || 'dev-session-secret';
 
 app.use(cors());
 app.use(express.json({ limit: '512kb' }));
 
+const issueToken = (payload) => {
+  const data = Buffer.from(JSON.stringify(payload)).toString('base64url');
+  const sig = crypto.createHmac('sha256', sessionSecret).update(data).digest('base64url');
+  return `${data}.${sig}`;
+};
+
+app.get('/api/health', (_req, res) => {
+  res.json({ status: 'ok' });
+});
+
+app.post('/api/login', (req, res) => {
+  const { email, name = 'Flow User', avatarSeed = 'Felix', picture } = req.body || {};
+  if (!email) return res.status(400).json({ error: 'email required' });
+
+  const token = issueToken({ email, ts: Date.now() });
+  const user = {
+    name,
+    email,
+    avatarSeed,
+    picture: picture || `https://api.dicebear.com/9.x/notionists/svg?seed=${avatarSeed}&backgroundColor=c0aede,d1d4f9,b6e3f4,ffd5dc,ffdfbf`,
+    isAuthenticated: true,
+    isPremium: false,
+    token
+  };
+
+  res.json({ user });
+});
+
 app.post('/api/insight', async (req, res) => {
+  const apiKey = process.env.GEMINI_API_KEY;
   try {
     if (!apiKey) {
       return res.status(500).json({ error: 'API key missing' });
