@@ -19,6 +19,11 @@ View your app in AI Studio: https://ai.studio/apps/drive/1y2a1ni1pLS1n59-9z-bTjv
 3. Run the app:
    `npm run dev`
 
+### API server (Gemini proxy)
+
+- Start the proxy: `npm run api` (requires GEMINI_API_KEY in your env)
+- Vite dev proxies `/api` to `http://localhost:4000`; in production, host the API alongside the app and serve `/api/insight` from the same origin.
+
 ## Version Control Workflow
 
 - Main stays protected: develop on short-lived branches (e.g., `fix/pagetransition-key`, `feat/<topic>`), then PR to `main`.
