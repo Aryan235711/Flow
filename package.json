@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --ext .ts,.tsx",
     "test": "vitest",
-    "api": "node server.js"
+    "api": "node server.js",
+    "start": "node server.js"
   },
   "dependencies": {
     "@google/genai": "0.11.0",

@@ -1,11 +1,15 @@
 import express from 'express';
 import cors from 'cors';
 import crypto from 'node:crypto';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { GoogleGenAI } from '@google/genai';
 
 const app = express();
 const port = process.env.PORT || 4000;
 const sessionSecret = process.env.SESSION_SECRET || 'dev-session-secret';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 app.use(cors());
 app.use(express.json({ limit: '512kb' }));
@@ -80,6 +84,13 @@ app.post('/api/insight', async (req, res) => {
     console.error('Insight error', err);
     res.status(500).json({ error: 'Insight generation failed' });
   }
+});
+
+// Serve built client (Render single service). Place after API routes.
+const distPath = path.join(__dirname, 'dist');
+app.use(express.static(distPath));
+app.get('*', (_req, res) => {
+  res.sendFile(path.join(distPath, 'index.html'));
 });
 
 app.listen(port, () => {
