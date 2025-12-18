@@ -188,21 +188,34 @@ const App = () => {
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
   }, []);
 
-  const handleLogin = useCallback(() => {
+  const handleLogin = useCallback(async () => {
     triggerHaptic();
-    const email = 'alex@flow.bio';
-    const seed = AVATAR_OPTIONS[0]; 
-    setUser({ 
-      name: 'Alex Trace', 
-      email: email, 
-      avatarSeed: seed,
-      picture: `https://api.dicebear.com/9.x/notionists/svg?seed=${seed}&backgroundColor=${AVATAR_BG_COLORS}`, 
-      isAuthenticated: true, 
-      token: 'jwt_' + Math.random().toString(36).substring(5),
-      isPremium: false 
-    });
-    setStage('ONBOARDING');
-  }, []);
+    try {
+      const seed = AVATAR_OPTIONS[0];
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: 'alex@flow.bio', name: 'Alex Trace', avatarSeed: seed })
+      });
+
+      if (!res.ok) throw new Error('Login failed');
+      const data = await res.json();
+      const profile = data.user;
+      setUser({
+        name: profile?.name || 'Alex Trace',
+        email: profile?.email || 'alex@flow.bio',
+        avatarSeed: profile?.avatarSeed || seed,
+        picture: profile?.picture || `https://api.dicebear.com/9.x/notionists/svg?seed=${seed}&backgroundColor=${AVATAR_BG_COLORS}`,
+        isAuthenticated: true,
+        token: profile?.token,
+        isPremium: !!profile?.isPremium
+      });
+      setStage('ONBOARDING');
+    } catch (err) {
+      console.error(err);
+      addNotification('Link Failed', 'Unable to authenticate. Try again.', 'SYSTEM');
+    }
+  }, [addNotification]);
 
   const handleSignOut = useCallback(() => {
     setUser({ name: '', email: '', picture: '', avatarSeed: 'Felix', isAuthenticated: false, isPremium: false });
