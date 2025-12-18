@@ -18,3 +18,11 @@ View your app in AI Studio: https://ai.studio/apps/drive/1y2a1ni1pLS1n59-9z-bTjv
 2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
 3. Run the app:
    `npm run dev`
+
+## Version Control Workflow
+
+- Main stays protected: develop on short-lived branches (e.g., `fix/pagetransition-key`, `feat/<topic>`), then PR to `main`.
+- Before new work: `git switch main` and `git pull --ff-only` to stay up to date.
+- For changes: `git switch -c <branch>` → edit → `npm test`/`npm run build` as needed → `git add -A && git commit -m "<type>: <summary>"` → `git push -u origin <branch>`.
+- Open a PR on GitHub, get review, then merge to `main`; delete the branch after merge.
+- Keep secrets out of git (`.env.local` is ignored). Tag milestones when stable (e.g., `git tag -a v0.1.0 -m "first drop"; git push --tags`).

@@ -47,7 +47,7 @@ const SPRING_TRANSITION = { type: "spring", stiffness: 280, damping: 24, mass: 1
 const LIQUID_EASE: [number, number, number, number] = [0.22, 1, 0.36, 1]; // Apple-style fluid ease
 
 // SMOOTH TRANSITION WRAPPER - REFINED
-const PageTransition = ({ children, className }: { children: React.ReactNode, className?: string }) => (
+const PageTransition = ({ children, className }: { children: React.ReactNode; className?: string; key?: React.Key }) => (
   <motion.div
     initial={{ opacity: 0, scale: 0.96, y: 10, filter: 'blur(4px)' }}
     animate={{ opacity: 1, scale: 1, y: 0, filter: 'blur(0px)' }}
