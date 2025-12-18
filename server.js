@@ -26,6 +26,7 @@ app.get('/api/health', (_req, res) => {
 
 app.post('/api/login', (req, res) => {
   const { email, name = 'Flow User', avatarSeed = 'Felix', picture } = req.body || {};
+  console.log('[api/login] hit', { email, name, avatarSeed });
   if (!email) return res.status(400).json({ error: 'email required' });
 
   const token = issueToken({ email, ts: Date.now() });

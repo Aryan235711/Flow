@@ -192,14 +192,18 @@ const App = () => {
     triggerHaptic();
     try {
       const seed = AVATAR_OPTIONS[0];
+      console.log('[login] starting request');
       const res = await fetch('/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: 'alex@flow.bio', name: 'Alex Trace', avatarSeed: seed })
       });
 
+      console.log('[login] response status', res.status);
+      const data = await res.json().catch(() => ({}));
+      console.log('[login] response body', data);
+
       if (!res.ok) throw new Error('Login failed');
-      const data = await res.json();
       const profile = data.user;
       setUser({
         name: profile?.name || 'Alex Trace',
@@ -212,7 +216,7 @@ const App = () => {
       });
       setStage('ONBOARDING');
     } catch (err) {
-      console.error(err);
+      console.error('[login] error', err);
       addNotification('Link Failed', 'Unable to authenticate. Try again.', 'SYSTEM');
     }
   }, [addNotification]);
