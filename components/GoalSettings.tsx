@@ -1,0 +1,158 @@
+
+import React, { useState, memo } from 'react';
+import { motion } from 'framer-motion';
+import { X, Save, Target, Moon, Activity, Wind, Utensils } from 'lucide-react';
+import { UserConfig } from '../types.ts';
+
+interface GoalSettingsProps {
+  config: UserConfig;
+  onSave: (newConfig: UserConfig) => void;
+  onClose: () => void;
+}
+
+export const GoalSettings = memo(({ config, onSave, onClose }: GoalSettingsProps) => {
+  const [localConfig, setLocalConfig] = useState<UserConfig>(JSON.parse(JSON.stringify(config)));
+
+  const handleChange = (section: keyof UserConfig, key: string, value: string) => {
+    let numValue = parseFloat(value);
+    if (isNaN(numValue)) return;
+    
+    // Safety Clamps to prevent chart breakage
+    if (key === 'sleep') numValue = Math.min(24, Math.max(0, numValue));
+    if (key === 'rhr') numValue = Math.min(200, Math.max(30, numValue));
+    if (key === 'hrv') numValue = Math.min(200, Math.max(10, numValue));
+    if (key === 'protein') numValue = Math.min(500, Math.max(0, numValue));
+
+    setLocalConfig(prev => ({
+      ...prev,
+      [section]: {
+        ...prev[section],
+        [key]: numValue
+      }
+    }));
+  };
+
+  const handleSave = () => {
+    onSave(localConfig);
+    onClose();
+  };
+
+  return (
+    <motion.div 
+      initial={{ y: '100%' }} 
+      animate={{ y: 0 }} 
+      exit={{ y: '100%' }} 
+      transition={{ type: 'spring', damping: 25, stiffness: 200 }} 
+      className="fixed inset-0 z-[450] bg-[#020617] flex flex-col pt-safe"
+    >
+      <div className="px-6 py-5 flex justify-between items-center border-b border-white/5 bg-[#020617]/95 backdrop-blur-xl z-10 shrink-0">
+        <h2 className="text-2xl font-black font-outfit tracking-tighter">Calibration</h2>
+        <button onClick={onClose} className="w-10 h-10 glass rounded-xl flex items-center justify-center text-white/50 active:scale-95 touch-manipulation">
+          <X size={20} />
+        </button>
+      </div>
+
+      <div className="flex-1 overflow-y-auto px-6 py-6 space-y-8 pb-32">
+        <div className="space-y-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-400">
+              <Activity size={20} />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold font-outfit">Wearable Baselines</h3>
+              <p className="text-xs text-white/40">Set your biometric thresholds.</p>
+            </div>
+          </div>
+
+          <div className="grid gap-4">
+            <div className="glass p-5 rounded-[24px] border-white/5">
+              <div className="flex justify-between items-center mb-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-indigo-300/50 flex items-center gap-2">
+                  <Moon size={12} /> Sleep Target (h)
+                </label>
+                <span className="text-xl font-bold font-outfit">{localConfig.wearableBaselines.sleep}</span>
+              </div>
+              <input 
+                type="range" 
+                min="4" 
+                max="12" 
+                step="0.1" 
+                value={localConfig.wearableBaselines.sleep} 
+                onChange={(e) => handleChange('wearableBaselines', 'sleep', e.target.value)}
+                className="w-full accent-indigo-500 h-2 bg-white/10 rounded-lg appearance-none cursor-pointer touch-none" 
+              />
+            </div>
+
+            <div className="glass p-5 rounded-[24px] border-white/5">
+              <div className="flex justify-between items-center mb-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-indigo-300/50 flex items-center gap-2">
+                  <Activity size={12} /> RHR Baseline (bpm)
+                </label>
+                <input 
+                  type="number" 
+                  inputMode="numeric"
+                  value={localConfig.wearableBaselines.rhr} 
+                  onChange={(e) => handleChange('wearableBaselines', 'rhr', e.target.value)}
+                  className="bg-transparent text-right font-bold font-outfit text-lg outline-none w-20 text-white" 
+                />
+              </div>
+              <p className="text-[10px] text-white/30">Resting Heart Rate baseline.</p>
+            </div>
+
+            <div className="glass p-5 rounded-[24px] border-white/5">
+              <div className="flex justify-between items-center mb-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-indigo-300/50 flex items-center gap-2">
+                  <Wind size={12} /> HRV Baseline (ms)
+                </label>
+                <input 
+                  type="number" 
+                  inputMode="numeric"
+                  value={localConfig.wearableBaselines.hrv} 
+                  onChange={(e) => handleChange('wearableBaselines', 'hrv', e.target.value)}
+                  className="bg-transparent text-right font-bold font-outfit text-lg outline-none w-20 text-white" 
+                />
+              </div>
+              <p className="text-[10px] text-white/30">Heart Rate Variability target.</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400">
+              <Utensils size={20} />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold font-outfit">Nutritional Targets</h3>
+              <p className="text-xs text-white/40">Daily intake goals.</p>
+            </div>
+          </div>
+
+          <div className="glass p-5 rounded-[24px] border-white/5">
+            <div className="flex justify-between items-center mb-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-emerald-300/50 flex items-center gap-2">
+                <Target size={12} /> Protein Goal (g)
+              </label>
+              <input 
+                type="number" 
+                inputMode="numeric"
+                value={localConfig.manualTargets.protein} 
+                onChange={(e) => handleChange('manualTargets', 'protein', e.target.value)}
+                className="bg-transparent text-right font-bold font-outfit text-lg outline-none w-20 text-white" 
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="fixed bottom-0 left-0 right-0 p-6 pb-safe bg-gradient-to-t from-[#020617] via-[#020617] to-transparent z-20">
+        <button 
+          onClick={handleSave} 
+          className="w-full py-5 bg-white text-black font-black rounded-[24px] text-lg shadow-2xl active:scale-95 transition-all flex items-center justify-center gap-3 font-outfit touch-manipulation"
+        >
+          <Save size={20} /> SAVE CALIBRATION
+        </button>
+      </div>
+    </motion.div>
+  );
+});
