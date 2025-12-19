@@ -27,7 +27,8 @@ export async function initSchema() {
        id uuid primary key default uuid_generate_v4(),
        email text unique not null
      );`,
-    `alter table users alter column id type uuid using uuid_generate_v4();`,
+    // Keep existing IDs stable; just ensure column is uuid-typed
+    `alter table users alter column id type uuid using id::uuid;`,
     `alter table users alter column id set default uuid_generate_v4();`,
     `alter table users add column if not exists name text;`,
     `alter table users add column if not exists picture text;`,
@@ -55,4 +56,8 @@ export async function initSchema() {
   for (const stmt of statements) {
     await runQuery(stmt);
   }
+
+  // Clean up any orphaned rows from earlier migrations that broke FKs
+  await runQuery(`delete from user_config uc where not exists (select 1 from users u where u.id = uc.user_id);`);
+  await runQuery(`delete from history h where not exists (select 1 from users u where u.id = h.user_id);`);
 }
