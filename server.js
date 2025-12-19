@@ -5,6 +5,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { OAuth2Client } from 'google-auth-library';
 import { GoogleGenAI } from '@google/genai';
+import { pool, runQuery, initSchema } from './db.js';
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -58,6 +59,157 @@ app.post('/api/login', (req, res) => {
   res.json({ user });
 });
 
+// Token middleware
+const verifyToken = (req, res, next) => {
+  const auth = req.get('authorization') || '';
+  const [, token] = auth.split(' ');
+  if (!token) return res.status(401).json({ error: 'missing token' });
+  const [data, sig] = token.split('.');
+  if (!data || !sig) return res.status(401).json({ error: 'invalid token' });
+  const expected = crypto.createHmac('sha256', sessionSecret).update(data).digest('base64url');
+  if (expected !== sig) return res.status(401).json({ error: 'bad signature' });
+  try {
+    req.userToken = JSON.parse(Buffer.from(data, 'base64url').toString('utf8'));
+    return next();
+  } catch (e) {
+    return res.status(401).json({ error: 'token parse error' });
+  }
+};
+
+// Ensure a user row exists and return DB row
+const upsertUser = async ({ email, name, picture, avatarSeed }) => {
+  const result = await runQuery(
+    `insert into users (email, name, picture, avatar_seed)
+     values ($1, $2, $3, $4)
+     on conflict (email) do update set
+       name = excluded.name,
+       picture = coalesce(excluded.picture, users.picture),
+       avatar_seed = coalesce(excluded.avatar_seed, users.avatar_seed),
+       updated_at = now()
+     returning *;`,
+    [email, name, picture, avatarSeed]
+  );
+  return result.rows[0];
+};
+
+const defaultConfig = () => ({
+  wearable_baselines: { sleep: 7.5, rhr: 65, hrv: 50 },
+  manual_targets: { protein: 80, gut: 4, sun: 'Full', exercise: 'Medium' },
+  streak_logic: { freezesAvailable: 2, lastFreezeReset: new Date().toISOString() }
+});
+
+const ensureConfig = async (userId) => {
+  const existing = await runQuery('select * from user_config where user_id = $1', [userId]);
+  if (existing.rows.length) return existing.rows[0];
+  const cfg = defaultConfig();
+  const inserted = await runQuery(
+    `insert into user_config (user_id, wearable_baselines, manual_targets, streak_logic)
+     values ($1, $2, $3, $4)
+     returning *;`,
+    [userId, cfg.wearable_baselines, cfg.manual_targets, cfg.streak_logic]
+  );
+  return inserted.rows[0];
+};
+
+// Authenticated user + config
+app.get('/api/me', verifyToken, async (req, res) => {
+  try {
+    const email = req.userToken.email;
+    const userRow = await runQuery('select * from users where email = $1', [email]);
+    if (!userRow.rows.length) return res.status(404).json({ error: 'user not found' });
+    const user = userRow.rows[0];
+    const cfg = await ensureConfig(user.id);
+    res.json({ user, config: cfg });
+  } catch (e) {
+    console.error('[api/me] error', e);
+    res.status(500).json({ error: 'failed to load profile' });
+  }
+});
+
+app.put('/api/config', verifyToken, async (req, res) => {
+  try {
+    const email = req.userToken.email;
+    const { wearable_baselines, manual_targets, streak_logic } = req.body || {};
+    const userRow = await runQuery('select * from users where email = $1', [email]);
+    if (!userRow.rows.length) return res.status(404).json({ error: 'user not found' });
+    const userId = userRow.rows[0].id;
+    const updated = await runQuery(
+      `insert into user_config (user_id, wearable_baselines, manual_targets, streak_logic)
+       values ($1, $2, $3, $4)
+       on conflict (user_id) do update set
+         wearable_baselines = excluded.wearable_baselines,
+         manual_targets = excluded.manual_targets,
+         streak_logic = excluded.streak_logic,
+         updated_at = now()
+       returning *;`,
+      [userId, wearable_baselines, manual_targets, streak_logic]
+    );
+    res.json({ config: updated.rows[0] });
+  } catch (e) {
+    console.error('[api/config] error', e);
+    res.status(500).json({ error: 'failed to save config' });
+  }
+});
+
+// History endpoints
+app.get('/api/history', verifyToken, async (req, res) => {
+  try {
+    const email = req.userToken.email;
+    const limit = Math.min(Number(req.query.limit) || 90, 180);
+    const userRow = await runQuery('select id from users where email = $1', [email]);
+    if (!userRow.rows.length) return res.status(404).json({ error: 'user not found' });
+    const userId = userRow.rows[0].id;
+    const hist = await runQuery(
+      'select date, payload from history where user_id = $1 order by date desc limit $2',
+      [userId, limit]
+    );
+    res.json({ history: hist.rows.map(r => ({ ...r.payload, date: r.date.toISOString().split('T')[0] })) });
+  } catch (e) {
+    console.error('[api/history] error', e);
+    res.status(500).json({ error: 'failed to load history' });
+  }
+});
+
+app.put('/api/history/:date', verifyToken, async (req, res) => {
+  try {
+    const email = req.userToken.email;
+    const { date } = req.params;
+    const entry = req.body;
+    const userRow = await runQuery('select id from users where email = $1', [email]);
+    if (!userRow.rows.length) return res.status(404).json({ error: 'user not found' });
+    const userId = userRow.rows[0].id;
+    const upserted = await runQuery(
+      `insert into history (user_id, date, payload)
+       values ($1, $2, $3)
+       on conflict (user_id, date) do update set
+         payload = excluded.payload,
+         updated_at = now()
+       returning date, payload;`,
+      [userId, date, entry]
+    );
+    const row = upserted.rows[0];
+    res.json({ entry: { ...row.payload, date: row.date.toISOString().split('T')[0] } });
+  } catch (e) {
+    console.error('[api/history put] error', e);
+    res.status(500).json({ error: 'failed to save entry' });
+  }
+});
+
+app.delete('/api/history/:date', verifyToken, async (req, res) => {
+  try {
+    const email = req.userToken.email;
+    const { date } = req.params;
+    const userRow = await runQuery('select id from users where email = $1', [email]);
+    if (!userRow.rows.length) return res.status(404).json({ error: 'user not found' });
+    const userId = userRow.rows[0].id;
+    await runQuery('delete from history where user_id = $1 and date = $2', [userId, date]);
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('[api/history delete] error', e);
+    res.status(500).json({ error: 'failed to delete entry' });
+  }
+});
+
 app.get('/api/auth/google/start', (req, res) => {
   if (!oauthClient) {
     return res.status(500).send('OAuth not configured');
@@ -101,6 +253,9 @@ app.get('/api/auth/google/callback', async (req, res) => {
     const name = payload?.name || 'Flow User';
     const picture = payload?.picture;
     const avatarSeed = 'Felix';
+
+    // Ensure user exists in DB
+    await upsertUser({ email, name, picture, avatarSeed });
 
     const token = issueToken({ email, ts: Date.now() });
     const user = {
@@ -177,4 +332,9 @@ app.get('*', (_req, res) => {
 app.listen(port, () => {
   console.log(`Flow API listening on :${port}`);
   console.log('[startup] GOOGLE_REDIRECT_URI', googleRedirect, 'GOOGLE_CLIENT_ID set?', !!googleClientId);
+  if (process.env.DATABASE_URL) {
+    initSchema().catch(err => console.error('[startup] schema init failed', err));
+  } else {
+    console.warn('[startup] DATABASE_URL not set; persistence disabled');
+  }
 });
