@@ -26,6 +26,7 @@ Env variables (see .env.example)
 - `SESSION_SECRET`
 - `GOOGLE_CLIENT_ID`
 - `GOOGLE_CLIENT_SECRET`
+- `GOOGLE_REDIRECT_URI` (e.g., `https://<your-domain>/api/auth/google/callback`)
 
 ### API server (Gemini proxy)
 

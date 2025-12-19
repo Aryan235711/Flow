@@ -190,36 +190,11 @@ const App = () => {
 
   const handleLogin = useCallback(async () => {
     triggerHaptic();
-    try {
-      const seed = AVATAR_OPTIONS[0];
-      console.log('[login] starting request');
-      const res = await fetch('/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: 'alex@flow.bio', name: 'Alex Trace', avatarSeed: seed })
-      });
-
-      console.log('[login] response status', res.status);
-      const data = await res.json().catch(() => ({}));
-      console.log('[login] response body', data);
-
-      if (!res.ok) throw new Error('Login failed');
-      const profile = data.user;
-      setUser({
-        name: profile?.name || 'Alex Trace',
-        email: profile?.email || 'alex@flow.bio',
-        avatarSeed: profile?.avatarSeed || seed,
-        picture: profile?.picture || `https://api.dicebear.com/9.x/notionists/svg?seed=${seed}&backgroundColor=${AVATAR_BG_COLORS}`,
-        isAuthenticated: true,
-        token: profile?.token,
-        isPremium: !!profile?.isPremium
-      });
-      setStage('ONBOARDING');
-    } catch (err) {
-      console.error('[login] error', err);
-      addNotification('Link Failed', 'Unable to authenticate. Try again.', 'SYSTEM');
-    }
-  }, [addNotification]);
+    const redirectUri = `${window.location.origin}/auth/callback`;
+    const url = `/api/auth/google/start?redirect_uri=${encodeURIComponent(redirectUri)}`;
+    console.log('[login] redirecting to', url);
+    window.location.href = url;
+  }, []);
 
   const handleSignOut = useCallback(() => {
     setUser({ name: '', email: '', picture: '', avatarSeed: 'Felix', isAuthenticated: false, isPremium: false });
@@ -358,6 +333,33 @@ const App = () => {
     }
     setView(v);
   };
+
+  // Handle OAuth return
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const url = new URL(window.location.href);
+    if (url.pathname.startsWith('/auth/callback')) {
+      const payload = url.searchParams.get('auth_payload');
+      if (payload) {
+        try {
+          const decoded = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
+          setUser({
+            name: decoded.name || '',
+            email: decoded.email || '',
+            avatarSeed: decoded.avatarSeed || 'Felix',
+            picture: decoded.picture || '',
+            isAuthenticated: true,
+            isPremium: !!decoded.isPremium,
+            token: decoded.token
+          });
+          setStage('ONBOARDING');
+        } catch (e) {
+          console.error('[auth callback] decode error', e);
+        }
+      }
+      window.history.replaceState({}, '', '/');
+    }
+  }, []);
 
   if (stage === 'AUTH') return (
     <div className="fixed inset-0 z-[300] bg-[#020617] flex flex-col justify-center items-center overflow-hidden">

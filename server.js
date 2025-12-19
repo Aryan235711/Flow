@@ -3,6 +3,7 @@ import cors from 'cors';
 import crypto from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { OAuth2Client } from 'google-auth-library';
 import { GoogleGenAI } from '@google/genai';
 
 const app = express();
@@ -10,9 +11,23 @@ const port = process.env.PORT || 4000;
 const sessionSecret = process.env.SESSION_SECRET || 'dev-session-secret';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const googleClientId = process.env.GOOGLE_CLIENT_ID;
+const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
+const googleRedirect = process.env.GOOGLE_REDIRECT_URI; // e.g., https://flow-si70.onrender.com/auth/callback
+const oauthClient = (googleClientId && googleClientSecret) ? new OAuth2Client({
+  clientId: googleClientId,
+  clientSecret: googleClientSecret,
+  redirectUri: googleRedirect
+}) : null;
 
 app.use(cors());
 app.use(express.json({ limit: '512kb' }));
+
+// Minimal request logger for debugging prod vs. local flow
+app.use((req, _res, next) => {
+  console.log(`[req] ${req.method} ${req.originalUrl} ua=${req.get('user-agent')}`);
+  next();
+});
 
 const issueToken = (payload) => {
   const data = Buffer.from(JSON.stringify(payload)).toString('base64url');
@@ -41,6 +56,68 @@ app.post('/api/login', (req, res) => {
   };
 
   res.json({ user });
+});
+
+app.get('/api/auth/google/start', (req, res) => {
+  if (!oauthClient) {
+    return res.status(500).send('OAuth not configured');
+  }
+
+  const base = `${req.protocol}://${req.get('host')}`;
+  const redirectUri = googleRedirect || `${base}/auth/callback`;
+  const state = Buffer.from(JSON.stringify({ redirectUri })).toString('base64url');
+
+   console.log('[auth/start] base', base, 'redirectUri', redirectUri, 'googleRedirectEnv', googleRedirect);
+
+  const url = oauthClient.generateAuthUrl({
+    access_type: 'offline',
+    scope: ['openid', 'email', 'profile'],
+    redirect_uri: redirectUri,
+    state
+  });
+  console.log('[auth/start] redirecting to Google', url);
+  res.redirect(url);
+});
+
+app.get('/api/auth/google/callback', async (req, res) => {
+  if (!oauthClient) return res.status(500).send('OAuth not configured');
+  const { code, state } = req.query;
+  console.log('[auth/callback] received', { code: !!code, state });
+  try {
+    const parsedState = state ? JSON.parse(Buffer.from(String(state), 'base64url').toString('utf8')) : {};
+    const redirectUri = parsedState.redirectUri || googleRedirect || `${req.protocol}://${req.get('host')}/auth/callback`;
+    console.log('[auth/callback] using redirectUri', redirectUri, 'googleRedirectEnv', googleRedirect);
+
+    const { tokens } = await oauthClient.getToken({ code, redirect_uri: redirectUri });
+    const idToken = tokens.id_token;
+    if (!idToken) throw new Error('Missing id_token');
+
+    const ticket = await oauthClient.verifyIdToken({ idToken, audience: googleClientId });
+    const payload = ticket.getPayload();
+    const email = payload?.email;
+    const name = payload?.name || 'Flow User';
+    const picture = payload?.picture;
+    const avatarSeed = 'Felix';
+
+    const token = issueToken({ email, ts: Date.now() });
+    const user = {
+      name,
+      email,
+      avatarSeed,
+      picture,
+      isAuthenticated: true,
+      isPremium: false,
+      token
+    };
+
+    const payloadB64 = Buffer.from(JSON.stringify(user)).toString('base64url');
+    const dest = `${redirectUri}?auth_payload=${payloadB64}`;
+    console.log('[auth/callback] success for', email, 'redirecting to', dest);
+    return res.redirect(dest);
+  } catch (err) {
+    console.error('[api/auth/google/callback] error', err);
+    return res.status(500).send('OAuth error');
+  }
 });
 
 app.post('/api/insight', async (req, res) => {
@@ -96,4 +173,5 @@ app.get('*', (_req, res) => {
 
 app.listen(port, () => {
   console.log(`Flow API listening on :${port}`);
+  console.log('[startup] GOOGLE_REDIRECT_URI', googleRedirect, 'GOOGLE_CLIENT_ID set?', !!googleClientId);
 });
