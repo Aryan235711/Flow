@@ -35,6 +35,14 @@ export async function initSchema() {
       updated_at timestamptz default now()
     );
 
+    -- Backfill columns if table existed before
+    alter table users add column if not exists name text;
+    alter table users add column if not exists picture text;
+    alter table users add column if not exists avatar_seed text default 'Felix';
+    alter table users add column if not exists is_premium boolean default false;
+    alter table users add column if not exists created_at timestamptz default now();
+    alter table users add column if not exists updated_at timestamptz default now();
+
     create table if not exists user_config (
       user_id uuid primary key references users(id) on delete cascade,
       wearable_baselines jsonb not null,
