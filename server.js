@@ -30,6 +30,7 @@ app.use((req, _res, next) => {
   next();
 });
 
+// HMAC-signed token (not JWT) for lightweight auth between client and API
 const issueToken = (payload) => {
   const data = Buffer.from(JSON.stringify(payload)).toString('base64url');
   const sig = crypto.createHmac('sha256', sessionSecret).update(data).digest('base64url');
@@ -60,6 +61,7 @@ app.post('/api/login', (req, res) => {
 });
 
 // Token middleware
+// Verifies HMAC token and hydrates req.userToken
 const verifyToken = (req, res, next) => {
   const auth = req.get('authorization') || '';
   const [, token] = auth.split(' ');
@@ -332,12 +334,16 @@ app.get('*', (_req, res) => {
   res.sendFile(path.join(distPath, 'index.html'));
 });
 
-app.listen(port, () => {
-  console.log(`Flow API listening on :${port}`);
-  console.log('[startup] GOOGLE_REDIRECT_URI', googleRedirect, 'GOOGLE_CLIENT_ID set?', !!googleClientId);
-  if (process.env.DATABASE_URL) {
-    initSchema().catch(err => console.error('[startup] schema init failed', err));
-  } else {
-    console.warn('[startup] DATABASE_URL not set; persistence disabled');
-  }
-});
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(port, () => {
+    console.log(`Flow API listening on :${port}`);
+    console.log('[startup] GOOGLE_REDIRECT_URI', googleRedirect, 'GOOGLE_CLIENT_ID set?', !!googleClientId);
+    if (process.env.DATABASE_URL) {
+      initSchema().catch(err => console.error('[startup] schema init failed', err));
+    } else {
+      console.warn('[startup] DATABASE_URL not set; persistence disabled');
+    }
+  });
+}
+
+export { app, issueToken, verifyToken };
