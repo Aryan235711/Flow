@@ -27,6 +27,8 @@ export async function initSchema() {
        id uuid primary key default uuid_generate_v4(),
        email text unique not null
      );`,
+    `alter table users alter column id type uuid using uuid_generate_v4();`,
+    `alter table users alter column id set default uuid_generate_v4();`,
     `alter table users add column if not exists name text;`,
     `alter table users add column if not exists picture text;`,
     `alter table users add column if not exists avatar_seed text default 'Felix';`,
