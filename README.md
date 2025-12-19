@@ -32,6 +32,7 @@ Env variables (see .env.example)
 ### API server (Gemini proxy)
 
 - When `DATABASE_URL` is set, the server will auto-run the Postgres schema init on startup (creates users, user_config, history tables idempotently).
+ - Render note: if the database existed before, the server will coerce `users.id` to `uuid` and add needed columns/tables on startup. Ensure `DATABASE_URL` is set and restart to apply.
 
 ## Version Control Workflow
 
