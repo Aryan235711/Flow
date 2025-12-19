@@ -26,12 +26,12 @@ Env variables (see .env.example)
 - `SESSION_SECRET`
 - `GOOGLE_CLIENT_ID`
 - `GOOGLE_CLIENT_SECRET`
- `GOOGLE_REDIRECT_URI` (e.g., `https://<your-domain>/api/auth/google/callback`)
+- `GOOGLE_REDIRECT_URI` (e.g., `https://<your-domain>/api/auth/google/callback`)
+- `DATABASE_URL` (Postgres; required for persistent history/config)
 
 ### API server (Gemini proxy)
 
-- Start the proxy: `npm run api` (requires GEMINI_API_KEY in your env)
-- Vite dev proxies `/api` to `http://localhost:4000`; in production, host the API alongside the app and serve `/api/insight` from the same origin.
+- When `DATABASE_URL` is set, the server will auto-run the Postgres schema init on startup (creates users, user_config, history tables idempotently).
 
 ## Version Control Workflow
 

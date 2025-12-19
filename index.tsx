@@ -86,6 +86,14 @@ const App = () => {
   const hasRunSystemCheck = useRef(false);
   const prevHistoryLength = useRef(history.length);
 
+  const authFetch = useCallback(async (url: string, options: RequestInit = {}) => {
+    if (!user.token) throw new Error('Missing auth token');
+    const headers = new Headers(options.headers || {});
+    headers.set('Authorization', `Bearer ${user.token}`);
+    if (options.body && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
+    return fetch(url, { ...options, headers });
+  }, [user.token]);
+
   // Persistence
   useEffect(() => setSafeStorage(STORAGE_KEYS.STAGE, stage), [stage]);
   useEffect(() => setSafeStorage(STORAGE_KEYS.USER, user), [user]);
@@ -188,6 +196,47 @@ const App = () => {
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
   }, []);
 
+  useEffect(() => {
+    if (!user.isAuthenticated || !user.token) return;
+    const load = async () => {
+      try {
+        const meRes = await authFetch('/api/me');
+        if (meRes.ok) {
+          const data = await meRes.json();
+          const dbUser = data.user || {};
+          const dbConfig = data.config || {};
+          setUser(prev => ({
+            ...prev,
+            name: dbUser.name || prev.name,
+            email: dbUser.email || prev.email,
+            picture: dbUser.picture || prev.picture,
+            avatarSeed: dbUser.avatar_seed || prev.avatarSeed,
+            isPremium: !!dbUser.is_premium,
+            isAuthenticated: true,
+            token: prev.token
+          }));
+          if (dbConfig.wearable_baselines && dbConfig.manual_targets && dbConfig.streak_logic) {
+            setConfig({
+              wearableBaselines: dbConfig.wearable_baselines,
+              manualTargets: dbConfig.manual_targets,
+              streakLogic: dbConfig.streak_logic
+            });
+          }
+        }
+
+        const histRes = await authFetch('/api/history?limit=90');
+        if (histRes.ok) {
+          const data = await histRes.json();
+          if (Array.isArray(data.history)) setHistory(data.history);
+        }
+        if (stage === 'AUTH') setStage('MAIN');
+      } catch (e) {
+        console.error('[sync] load failed', e);
+      }
+    };
+    load();
+  }, [user.isAuthenticated, user.token, authFetch, stage]);
+
   const handleLogin = useCallback(async () => {
     triggerHaptic();
     const redirectUri = `${window.location.origin}/auth/callback`;
@@ -207,17 +256,28 @@ const App = () => {
 
   const handleDeleteEntry = useCallback((index: number) => {
     triggerHaptic();
-    setHistory(prev => {
-      const newHistory = [...prev];
-      const realIndex = prev.length - 1 - index;
-      if (realIndex >= 0 && realIndex < prev.length) {
-         newHistory.splice(realIndex, 1);
-         return newHistory;
+    const remove = async () => {
+      try {
+        const entry = history[history.length - 1 - index];
+        if (entry?.date && user.token) {
+          await authFetch(`/api/history/${entry.date}`, { method: 'DELETE' });
+        }
+      } catch (e) {
+        console.error('[history/delete] remote delete failed', e);
       }
-      return prev;
-    });
+      setHistory(prev => {
+        const newHistory = [...prev];
+        const realIndex = prev.length - 1 - index;
+        if (realIndex >= 0 && realIndex < prev.length) {
+           newHistory.splice(realIndex, 1);
+           return newHistory;
+        }
+        return prev;
+      });
+    };
+    remove();
     addNotification('Record Expunged', 'Telemetry entry deleted.', 'SYSTEM');
-  }, [addNotification]);
+  }, [addNotification, authFetch, history, user.token]);
 
   const handleEditEntry = useCallback((entry: MetricEntry, index: number) => {
     if (entry.isSystemGenerated) {
@@ -248,17 +308,35 @@ const App = () => {
   }, [history, addNotification]);
 
   const handleSaveEntry = useCallback((entry: MetricEntry) => {
-    setHistory(prev => {
-      let newHistory = [...prev];
-      const entryDate = entry.date;
-      newHistory = newHistory.filter(h => h.date !== entryDate);
-      newHistory.push(entry);
-      return newHistory.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    });
-    setEntryToEdit(null); 
-    changeView('DASHBOARD'); 
-    addNotification(entryToEdit ? 'Protocol Updated' : 'Sync Success', 'Registry updated.', 'SYSTEM'); 
-  }, [entryToEdit, addNotification]);
+    const persist = async () => {
+      try {
+        if (user.token) {
+          const res = await authFetch(`/api/history/${entry.date}`, {
+            method: 'PUT',
+            body: JSON.stringify(entry)
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.entry) entry = data.entry;
+          }
+        }
+      } catch (e) {
+        console.error('[history/save] remote save failed, keeping local', e);
+      }
+
+      setHistory(prev => {
+        let newHistory = [...prev];
+        const entryDate = entry.date;
+        newHistory = newHistory.filter(h => h.date !== entryDate);
+        newHistory.push(entry);
+        return newHistory.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      });
+      setEntryToEdit(null); 
+      changeView('DASHBOARD'); 
+      addNotification(entryToEdit ? 'Protocol Updated' : 'Sync Success', 'Registry updated.', 'SYSTEM'); 
+    };
+    persist();
+  }, [entryToEdit, addNotification, authFetch, user.token]);
 
   const exportDataCSV = useCallback(() => {
     triggerHaptic();
@@ -575,8 +653,22 @@ const App = () => {
         {showGoals && (
           <GoalSettings 
             config={config} 
-            onSave={(newConfig) => {
+            onSave={async (newConfig) => {
               setConfig(newConfig);
+              if (user.token) {
+                try {
+                  await authFetch('/api/config', {
+                    method: 'PUT',
+                    body: JSON.stringify({
+                      wearable_baselines: newConfig.wearableBaselines,
+                      manual_targets: newConfig.manualTargets,
+                      streak_logic: newConfig.streakLogic
+                    })
+                  });
+                } catch (e) {
+                  console.error('[config] save failed', e);
+                }
+              }
               addNotification("Protocol Updated", "New baselines established.", "SYSTEM");
             }} 
             onClose={() => setShowGoals(false)} 
