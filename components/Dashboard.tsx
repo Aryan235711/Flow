@@ -323,7 +323,7 @@ export const Dashboard = memo(({ history, config, onAddNotif, isMockData, user, 
       </motion.div>
 
       {/* 1. HERO CARD (Streak) */}
-      <motion.div variants={fadeUp} className={`glass rounded-[48px] p-8 relative overflow-hidden group border-t-2 ${dailyFocus.border || 'border-white/10'}`}>
+      <motion.div variants={fadeUp} className={`glass rounded-[48px] p-6 sm:p-8 relative overflow-hidden group border-t-2 ${dailyFocus.border || 'border-white/10'}`}>
         {/* Subtle Gradient wash that breathes */}
         <div className={`absolute inset-0 bg-gradient-to-br ${dailyFocus.color === 'text-emerald-400' ? 'from-emerald-900/10' : dailyFocus.color === 'text-rose-400' ? 'from-rose-900/10' : 'from-indigo-900/10'} to-transparent opacity-50`} />
         
@@ -331,19 +331,19 @@ export const Dashboard = memo(({ history, config, onAddNotif, isMockData, user, 
         <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent animate-[scan_6s_ease-in-out_infinite]" />
         <style>{`@keyframes scan { 0%,100% { transform: translateY(0); opacity: 0; } 50% { transform: translateY(200px); opacity: 1; } }`}</style>
         
-        <div className="relative z-10 flex flex-col gap-6">
-            <div className="flex justify-between items-start gap-6">
-                <div className="space-y-3 flex-1">
+        <div className="relative z-10 flex flex-col gap-4 sm:gap-6">
+          <div className="flex justify-between items-start gap-4 sm:gap-6">
+            <div className="space-y-2 sm:space-y-3 flex-1 min-w-0">
                      <div className="flex items-center gap-2">
                         <Fingerprint size={14} className={`animate-pulse ${dailyFocus.color}`} />
                         <span className={`text-[10px] font-black uppercase tracking-[0.3em] ${dailyFocus.color} opacity-80`}>Protocol</span>
                      </div>
-                     <h2 className="text-4xl font-black font-outfit tracking-tighter leading-none text-white drop-shadow-lg">{dailyFocus.title}</h2>
-                     <p className="text-sm font-bold text-white/50 leading-relaxed">{dailyFocus.desc}</p>
+               <h2 className="text-3xl sm:text-4xl font-black font-outfit tracking-tighter leading-none text-white drop-shadow-lg">{dailyFocus.title}</h2>
+               <p className="text-xs sm:text-sm font-bold text-white/50 leading-relaxed sm:leading-relaxed">{dailyFocus.desc}</p>
                 </div>
-                <div className="flex flex-col items-end shrink-0">
-                    <div className="w-16 h-16 rounded-[24px] bg-white/5 border border-white/10 flex items-center justify-center shadow-2xl backdrop-blur-md relative mb-3">
-                        <span className="text-3xl font-black font-outfit text-white">{streak}</span>
+            <div className="flex flex-col items-end shrink-0">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-[24px] bg-white/5 border border-white/10 flex items-center justify-center shadow-2xl backdrop-blur-md relative mb-3">
+                <span className="text-2xl sm:text-3xl font-black font-outfit text-white">{streak}</span>
                         <div className="absolute -top-1 -right-1 w-3 h-3 bg-amber-500 rounded-full animate-pulse shadow-[0_0_15px_#f59e0b]" />
                     </div>
                     <div className="flex items-center gap-1.5 bg-black/20 px-3 py-1.5 rounded-full border border-white/5 backdrop-blur-sm">
