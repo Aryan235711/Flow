@@ -95,6 +95,13 @@ const App = () => {
     return fetch(url, { ...options, headers });
   }, [user.token]);
 
+  const addNotification = useCallback((title: string, message: string, type: Notification['type'] = 'AI') => {
+    const newNotif: Notification = { id: Date.now().toString(), title, message, time: 'Now', read: false, type };
+    setNotifications(prev => [newNotif, ...prev.slice(0, 10)]);
+    setActiveToast(newNotif); 
+    triggerHaptic();
+  }, []);
+
   // Persistence
   useEffect(() => setSafeStorage(STORAGE_KEYS.STAGE, stage), [stage]);
   useEffect(() => setSafeStorage(STORAGE_KEYS.USER, user), [user]);
@@ -115,13 +122,6 @@ const App = () => {
   const isMockData = history.length === 0;
   const displayHistory = isMockData ? mockHistory : history;
   const unreadCount = useMemo(() => notifications.filter(n => !n.read).length, [notifications]);
-
-  const addNotification = useCallback((title: string, message: string, type: Notification['type'] = 'AI') => {
-    const newNotif: Notification = { id: Date.now().toString(), title, message, time: 'Now', read: false, type };
-    setNotifications(prev => [newNotif, ...prev.slice(0, 10)]);
-    setActiveToast(newNotif); 
-    triggerHaptic();
-  }, []);
 
   // SYSTEM MAINTENANCE PIPELINE
   useEffect(() => {
