@@ -13,7 +13,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const googleClientId = process.env.GOOGLE_CLIENT_ID;
 const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
-const googleRedirect = process.env.GOOGLE_REDIRECT_URI; // e.g., https://flow-si70.onrender.com/auth/callback
+const googleRedirect = process.env.GOOGLE_REDIRECT_URI; // e.g., https://flow-si70.onrender.com/api/auth/google/callback
 const oauthClient = (googleClientId && googleClientSecret) ? new OAuth2Client({
   clientId: googleClientId,
   clientSecret: googleClientSecret,
@@ -64,15 +64,16 @@ app.get('/api/auth/google/start', (req, res) => {
   }
 
   const base = `${req.protocol}://${req.get('host')}`;
-  const redirectUri = googleRedirect || `${base}/auth/callback`;
-  const state = Buffer.from(JSON.stringify({ redirectUri })).toString('base64url');
+  const clientRedirect = req.query.redirect_uri || `${base}/auth/callback`;
+  const authRedirectUri = googleRedirect || `${base}/api/auth/google/callback`;
+  const state = Buffer.from(JSON.stringify({ clientRedirect })).toString('base64url');
 
-   console.log('[auth/start] base', base, 'redirectUri', redirectUri, 'googleRedirectEnv', googleRedirect);
+  console.log('[auth/start] base', base, 'clientRedirect', clientRedirect, 'authRedirectUri', authRedirectUri, 'googleRedirectEnv', googleRedirect);
 
   const url = oauthClient.generateAuthUrl({
     access_type: 'offline',
     scope: ['openid', 'email', 'profile'],
-    redirect_uri: redirectUri,
+    redirect_uri: authRedirectUri,
     state
   });
   console.log('[auth/start] redirecting to Google', url);
@@ -84,11 +85,13 @@ app.get('/api/auth/google/callback', async (req, res) => {
   const { code, state } = req.query;
   console.log('[auth/callback] received', { code: !!code, state });
   try {
+    const base = `${req.protocol}://${req.get('host')}`;
     const parsedState = state ? JSON.parse(Buffer.from(String(state), 'base64url').toString('utf8')) : {};
-    const redirectUri = parsedState.redirectUri || googleRedirect || `${req.protocol}://${req.get('host')}/auth/callback`;
-    console.log('[auth/callback] using redirectUri', redirectUri, 'googleRedirectEnv', googleRedirect);
+    const clientRedirect = parsedState.clientRedirect || `${base}/auth/callback`;
+    const authRedirectUri = googleRedirect || `${base}/api/auth/google/callback`;
+    console.log('[auth/callback] using authRedirectUri', authRedirectUri, 'clientRedirect', clientRedirect, 'googleRedirectEnv', googleRedirect);
 
-    const { tokens } = await oauthClient.getToken({ code, redirect_uri: redirectUri });
+    const { tokens } = await oauthClient.getToken({ code, redirect_uri: authRedirectUri });
     const idToken = tokens.id_token;
     if (!idToken) throw new Error('Missing id_token');
 
@@ -111,7 +114,7 @@ app.get('/api/auth/google/callback', async (req, res) => {
     };
 
     const payloadB64 = Buffer.from(JSON.stringify(user)).toString('base64url');
-    const dest = `${redirectUri}?auth_payload=${payloadB64}`;
+    const dest = `${clientRedirect}?auth_payload=${payloadB64}`;
     console.log('[auth/callback] success for', email, 'redirecting to', dest);
     return res.redirect(dest);
   } catch (err) {
