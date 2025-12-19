@@ -85,6 +85,7 @@ const App = () => {
   
   const hasRunSystemCheck = useRef(false);
   const prevHistoryLength = useRef(history.length);
+  const mockNoticeShown = useRef(false);
 
   const authFetch = useCallback(async (url: string, options: RequestInit = {}) => {
     if (!user.token) throw new Error('Missing auth token');
@@ -100,6 +101,15 @@ const App = () => {
   useEffect(() => setSafeStorage(STORAGE_KEYS.HISTORY, history), [history]);
   useEffect(() => setSafeStorage(STORAGE_KEYS.NOTIFS, notifications), [notifications]);
   useEffect(() => setSafeStorage(STORAGE_KEYS.CONFIG, config), [config]);
+
+  // Notify when using mock data (no user entries)
+  useEffect(() => {
+    if (history.length === 0 && user.isAuthenticated && !mockNoticeShown.current) {
+      mockNoticeShown.current = true;
+      addNotification('Mock Data Active', 'No personal telemetry yet. Logs show mock data until you add entries.');
+    }
+    if (history.length > 0) mockNoticeShown.current = false;
+  }, [history.length, user.isAuthenticated, addNotification]);
 
   const mockHistory = useMemo(() => generateMockData(), []);
   const isMockData = history.length === 0;
@@ -277,6 +287,11 @@ const App = () => {
     };
     remove();
     addNotification('Record Expunged', 'Telemetry entry deleted.', 'SYSTEM');
+    setTimeout(() => {
+      if (history.length <= 1) {
+        addNotification('Mock Data Active', 'No personal telemetry remains. Showing mock data until you add entries.');
+      }
+    }, 0);
   }, [addNotification, authFetch, history, user.token]);
 
   const handleEditEntry = useCallback((entry: MetricEntry, index: number) => {

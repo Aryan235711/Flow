@@ -119,6 +119,8 @@ app.get('/api/me', verifyToken, async (req, res) => {
     if (!userRow.rows.length) return res.status(404).json({ error: 'user not found' });
     const user = userRow.rows[0];
     const cfg = await ensureConfig(user.id);
+    const histCount = await runQuery('select count(*)::int as c from history where user_id = $1', [user.id]);
+    console.log('[api/me] user', email, 'history_count', histCount.rows[0]?.c ?? 0);
     res.json({ user, config: cfg });
   } catch (e) {
     console.error('[api/me] error', e);
@@ -163,6 +165,7 @@ app.get('/api/history', verifyToken, async (req, res) => {
       'select date, payload from history where user_id = $1 order by date desc limit $2',
       [userId, limit]
     );
+    console.log('[api/history] user', email, 'rows', hist.rows.length);
     res.json({ history: hist.rows.map(r => ({ ...r.payload, date: r.date.toISOString().split('T')[0] })) });
   } catch (e) {
     console.error('[api/history] error', e);
