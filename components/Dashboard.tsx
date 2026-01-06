@@ -447,21 +447,42 @@ export const Dashboard = memo(({ history, config, onAddNotif, isMockData, user, 
           <div className="h-[280px] w-full">
             <PremiumGate isPremium={user.isPremium} triggerPaywall={onTriggerPaywall} label="Velocity Tracking">
               <FlippableCard title="Velocity" icon={Activity} color="text-emerald-400" backContent="Velocity tracks the correlation between metabolic protein intake and physical exertion.">
-                <div className="h-full w-full pb-6"><Deferred><Suspense fallback={<div/>}><VelocityChart data={chartData} proteinGoal={config.manualTargets.protein} /></Suspense></Deferred></div>
+                {history.length >= 3 ? (
+                  <div className="h-full w-full pb-6"><Deferred><Suspense fallback={<div/>}><VelocityChart data={chartData} proteinGoal={config.manualTargets.protein} /></Suspense></Deferred></div>
+                ) : (
+                  <div className="h-full w-full flex flex-col items-center justify-center gap-3 opacity-40">
+                    <Database size={32} className="text-emerald-400" />
+                    <p className="text-xs text-white/50 text-center px-4">Need 3+ entries to visualize velocity trends</p>
+                  </div>
+                )}
               </FlippableCard>
             </PremiumGate>
           </div>
           <div className="h-[240px] w-full">
             <PremiumGate isPremium={user.isPremium} triggerPaywall={onTriggerPaywall} label="Drift Analysis">
               <FlippableCard title="Cognitive Drift" icon={Zap} color="text-pink-400" backContent="Drift visualizes the stability of your subjective mental state over time.">
-                <div className="h-full w-full pb-4"><Deferred><Suspense fallback={<div/>}><CognitiveDriftChart data={driftData} /></Suspense></Deferred></div>
+                {history.length >= 3 ? (
+                  <div className="h-full w-full pb-4"><Deferred><Suspense fallback={<div/>}><CognitiveDriftChart data={driftData} /></Suspense></Deferred></div>
+                ) : (
+                  <div className="h-full w-full flex flex-col items-center justify-center gap-3 opacity-40">
+                    <Zap size={32} className="text-pink-400" />
+                    <p className="text-xs text-white/50 text-center px-4">Need 3+ entries to analyze cognitive drift</p>
+                  </div>
+                )}
               </FlippableCard>
             </PremiumGate>
           </div>
           <div className="h-[320px] w-full">
             <PremiumGate isPremium={user.isPremium} triggerPaywall={onTriggerPaywall} label="Flow Heatmap">
               <FlippableCard title="Flow Persistence" icon={Calendar} color="text-fuchsia-400" backContent="The Heatmap displays your consistency density over the last 28 days.">
-                <div className="h-full w-full mt-2"><Deferred><Suspense fallback={<div/>}><ConsistencyHeatmap history={history} config={config} /></Suspense></Deferred></div>
+                {history.length >= 3 ? (
+                  <div className="h-full w-full mt-2"><Deferred><Suspense fallback={<div/>}><ConsistencyHeatmap history={history} config={config} /></Suspense></Deferred></div>
+                ) : (
+                  <div className="h-full w-full flex flex-col items-center justify-center gap-3 opacity-40">
+                    <Calendar size={32} className="text-fuchsia-400" />
+                    <p className="text-xs text-white/50 text-center px-4">Need 3+ entries to show consistency heatmap</p>
+                  </div>
+                )}
               </FlippableCard>
             </PremiumGate>
           </div>

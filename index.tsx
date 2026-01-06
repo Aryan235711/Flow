@@ -152,8 +152,8 @@ const App = () => {
   }, [history.length, user.isAuthenticated, addNotification]);
 
   const mockHistory = useMemo(() => generateMockData(), []);
-  const isMockData = history.length === 0;
-  const displayHistory = isMockData ? mockHistory : history;
+  const isMockData = useMemo(() => history.length === 0, [history.length]);
+  const displayHistory = useMemo(() => isMockData ? mockHistory : history, [isMockData, mockHistory, history]);
   const unreadCount = useMemo(() => notifications.filter(n => !n.read).length, [notifications]);
 
   // SYSTEM MAINTENANCE PIPELINE

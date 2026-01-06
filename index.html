@@ -8,6 +8,28 @@
     <meta name="theme-color" content="#020617">
     <title>Flow Wellness - Biological Telemetry</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            spacing: {
+              'content-xs': '1rem',
+              'content-sm': '1.25rem',
+              'content-md': '1.5rem',
+              'content-lg': '2rem',
+            },
+            borderRadius: {
+              'card': '2rem',
+              'card-lg': '2.5rem',
+              'card-xl': '3rem',
+            },
+            animation: {
+              'spin-slow': 'spin 3s linear infinite',
+            },
+          }
+        }
+      }
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
