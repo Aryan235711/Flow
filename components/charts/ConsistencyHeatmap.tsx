@@ -118,7 +118,7 @@ export const ConsistencyHeatmap = memo(({ history, config }: { history: MetricEn
       </div>
 
       {/* Spacer to breathe without forcing tall gaps */}
-      <div className="mt-2 md:mt-4" />
+      <div className="mt-2 md:mt-3" />
 
       {/* Info & Legend Container - Fixed at bottom */}
       <div className="space-y-3 md:space-y-4 pb-2">

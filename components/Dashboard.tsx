@@ -72,8 +72,8 @@ const DailySnapshot = memo(({ entry, onLog }: { entry?: MetricEntry, onLog: () =
        <div className={`absolute inset-0 bg-gradient-to-br ${theme.gradient} blur-3xl opacity-30 rounded-[40px] transition-all duration-700 group-hover:opacity-50`} />
        
        <div className="relative glass rounded-[40px] p-8 border-white/10 overflow-hidden">
-          {/* Header */}
-          <div className="flex justify-between items-start mb-10 relative z-10">
+           {/* Header */}
+           <div className="flex justify-between items-start mb-10 relative z-10">
              <div className="flex items-center gap-5">
                 <div className={`w-14 h-14 rounded-2xl flex items-center justify-center bg-white/5 border border-white/10 ${theme.color} shadow-lg backdrop-blur-md`}>
                    <StatusIcon size={24} />
@@ -93,8 +93,8 @@ const DailySnapshot = memo(({ entry, onLog }: { entry?: MetricEntry, onLog: () =
              )}
           </div>
 
-           {/* Minimal Vitals Grid */}
-           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-8 relative z-10 border-t border-white/5 pt-8">
+          {/* Minimal Vitals Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-5 md:gap-7 mb-10 relative z-10 border-t border-white/5 pt-8">
              <div className="flex flex-col gap-1">
                <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-white/20">Sleep</span>
                <span className="text-2xl md:text-3xl font-black font-outfit text-teal-200">{entry.rawValues.sleep.toFixed(1)}<span className="text-[10px] text-white/20 ml-0.5 align-top">h</span></span>
@@ -113,7 +113,7 @@ const DailySnapshot = memo(({ entry, onLog }: { entry?: MetricEntry, onLog: () =
              </div>
           </div>
 
-          {/* Footer Context Pills */}
+           {/* Footer Context Pills */}
            <div className="flex flex-wrap md:flex-nowrap items-center gap-3 md:gap-4 relative z-10">
              <div className="px-4 py-2 md:px-5 md:py-3 rounded-full bg-white/5 border border-white/5 flex items-center gap-2.5">
                <Sun size={14} className={entry.processedState.sun === 'GREEN' ? 'text-amber-400' : 'text-white/30'} />
@@ -253,7 +253,7 @@ export const Dashboard = memo(({ history, config, onAddNotif, isMockData, user, 
       <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
         
         {/* 3. VITALITY ORB (Left on iPad) */}
-        <motion.div variants={fadeUp} className="md:col-span-5 lg:col-span-4 glass rounded-[48px] border-white/5 relative overflow-hidden bg-gradient-to-br from-teal-500/[0.02] to-cyan-500/[0.02] min-h-[520px] lg:sticky lg:top-32">
+        <motion.div variants={fadeUp} className="md:col-span-5 lg:col-span-4 glass rounded-[48px] border-white/5 relative overflow-hidden bg-gradient-to-br from-teal-500/[0.02] to-cyan-500/[0.02] min-h-[520px] lg:sticky lg:top-32 flex">
           <VitalityOrb history={history} config={config} userAge={30} />
         </motion.div>
 
@@ -357,11 +357,11 @@ export const Dashboard = memo(({ history, config, onAddNotif, isMockData, user, 
                   </FlippableCard>
                 </PremiumGate>
               </div>
-              <div className="min-h-[360px] md:min-h-[440px] lg:min-h-[500px] md:col-span-2">
+              <div className="min-h-[440px] md:min-h-[520px] lg:min-h-[560px] md:col-span-2 h-full">
                 <PremiumGate isPremium={user.isPremium} triggerPaywall={onTriggerPaywall} label="Flow Heatmap">
                   <FlippableCard title="Flow Persistence" icon={Calendar} color="text-cyan-400" backContent="The Heatmap displays your consistency density over the last 28 days.">
                     {history.length >= 3 ? (
-                      <div className="h-full w-full mt-2"><Deferred><Suspense fallback={<div/>}><ConsistencyHeatmap history={history} config={config} /></Suspense></Deferred></div>
+                      <div className="h-full w-full mt-2 flex"><Deferred><Suspense fallback={<div/>}><ConsistencyHeatmap history={history} config={config} /></Suspense></Deferred></div>
                     ) : (
                       <div className="h-full w-full flex flex-col items-center justify-center gap-3 opacity-40">
                         <Calendar size={32} className="text-cyan-400" />
