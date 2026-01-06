@@ -67,12 +67,6 @@ const App = () => {
   const [history, setHistory] = useState<MetricEntry[]>(() => getSafeStorage(STORAGE_KEYS.HISTORY, []));
   const [notifications, setNotifications] = useState<Notification[]>(() => getSafeStorage(STORAGE_KEYS.NOTIFS, []));
 
-  const [showDevPass, setShowDevPass] = useState(false);
-  const [devEmail, setDevEmail] = useState('dev@flow.local');
-  const [devPass, setDevPass] = useState('');
-  const [devLoading, setDevLoading] = useState(false);
-  const [devError, setDevError] = useState<string | null>(null);
-
   const isLocalDev = useMemo(() => {
     if (typeof window === 'undefined') return false;
     const host = window.location.hostname;
@@ -121,44 +115,26 @@ const App = () => {
   useEffect(() => setSafeStorage(STORAGE_KEYS.NOTIFS, notifications), [notifications]);
   useEffect(() => setSafeStorage(STORAGE_KEYS.CONFIG, config), [config]);
 
-  // Local dev: permanently bypass login (no OAuth needed)
+  // Local dev: completely bypass login (no API, no OAuth)
   useEffect(() => {
     if (!isLocalDev) return;
     if (user.isAuthenticated && user.token) return;
-    let cancelled = false;
 
-    const run = async () => {
-      try {
-        const res = await fetch('/api/dev-login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: 'dev@flow.local', name: 'Dev User', avatarSeed: 'Felix' })
-        });
-        if (!res.ok) throw new Error('Dev login failed');
-        const data = await res.json();
-        const u = data?.user;
-        if (!u?.token) throw new Error('Dev login missing token');
-        if (cancelled) return;
-        setUser({
-          name: u.name || 'Dev User',
-          email: u.email || 'dev@flow.local',
-          avatarSeed: u.avatarSeed || 'Felix',
-          picture: u.picture || '',
-          isAuthenticated: true,
-          isPremium: !!u.isPremium,
-          token: u.token
-        });
-        setStage('MAIN');
-      } catch (e) {
-        console.error('[dev-auto-login] error', e);
-      }
+    // Instantly create a fake dev user with a mock token
+    const fakeDevUser: UserProfile = {
+      name: 'Dev User',
+      email: 'dev@flow.local',
+      avatarSeed: 'Felix',
+      picture: 'https://api.dicebear.com/9.x/notionists/svg?seed=Felix&backgroundColor=c0aede,d1d4f9,b6e3f4,ffd5dc,ffdfbf',
+      isAuthenticated: true,
+      isPremium: false,
+      token: 'dev-local-token-' + Date.now()
     };
 
-    run();
-    return () => {
-      cancelled = true;
-    };
+    setUser(fakeDevUser);
+    setStage('ONBOARDING');
   }, [isLocalDev, user.isAuthenticated, user.token]);
+
 
   // Notify when using mock data (no user entries)
   useEffect(() => {
@@ -305,46 +281,6 @@ const App = () => {
     console.log('[login] redirecting to', url);
     window.location.href = url;
   }, []);
-
-  const handleDevLogin = useCallback(async () => {
-    triggerHaptic();
-    setDevLoading(true);
-    setDevError(null);
-    try {
-      const res = await fetch('/api/dev-login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pass: devPass, email: devEmail })
-      });
-
-      if (!res.ok) {
-        const msg = res.status === 404
-          ? 'Developer pass not enabled on this environment.'
-          : 'Invalid developer pass.';
-        throw new Error(msg);
-      }
-
-      const data = await res.json();
-      const u = data?.user;
-      if (!u?.token) throw new Error('Dev login failed.');
-
-      setUser({
-        name: u.name || 'Dev User',
-        email: u.email || devEmail,
-        avatarSeed: u.avatarSeed || 'Felix',
-        picture: u.picture || '',
-        isAuthenticated: true,
-        isPremium: !!u.isPremium,
-        token: u.token
-      });
-      setStage('ONBOARDING');
-    } catch (e: any) {
-      console.error('[dev-login] error', e);
-      setDevError(e?.message || 'Dev login failed.');
-    } finally {
-      setDevLoading(false);
-    }
-  }, [devEmail, devPass]);
 
   const handleSignOut = useCallback(() => {
     setUser({ name: '', email: '', picture: '', avatarSeed: 'Felix', isAuthenticated: false, isPremium: false });
@@ -650,55 +586,6 @@ const App = () => {
             Local Dev: Login bypassed
           </div>
         )}
-
-        <div className="w-full">
-          <button
-            onClick={() => setShowDevPass(v => !v)}
-            className="w-full text-center text-[10px] uppercase tracking-[0.3em] text-white/30 font-black"
-          >
-            {showDevPass ? 'Hide Developer Pass' : 'Developer Pass'}
-          </button>
-
-          <AnimatePresence>
-            {showDevPass && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 10 }}
-                transition={{ duration: 0.25 }}
-                className="mt-4 space-y-3"
-              >
-                <input
-                  value={devEmail}
-                  onChange={(e) => setDevEmail(e.target.value)}
-                  placeholder="dev email"
-                  className="w-full px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-white text-sm outline-none"
-                />
-                <input
-                  value={devPass}
-                  onChange={(e) => setDevPass(e.target.value)}
-                  placeholder="developer pass"
-                  type="password"
-                  className="w-full px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-white text-sm outline-none"
-                />
-
-                {devError && (
-                  <div className="text-xs text-rose-200/80 font-medium">
-                    {devError}
-                  </div>
-                )}
-
-                <button
-                  onClick={handleDevLogin}
-                  disabled={devLoading || !devPass}
-                  className="w-full py-3 rounded-2xl bg-white/10 border border-white/10 text-white text-sm font-bold disabled:opacity-50"
-                >
-                  {devLoading ? 'Authorizing…' : 'Bypass Login'}
-                </button>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
       </div>
       
       {/* SYSTEM FOOTER */}
