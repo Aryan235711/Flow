@@ -172,6 +172,7 @@ const ParticleRing: React.FC<{ theme: ReturnType<typeof getOrbTheme> }> = ({ the
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>();
   const rotationRef = useRef(0);
+  const timeRef = useRef(0);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -190,12 +191,31 @@ const ParticleRing: React.FC<{ theme: ReturnType<typeof getOrbTheme> }> = ({ the
 
     const centerX = size / 2;
     const centerY = size / 2;
-    const innerRadius = 60;
-    const outerRadius = 105;
+    const baseInnerRadius = 60;
+    const baseOuterRadius = 105;
     const particleCount = 900;
 
-    // Generate particles with more uniform distribution
-    const particles: Array<{ angle: number; radius: number; opacity: number; size: number }> = [];
+    // Easing function for asymmetric pulse (cubic-bezier approximation)
+    const easeInOutCustom = (t: number) => {
+      if (t < 0.5) {
+        // Contraction phase - faster (ease-in)
+        return 4 * t * t * t;
+      } else {
+        // Expansion phase - slower (ease-out with overshoot)
+        const t2 = t - 1;
+        return 1 + 4 * t2 * t2 * t2;
+      }
+    };
+
+    // Generate particles with individual shimmer offsets
+    const particles: Array<{ 
+      angle: number; 
+      baseRadius: number; 
+      opacity: number; 
+      size: number;
+      shimmerPhase: number;
+      radiusRatio: number; // 0-1, how far out in the ring (for velocity lag)
+    }> = [];
     
     for (let i = 0; i < particleCount; i++) {
       const angle = Math.random() * Math.PI * 2;
@@ -204,41 +224,76 @@ const ParticleRing: React.FC<{ theme: ReturnType<typeof getOrbTheme> }> = ({ the
       const u1 = Math.random();
       const u2 = Math.random();
       const gaussian = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-      const normalizedGaussian = Math.max(0, Math.min(1, (gaussian + 2) / 4)); // Wider spread
-      const radius = innerRadius + normalizedGaussian * (outerRadius - innerRadius);
+      const normalizedGaussian = Math.max(0, Math.min(1, (gaussian + 2) / 4));
+      const baseRadius = baseInnerRadius + normalizedGaussian * (baseOuterRadius - baseInnerRadius);
       
-      // Lower opacity and smaller particles for airier look
       const opacity = 0.2 + Math.random() * 0.5;
       const size = 0.8 + Math.random() * 1.0;
+      const shimmerPhase = Math.random() * Math.PI * 2; // Random phase offset for shimmer
+      const radiusRatio = (baseRadius - baseInnerRadius) / (baseOuterRadius - baseInnerRadius);
       
-      particles.push({ angle, radius, opacity, size });
+      particles.push({ angle, baseRadius, opacity, size, shimmerPhase, radiusRatio });
     }
 
     // Animation loop
     const animate = () => {
       ctx.clearRect(0, 0, size, size);
       
-      // Apply global glow/bloom effect
+      // Time progression (60fps = ~0.016s per frame)
+      timeRef.current += 0.016;
+      
+      // Biomimetic pulse calculation (4 second cycle = 0.25 Hz)
+      const pulseFrequency = 0.25; // Hz
+      const pulseAmplitude = 12; // pixels
+      const rawPulse = Math.sin(2 * Math.PI * pulseFrequency * timeRef.current);
+      const normalizedTime = (rawPulse + 1) / 2; // 0 to 1
+      const easedPulse = easeInOutCustom(normalizedTime);
+      const pulseFactor = (easedPulse - 0.5) * 2; // -1 to 1
+      
+      // Phase detection: contraction (negative) vs expansion (positive)
+      const isContracting = pulseFactor < 0;
+      const pulseIntensity = Math.abs(pulseFactor);
+      
+      // Dynamic ring dimensions
+      const currentInnerRadius = baseInnerRadius + pulseFactor * pulseAmplitude * 0.5;
+      const currentOuterRadius = baseOuterRadius + pulseFactor * pulseAmplitude;
+      
+      // Density fluctuation: intensity during contraction, ethereal during expansion
+      const globalBlur = isContracting ? 4 + pulseIntensity * 2 : 3;
+      const opacityMultiplier = isContracting ? 1 + pulseIntensity * 0.3 : 1 - pulseIntensity * 0.2;
+      
       ctx.globalCompositeOperation = 'lighter';
-      ctx.shadowBlur = 3;
+      ctx.shadowBlur = globalBlur;
       ctx.shadowColor = theme.glow;
 
       // Slow rotation
       rotationRef.current += 0.0015;
 
-      // Draw particles
+      // Draw particles with elasticity and shimmer
       particles.forEach(p => {
         const currentAngle = p.angle + rotationRef.current;
-        const x = centerX + Math.cos(currentAngle) * p.radius;
-        const y = centerY + Math.sin(currentAngle) * p.radius;
+        
+        // Velocity lag: outer particles lag during contraction
+        const lagFactor = isContracting ? p.radiusRatio * 0.3 : 0;
+        const laggedPulse = pulseFactor * (1 - lagFactor);
+        
+        // Individual shimmer using cosine wave
+        const shimmer = Math.cos(timeRef.current * 2 + p.shimmerPhase) * 2;
+        
+        // Calculate current radius with pulse, lag, and shimmer
+        const radius = p.baseRadius + laggedPulse * pulseAmplitude + shimmer;
+        
+        const x = centerX + Math.cos(currentAngle) * radius;
+        const y = centerY + Math.sin(currentAngle) * radius;
 
-        // Create radial gradient for each particle (sparkle effect)
+        // Radial gradient for sparkle effect
         const gradient = ctx.createRadialGradient(x, y, 0, x, y, p.size * 2);
         gradient.addColorStop(0, theme.primary);
         gradient.addColorStop(0.5, theme.secondary);
         gradient.addColorStop(1, 'transparent');
 
-        ctx.globalAlpha = p.opacity;
+        // Apply density-based opacity
+        ctx.globalAlpha = p.opacity * opacityMultiplier;
         ctx.fillStyle = gradient;
         ctx.beginPath();
         ctx.arc(x, y, p.size * 1.5, 0, Math.PI * 2);
