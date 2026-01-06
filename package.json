@@ -5,21 +5,24 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:full": "concurrently -k -n web,api -c auto \"vite\" \"node server.js\"",
     "build": "vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --ext .ts,.tsx",
-    "test": "vitest",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "api": "node server.js",
     "start": "node server.js"
   },
   "dependencies": {
     "@google/genai": "0.11.0",
     "cors": "2.8.5",
-    "express": "4.19.2",
+    "dotenv": "^16.4.7",
+    "express": "^4.22.1",
     "framer-motion": "11.0.8",
-    "lucide-react": "0.303.0",
     "google-auth-library": "9.15.0",
+    "lucide-react": "0.303.0",
     "pg": "^8.16.3",
     "react": "18.2.0",
     "react-dom": "18.2.0",
@@ -30,6 +33,7 @@
     "@testing-library/react": "^16.0.1",
     "@testing-library/user-event": "^14.5.2",
     "@types/node": "^22.14.0",
+    "@types/supertest": "^2.0.16",
     "@typescript-eslint/eslint-plugin": "^8.11.0",
     "@typescript-eslint/parser": "^8.11.0",
     "@vitejs/plugin-react": "^5.0.0",
@@ -37,10 +41,10 @@
     "eslint-plugin-react-hooks": "^5.1.0",
     "globals": "^16.5.0",
     "jsdom": "^26.0.0",
-    "@types/supertest": "^2.0.16",
+    "supertest": "^7.1.1",
+    "concurrently": "^9.1.2",
     "typescript": "~5.8.2",
     "vite": "^6.2.0",
-    "vitest": "^2.1.1",
-    "supertest": "^7.1.1"
+    "vitest": "^4.0.16"
   }
 }

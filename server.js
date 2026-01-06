@@ -5,7 +5,12 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { OAuth2Client } from 'google-auth-library';
 import { GoogleGenAI } from '@google/genai';
+import dotenv from 'dotenv';
 import { pool, runQuery, initSchema } from './db.js';
+
+// Load local env files for development. Does not override existing process.env.
+dotenv.config({ path: '.env.local' });
+dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 4000;
