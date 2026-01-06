@@ -244,6 +244,14 @@ const App = () => {
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
   }, []);
 
+  const handleOpenProfile = useCallback(() => {
+    triggerHaptic();
+    setShowNotifs(false);
+    setShowPaywall(false);
+    setShowGoals(false);
+    setShowProfile(true);
+  }, []);
+
   useEffect(() => {
     if (!user.isAuthenticated || !user.token) return;
     const load = async () => {
@@ -704,7 +712,7 @@ const App = () => {
         user={user} 
         unreadCount={unreadCount} 
         onOpenNotifs={handleOpenNotifs} 
-        onOpenProfile={() => setShowProfile(true)} 
+        onOpenProfile={handleOpenProfile} 
       />
 
       <Toast notification={activeToast} onDismiss={() => setActiveToast(null)} />
