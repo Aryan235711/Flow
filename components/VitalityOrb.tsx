@@ -375,7 +375,7 @@ const ParticleRing: React.FC<{ theme: ReturnType<typeof getOrbTheme> }> = ({ the
   return (
     <canvas
       ref={canvasRef}
-      className="absolute inset-0 m-auto"
+      className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
       style={{ filter: 'blur(0.5px)' }}
     />
   );
@@ -387,16 +387,16 @@ export const VitalityOrb: React.FC<VitalityOrbProps> = ({ history, config, userA
   const [isFlipped, setIsFlipped] = useState(false);
 
   return (
-    <div className="w-full h-full min-h-[520px] relative" style={{ perspective: '1000px' }}>
+    <div className="perspective-1000 w-full h-full min-h-[520px] relative">
       <motion.div
-        className="w-full h-full relative"
-        style={{ transformStyle: 'preserve-3d' }}
+        className="w-full h-full relative preserve-3d"
         initial={false}
         animate={{ rotateY: isFlipped ? 180 : 0 }}
         transition={{ type: "spring", stiffness: 260, damping: 20 }}
+        style={{ willChange: "transform" }}
       >
         {/* FRONT FACE */}
-        <div className="absolute inset-0" style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}>
+        <div className="absolute inset-0 backface-hidden">
           <div className="w-full h-full flex flex-col">
             {/* Header with flip button */}
             <div className="flex justify-between items-center px-5 pt-4 pb-2">
@@ -417,7 +417,7 @@ export const VitalityOrb: React.FC<VitalityOrbProps> = ({ history, config, userA
             {/* Orb Content */}
             <div className="flex-1 flex flex-col items-center justify-start px-6 py-4">
               {/* Luminous Particle Ring */}
-              <div className="relative w-[280px] h-[280px] mb-4 flex items-center justify-center shrink-0">
+              <div className="relative w-[280px] h-[280px] mb-4 mx-auto shrink-0">
                 {/* Ambient Background Glow */}
                 <div 
                   className="absolute inset-0 rounded-full blur-3xl opacity-40"
@@ -467,14 +467,7 @@ export const VitalityOrb: React.FC<VitalityOrbProps> = ({ history, config, userA
         </div>
 
         {/* BACK FACE */}
-        <div 
-          className="absolute inset-0 glass rounded-[40px] border border-white/5" 
-          style={{ 
-            backfaceVisibility: 'hidden', 
-            WebkitBackfaceVisibility: 'hidden',
-            transform: 'rotateY(180deg)'
-          }}
-        >
+        <div className="absolute inset-0 backface-hidden rotate-y-180 glass rounded-[40px] border border-white/5 z-30">
           <div className="w-full h-full flex flex-col overflow-hidden">
             {/* Back Header */}
             <div className="flex justify-between items-center p-5 pb-3 border-b border-white/5">
