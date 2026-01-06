@@ -97,6 +97,12 @@
         ::-webkit-scrollbar { display: none; }
         .pt-safe { padding-top: env(safe-area-inset-top); }
         .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+        /* Ensure Safari and legacy browsers honor the manipulation touch-action utility */
+        .touch-manipulation {
+          touch-action: manipulation;
+          -ms-touch-action: manipulation;
+          -webkit-touch-action: manipulation;
+        }
         
         .perspective-1000 { perspective: 1000px; -webkit-perspective: 1000px; }
         .preserve-3d { transform-style: preserve-3d; -webkit-transform-style: preserve-3d; }

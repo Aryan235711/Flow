@@ -31,10 +31,14 @@ import { Onboarding } from './components/Onboarding.tsx';
 import { FlowLogo } from './components/FlowLogo.tsx';
 import { Paywall } from './components/Paywall.tsx';
 
-// Lazy load heavy components
-const Dashboard = lazy(() => import('./components/Dashboard.tsx').then(m => ({ default: m.Dashboard })));
-const LogInput = lazy(() => import('./components/LogInput.tsx').then(m => ({ default: m.LogInput })));
-const HistoryView = lazy(() => import('./components/HistoryView.tsx').then(m => ({ default: m.HistoryView })));
+// Lazy load heavy components (extracted loaders to allow explicit prefetch)
+const importDashboard = () => import('./components/Dashboard.tsx').then(m => ({ default: m.Dashboard }));
+const importLogInput = () => import('./components/LogInput.tsx').then(m => ({ default: m.LogInput }));
+const importHistoryView = () => import('./components/HistoryView.tsx').then(m => ({ default: m.HistoryView }));
+
+const Dashboard = lazy(importDashboard);
+const LogInput = lazy(importLogInput);
+const HistoryView = lazy(importHistoryView);
 
 // AESTHETIC AVATAR CONFIGURATION (Notion Style)
 const AVATAR_OPTIONS = [
@@ -93,6 +97,7 @@ const App = () => {
   const [activeToast, setActiveToast] = useState<Notification | null>(null);
   
   const [entryToEdit, setEntryToEdit] = useState<MetricEntry | null>(null);
+  const [navTouched, setNavTouched] = useState(false);
   
   const hasRunSystemCheck = useRef(false);
   const prevHistoryLength = useRef(history.length);
@@ -453,12 +458,23 @@ const App = () => {
     setUser(prev => ({ ...prev, name: newName }));
   }, []);
 
-  const changeView = (v: AppView) => {
-    triggerHaptic();
-    if (v !== 'LOG') {
-      setEntryToEdit(null);
+  const scheduleRender = useCallback((cb: () => void) => {
+    if (typeof window === 'undefined' || !window.requestAnimationFrame) {
+      cb();
+      return;
     }
-    setView(v);
+    window.requestAnimationFrame(cb);
+  }, []);
+
+  const changeView = (v: AppView) => {
+    setNavTouched(true);
+    scheduleRender(() => {
+      triggerHaptic();
+      if (v !== 'LOG') {
+        setEntryToEdit(null);
+      }
+      setView(v);
+    });
   };
 
   // Handle OAuth return
@@ -502,6 +518,18 @@ const App = () => {
       window.history.replaceState({}, '', '/');
     }
   }, [addNotification]);
+
+  useEffect(() => {
+    importDashboard();
+    importLogInput();
+    importHistoryView();
+  }, []);
+
+  useEffect(() => {
+    if (!navTouched) return;
+    const timeout = setTimeout(() => setNavTouched(false), 220);
+    return () => clearTimeout(timeout);
+  }, [navTouched, view]);
 
   if (stage === 'AUTH') return (
     <div className="fixed inset-0 z-[300] bg-[#020617] flex flex-col justify-center items-center overflow-hidden">
