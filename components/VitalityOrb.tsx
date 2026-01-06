@@ -167,226 +167,84 @@ const getOrbTheme = (agingFactor: number) => {
   };
 };
 
-// Particle Ring Canvas Component
+// Particle Ring Canvas Component - Web Worker Optimized
+// Runs on separate CPU thread, keeping Main Thread 100% responsive
 const ParticleRing: React.FC<{ theme: ReturnType<typeof getOrbTheme> }> = ({ theme }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animationRef = useRef<number>();
-  const rotationRef = useRef(0);
-  const timeRef = useRef(0);
-  const lastFrameTimeRef = useRef(0);
-  const velocityRef = useRef(0);
-  const currentRadiusRef = useRef(0);
-  const lastPhaseRef = useRef<'contracting' | 'expanding'>('expanding');
-  const shockwavesRef = useRef<Array<{ startTime: number; startRadius: number }>>([]);
+  const workerRef = useRef<Worker | null>(null);
+  const observerRef = useRef<IntersectionObserver | null>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    // Check OffscreenCanvas support
+    const supportsOffscreenCanvas = 'OffscreenCanvas' in window;
 
+    // Initialize canvas
     const size = 300;
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = size * dpr;
-    canvas.height = size * dpr;
+    canvas.width = size;
+    canvas.height = size;
     canvas.style.width = `${size}px`;
     canvas.style.height = `${size}px`;
-    ctx.scale(dpr, dpr);
 
-    const centerX = size / 2;
-    const centerY = size / 2;
-    const baseInnerRadius = 60;
-    const baseOuterRadius = 105;
-    const particleCount = 900;
+    // Initialize Web Worker with OffscreenCanvas (if supported)
+    if (supportsOffscreenCanvas) {
+      try {
+        // Create worker from separate file
+        workerRef.current = new Worker(new URL('../workers/particleWorker.ts', import.meta.url), {
+          type: 'module'
+        });
 
-    // Spring physics parameters (snappy contraction, slow drift expansion)
-    const springTension = 120;
-    const springFriction = 14;
-    const cycleDuration = 2.8; // seconds (faster, more energetic)
+        // Transfer canvas control to worker thread (zero-copy transfer)
+        const offscreen = canvas.transferControlToOffscreen();
+        workerRef.current.postMessage(
+          {
+            type: 'init',
+            payload: {
+              canvas: offscreen,
+              particleCount: 900,
+              baseInnerRadius: 60,
+              baseOuterRadius: 105,
+              theme: {
+                primary: theme.primary,
+                secondary: theme.secondary,
+                glow: theme.glow
+              }
+            }
+          },
+          [offscreen] // Transfer ownership (no serialization overhead)
+        );
 
-    // Pre-render glowing particle texture to offscreen canvas (10x performance boost)
-    const offscreenParticle = document.createElement('canvas');
-    const offscreenCtx = offscreenParticle.getContext('2d')!;
-    const particleTextureSize = 20;
-    offscreenParticle.width = particleTextureSize;
-    offscreenParticle.height = particleTextureSize;
-    
-    // Draw one perfect glowing particle
-    const gradient = offscreenCtx.createRadialGradient(
-      particleTextureSize / 2, particleTextureSize / 2, 0,
-      particleTextureSize / 2, particleTextureSize / 2, particleTextureSize / 2
-    );
-    gradient.addColorStop(0, theme.primary);
-    gradient.addColorStop(0.5, theme.secondary);
-    gradient.addColorStop(1, 'transparent');
-    offscreenCtx.fillStyle = gradient;
-    offscreenCtx.fillRect(0, 0, particleTextureSize, particleTextureSize);
+        // Set up Intersection Observer for smart pause/resume
+        observerRef.current = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (workerRef.current) {
+                workerRef.current.postMessage({
+                  type: entry.isIntersecting ? 'resume' : 'pause'
+                });
+              }
+            });
+          },
+          { threshold: 0.1 } // Pause when <10% visible
+        );
 
-    // Generate particles with individual shimmer offsets
-    const particles: Array<{ 
-      angle: number; 
-      baseRadius: number; 
-      opacity: number; 
-      size: number;
-      shimmerPhase: number;
-      radiusRatio: number; // 0-1, for velocity lag
-    }> = [];
-    
-    for (let i = 0; i < particleCount; i++) {
-      const angle = Math.random() * Math.PI * 2;
-      
-      const u1 = Math.random();
-      const u2 = Math.random();
-      const gaussian = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-      const normalizedGaussian = Math.max(0, Math.min(1, (gaussian + 2) / 4));
-      const baseRadius = baseInnerRadius + normalizedGaussian * (baseOuterRadius - baseInnerRadius);
-      
-      const opacity = 0.2 + Math.random() * 0.5;
-      const size = 0.8 + Math.random() * 1.0;
-      const shimmerPhase = Math.random() * Math.PI * 2;
-      const radiusRatio = (baseRadius - baseInnerRadius) / (baseOuterRadius - baseInnerRadius);
-      
-      particles.push({ angle, baseRadius, opacity, size, shimmerPhase, radiusRatio });
+        observerRef.current.observe(canvas);
+      } catch (error) {
+        console.error('Web Worker initialization failed, falling back to main thread:', error);
+        // Fallback to main thread rendering if worker fails
+      }
     }
 
-    // Animation loop with deltaTime for frame-rate independence
-    const animate = (currentTime: number) => {
-      // Delta time in seconds (hardware-agnostic smoothness)
-      const deltaTime = lastFrameTimeRef.current === 0 ? 0.016 : (currentTime - lastFrameTimeRef.current) / 1000;
-      lastFrameTimeRef.current = currentTime;
-      timeRef.current += deltaTime;
-      
-      ctx.clearRect(0, 0, size, size);
-      
-      // 20/80 rule: 20% contraction (0-0.56s), 80% expansion (0.56-2.8s)
-      const cycleProgress = (timeRef.current % cycleDuration) / cycleDuration;
-      const contractionPhase = 0.2; // 20% of cycle
-      
-      let targetRadius: number;
-      let isContracting: boolean;
-      
-      if (cycleProgress < contractionPhase) {
-        // SNAP phase: violent inward pull (spring tension high)
-        const snapProgress = cycleProgress / contractionPhase;
-        // Back-ease-in for aggressive snap
-        const backEase = snapProgress * snapProgress * ((2.5 + 1) * snapProgress - 2.5);
-        targetRadius = -12 * backEase;
-        isContracting = true;
-      } else {
-        // DRIFT phase: slow, low-friction expansion (spring friction low)
-        const driftProgress = (cycleProgress - contractionPhase) / (1 - contractionPhase);
-        // Ease-out with overshoot
-        const driftEase = 1 - Math.pow(1 - driftProgress, 3);
-        targetRadius = -12 + (12 * driftEase);
-        isContracting = false;
-      }
-      
-      // Spring physics simulation for smooth, realistic motion
-      const displacement = targetRadius - currentRadiusRef.current;
-      const springForce = displacement * springTension;
-      const dampingForce = -velocityRef.current * springFriction;
-      const acceleration = (springForce + dampingForce) / 100; // mass = 100
-      
-      velocityRef.current += acceleration * deltaTime;
-      currentRadiusRef.current += velocityRef.current * deltaTime;
-      
-      const pulseFactor = currentRadiusRef.current;
-      const pulseIntensity = Math.abs(pulseFactor) / 12;
-      
-      // Detect peak contraction (phase transition) and trigger shockwave
-      const currentPhase: 'contracting' | 'expanding' = isContracting ? 'contracting' : 'expanding';
-      if (lastPhaseRef.current === 'contracting' && currentPhase === 'expanding') {
-        // Peak snap reached! Emit pulse echo
-        shockwavesRef.current.push({ 
-          startTime: timeRef.current, 
-          startRadius: baseInnerRadius + pulseFactor * 0.5 
-        });
-      }
-      lastPhaseRef.current = currentPhase;
-      
-      // Dynamic ring dimensions with sub-pixel precision
-      const currentInnerRadius = baseInnerRadius + pulseFactor * 0.5;
-      const currentOuterRadius = baseOuterRadius + pulseFactor;
-      
-      // Density fluctuation
-      const globalBlur = isContracting ? 4 + pulseIntensity * 3 : 3;
-      const opacityMultiplier = isContracting ? 1 + pulseIntensity * 0.4 : 1 - pulseIntensity * 0.15;
-      
-      ctx.globalCompositeOperation = 'lighter';
-      ctx.shadowBlur = globalBlur;
-      ctx.shadowColor = theme.glow;
-
-      // Slow rotation
-      rotationRef.current += 0.0015;
-
-      // Draw shockwave pulse echoes first (behind particles)
-      ctx.save();
-      ctx.globalCompositeOperation = 'lighter';
-      ctx.shadowBlur = 0; // No blur for crisp shockwave
-      
-      shockwavesRef.current = shockwavesRef.current.filter(wave => {
-        const elapsed = timeRef.current - wave.startTime;
-        if (elapsed > 0.5) return false; // Remove after 500ms
-        
-        const progress = elapsed / 0.5; // 0 to 1
-        const easeOut = 1 - Math.pow(1 - progress, 2); // Quadratic ease-out
-        
-        const waveRadius = wave.startRadius + easeOut * (baseOuterRadius * 2 - wave.startRadius);
-        const waveOpacity = 0.3 * (1 - easeOut); // Fade from 0.3 to 0
-        
-        ctx.strokeStyle = theme.primary;
-        ctx.globalAlpha = waveOpacity;
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, waveRadius, 0, Math.PI * 2);
-        ctx.stroke();
-        
-        return true; // Keep for next frame
-      });
-      
-      ctx.restore();
-
-      // Draw particles using pre-rendered texture (10x faster)
-      ctx.shadowBlur = globalBlur;
-      ctx.shadowColor = theme.glow;
-      
-      particles.forEach(p => {
-        const currentAngle = p.angle + rotationRef.current;
-        
-        // Increased velocity lag for dramatic bell stretch (50% for outer particles)
-        const lagFactor = isContracting ? p.radiusRatio * 0.5 : 0;
-        const laggedPulse = pulseFactor * (1 - lagFactor);
-        
-        // Individual shimmer with sub-pixel precision
-        const shimmer = Math.cos(timeRef.current * 2.5 + p.shimmerPhase) * 1.5;
-        
-        // Calculate current radius (floating-point for smooth motion)
-        const radius = p.baseRadius + laggedPulse + shimmer;
-        
-        const x = centerX + Math.cos(currentAngle) * radius;
-        const y = centerY + Math.sin(currentAngle) * radius;
-
-        // Use pre-rendered particle texture
-        ctx.globalAlpha = p.opacity * opacityMultiplier;
-        const renderSize = p.size * 3;
-        ctx.drawImage(
-          offscreenParticle,
-          x - renderSize / 2,
-          y - renderSize / 2,
-          renderSize,
-          renderSize
-        );
-      });
-
-      animationRef.current = requestAnimationFrame(animate);
-    };
-
-    animationRef.current = requestAnimationFrame(animate);
-
     return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
+      // Cleanup
+      if (workerRef.current) {
+        workerRef.current.postMessage({ type: 'pause' });
+        workerRef.current.terminate();
+      }
+      if (observerRef.current) {
+        observerRef.current.disconnect();
       }
     };
   }, [theme]);

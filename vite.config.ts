@@ -24,6 +24,10 @@ export default defineConfig(({ mode }) => {
           }
         }
       },
+      worker: {
+        format: 'es', // Use ES modules for workers
+        plugins: () => [react()]
+      },
       plugins: [react()],
       resolve: {
         alias: {
