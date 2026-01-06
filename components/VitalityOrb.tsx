@@ -171,27 +171,35 @@ const getOrbTheme = (agingFactor: number) => {
 };
 
 // Particle Ring Canvas Component - Main Thread Optimized with TypedArray
-const ParticleRing: React.FC<{ theme: ReturnType<typeof getOrbTheme> }> = ({ theme }) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animationRef = useRef<number>();
-  const timeRef = useRef(0);
-  const lastFrameTimeRef = useRef(0);
-  const velocityRef = useRef(0);
-  const currentRadiusRef = useRef(0);
-  const rotationRef = useRef(0);
-  const lastPhaseRef = useRef<'contracting' | 'expanding'>('expanding');
-  const shockwavesRef = useRef<Array<{ startTime: number; startRadius: number }>>([]);
+  const ParticleRing: React.FC<{ theme: ReturnType<typeof getOrbTheme> }> = ({ theme }) => {
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const animationRef = useRef<number>();
+    const timeRef = useRef(0);
+    const lastFrameTimeRef = useRef(0);
+    const lastRenderTimestampRef = useRef(0);
+    const velocityRef = useRef(0);
+    const currentRadiusRef = useRef(0);
+    const rotationRef = useRef(0);
+    const lastPhaseRef = useRef<'contracting' | 'expanding'>('expanding');
+    const shockwavesRef = useRef<Array<{ startTime: number; startRadius: number }>>([]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const size = 300;
+    const size = 240;
     const dpr = window.devicePixelRatio || 1;
+    const hiddenScale = 0.5;
+    const hiddenCanvasSize = Math.round(size * hiddenScale);
     canvas.width = size * dpr;
     canvas.height = size * dpr;
     canvas.style.width = `${size}px`;
     canvas.style.height = `${size}px`;
+    const hiddenCanvas = document.createElement('canvas');
+    hiddenCanvas.width = hiddenCanvasSize;
+    hiddenCanvas.height = hiddenCanvasSize;
+    const hiddenCtx = hiddenCanvas.getContext('2d')!;
+
 
     // ALWAYS use main thread rendering (Web Worker has compatibility issues)
     // Safari claims to support OffscreenCanvas but transferControlToOffscreen() fails
@@ -200,16 +208,33 @@ const ParticleRing: React.FC<{ theme: ReturnType<typeof getOrbTheme> }> = ({ the
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    const glowCanvas = document.createElement('canvas');
+    glowCanvas.width = size;
+    glowCanvas.height = size;
+    const glowCtx = glowCanvas.getContext('2d')!;
+
+    const hiddenGlowCanvas = document.createElement('canvas');
+    hiddenGlowCanvas.width = hiddenCanvasSize;
+    hiddenGlowCanvas.height = hiddenCanvasSize;
+    const hiddenGlowCtx = hiddenGlowCanvas.getContext('2d')!;
+
     ctx.scale(dpr, dpr);
 
-    const centerX = size / 2;
-    const centerY = size / 2;
     const baseInnerRadius = 60;
     const baseOuterRadius = 105;
-    const particleCount = 900;
-    const springTension = 120;
-    const springFriction = 14;
+    const particleCount = 180;
+    const springTension = 110;
+    const springFriction = 12;
     const cycleDuration = 2.8;
+    const desiredFPS = 45;
+    const frameInterval = 1000 / desiredFPS;
+    const hiddenFrameInterval = 1000 / 5;
+    const rotationSpeed = 0.09;
+    const maxShockwaves = 3;
+    const glowBlur = 5;
+    const glowOpacity = 0.35;
+    const hiddenGlowBlur = 3;
+    const hiddenGlowOpacity = 0.25;
 
     // TypedArray particle storage (zero GC even on main thread)
     const FLOATS_PER_PARTICLE = 6;
@@ -258,8 +283,28 @@ const ParticleRing: React.FC<{ theme: ReturnType<typeof getOrbTheme> }> = ({ the
       const deltaTime = lastFrameTimeRef.current === 0 ? 0.016 : (currentTime - lastFrameTimeRef.current) / 1000;
       lastFrameTimeRef.current = currentTime;
       timeRef.current += deltaTime;
+      rotationRef.current += deltaTime * rotationSpeed;
 
-      ctx.clearRect(0, 0, size, size);
+      const isHidden = typeof document !== 'undefined' && document.visibilityState === 'hidden';
+      const interval = isHidden ? hiddenFrameInterval : frameInterval;
+      if (currentTime - lastRenderTimestampRef.current < interval) {
+        animationRef.current = requestAnimationFrame(animate);
+        return;
+      }
+      lastRenderTimestampRef.current = currentTime;
+
+      const drawCtx = isHidden ? hiddenCtx : ctx;
+      const glowTargetCtx = isHidden ? hiddenGlowCtx : glowCtx;
+      const glowSourceCanvas = isHidden ? hiddenGlowCanvas : glowCanvas;
+      const drawSize = isHidden ? hiddenCanvasSize : size;
+      const scale = drawSize / size;
+      const centerX = drawSize / 2;
+      const centerY = drawSize / 2;
+
+      drawCtx.clearRect(0, 0, drawSize, drawSize);
+      glowTargetCtx.clearRect(0, 0, drawSize, drawSize);
+      drawCtx.globalCompositeOperation = 'lighter';
+      glowTargetCtx.globalCompositeOperation = 'lighter';
 
       const cycleProgress = (timeRef.current % cycleDuration) / cycleDuration;
       const contractionPhase = 0.2;
@@ -291,7 +336,7 @@ const ParticleRing: React.FC<{ theme: ReturnType<typeof getOrbTheme> }> = ({ the
       const pulseIntensity = Math.abs(pulseFactor) / 12;
 
       const currentPhase: 'contracting' | 'expanding' = isContracting ? 'contracting' : 'expanding';
-      if (lastPhaseRef.current === 'contracting' && currentPhase === 'expanding') {
+      if (!isHidden && lastPhaseRef.current === 'contracting' && currentPhase === 'expanding' && shockwavesRef.current.length < maxShockwaves) {
         shockwavesRef.current.push({
           startTime: timeRef.current,
           startRadius: baseInnerRadius + pulseFactor * 0.5
@@ -299,43 +344,34 @@ const ParticleRing: React.FC<{ theme: ReturnType<typeof getOrbTheme> }> = ({ the
       }
       lastPhaseRef.current = currentPhase;
 
-      const globalBlur = isContracting ? 4 + pulseIntensity * 3 : 3;
-      const opacityMultiplier = isContracting ? 1 + pulseIntensity * 0.4 : 1 - pulseIntensity * 0.15;
+      const globalBlur = isContracting ? 4 : 2.5;
+      const opacityMultiplier = isContracting ? 1 + pulseIntensity * 0.25 : 1 - pulseIntensity * 0.1;
 
-      ctx.globalCompositeOperation = 'lighter';
-      ctx.shadowBlur = globalBlur;
-      ctx.shadowColor = theme.glow;
+      if (!isHidden) {
+        drawCtx.save();
+        drawCtx.shadowBlur = 0;
+        drawCtx.strokeStyle = theme.primary;
+        drawCtx.globalAlpha = 1;
 
-      rotationRef.current += 0.0015;
+        shockwavesRef.current = shockwavesRef.current.filter(wave => {
+          const elapsed = timeRef.current - wave.startTime;
+          if (elapsed > 0.5) return false;
 
-      // Draw shockwaves
-      ctx.save();
-      ctx.shadowBlur = 0;
+          const progress = elapsed / 0.5;
+          const easeOut = 1 - Math.pow(1 - progress, 2);
+          const waveRadius = (wave.startRadius + easeOut * (baseOuterRadius * 2 - wave.startRadius)) * scale;
+          const waveOpacity = 0.3 * (1 - easeOut);
 
-      shockwavesRef.current = shockwavesRef.current.filter(wave => {
-        const elapsed = timeRef.current - wave.startTime;
-        if (elapsed > 0.5) return false;
+          drawCtx.globalAlpha = waveOpacity;
+          drawCtx.lineWidth = 1.5;
+          drawCtx.beginPath();
+          drawCtx.arc(centerX, centerY, waveRadius, 0, Math.PI * 2);
+          drawCtx.stroke();
 
-        const progress = elapsed / 0.5;
-        const easeOut = 1 - Math.pow(1 - progress, 2);
-        const waveRadius = wave.startRadius + easeOut * (baseOuterRadius * 2 - wave.startRadius);
-        const waveOpacity = 0.3 * (1 - easeOut);
-
-        ctx.strokeStyle = theme.primary;
-        ctx.globalAlpha = waveOpacity;
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, waveRadius, 0, Math.PI * 2);
-        ctx.stroke();
-
-        return true;
-      });
-
-      ctx.restore();
-
-      // Draw particles from TypedArray
-      ctx.shadowBlur = globalBlur;
-      ctx.shadowColor = theme.glow;
+          return true;
+        });
+        drawCtx.restore();
+      }
 
       for (let i = 0; i < particleCount; i++) {
         const offset = i * FLOATS_PER_PARTICLE;
@@ -350,15 +386,27 @@ const ParticleRing: React.FC<{ theme: ReturnType<typeof getOrbTheme> }> = ({ the
         const lagFactor = isContracting ? radiusRatio * 0.5 : 0;
         const laggedPulse = pulseFactor * (1 - lagFactor);
         const shimmer = Math.cos(timeRef.current * 2.5 + shimmerPhase) * 1.5;
-        const radius = baseRadius + laggedPulse + shimmer;
+        const radius = (baseRadius + laggedPulse + shimmer) * scale;
 
         const x = centerX + Math.cos(currentAngle) * radius;
         const y = centerY + Math.sin(currentAngle) * radius;
+        const renderSize = particleSize * 3 * scale;
+        const drawAlpha = opacity * opacityMultiplier;
 
-        ctx.globalAlpha = opacity * opacityMultiplier;
-        const renderSize = particleSize * 3;
-        ctx.drawImage(offscreenParticle, x - renderSize / 2, y - renderSize / 2, renderSize, renderSize);
+        drawCtx.globalAlpha = drawAlpha;
+        drawCtx.drawImage(offscreenParticle, x - renderSize / 2, y - renderSize / 2, renderSize, renderSize);
+
+        glowTargetCtx.globalAlpha = drawAlpha;
+        glowTargetCtx.drawImage(offscreenParticle, x - renderSize / 2, y - renderSize / 2, renderSize, renderSize);
       }
+
+      drawCtx.save();
+      drawCtx.filter = `blur(${isHidden ? hiddenGlowBlur : glowBlur}px)`;
+      drawCtx.globalAlpha = isHidden ? hiddenGlowOpacity : glowOpacity;
+      drawCtx.drawImage(glowSourceCanvas, 0, 0, drawSize, drawSize);
+      drawCtx.restore();
+      drawCtx.globalCompositeOperation = 'source-over';
+      glowTargetCtx.globalCompositeOperation = 'source-over';
 
       animationRef.current = requestAnimationFrame(animate);
     };
@@ -385,18 +433,87 @@ export const VitalityOrb: React.FC<VitalityOrbProps> = ({ history, config, userA
   const vitality = useMemo(() => calculateVitality(history, config, userAge), [history, config, userAge]);
   const theme = getOrbTheme(vitality.agingFactor);
   const [isFlipped, setIsFlipped] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const frontFaceRef = useRef<HTMLDivElement>(null);
+  const backFaceRef = useRef<HTMLDivElement>(null);
+
+  const inspectDOM = () => {
+    if (!cardRef.current) return;
+    
+    const card = cardRef.current;
+    const allFaces = card.querySelectorAll('.absolute.inset-0.backface-hidden');
+    
+    console.log('[VitalityOrb] === DOM INSPECTION ===');
+    console.log('[VitalityOrb] Found', allFaces.length, 'faces');
+    console.log('[VitalityOrb] Card transform:', window.getComputedStyle(card).transform);
+    console.log('[VitalityOrb] Card transformStyle:', window.getComputedStyle(card).transformStyle);
+    console.log('[VitalityOrb] Card perspective:', window.getComputedStyle(card.parentElement!).perspective);
+    
+    allFaces.forEach((face, index) => {
+      const faceEl = face as HTMLElement;
+      const style = window.getComputedStyle(faceEl);
+      const isBack = faceEl.classList.contains('z-30');
+      const label = isBack ? 'BACK' : 'FRONT';
+      
+      console.log(`[VitalityOrb] ${label} #${index} - visibility:`, style.visibility);
+      console.log(`[VitalityOrb] ${label} #${index} - opacity:`, style.opacity);
+      console.log(`[VitalityOrb] ${label} #${index} - display:`, style.display);
+      console.log(`[VitalityOrb] ${label} #${index} - backfaceVisibility:`, style.backfaceVisibility);
+      console.log(`[VitalityOrb] ${label} #${index} - transform:`, style.transform);
+      console.log(`[VitalityOrb] ${label} #${index} - zIndex:`, style.zIndex);
+      console.log(`[VitalityOrb] ${label} #${index} - background:`, style.background);
+      console.log(`[VitalityOrb] ${label} #${index} - color:`, style.color);
+      console.log(`[VitalityOrb] ${label} #${index} - innerText (trimmed):`, faceEl.textContent?.trim().slice(0, 120));
+    });
+    
+    console.log('[VitalityOrb] === END INSPECTION ===');
+  };
+
+  const handleFlipToBack = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    console.log('[VitalityOrb] Flip to BACK clicked');
+    console.log('[VitalityOrb] Current state:', { isFlipped });
+    setIsFlipped(true);
+    console.log('[VitalityOrb] State updated to: true');
+  };
+
+  const handleFlipToFront = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    console.log('[VitalityOrb] Flip to FRONT clicked');
+    console.log('[VitalityOrb] Current state:', { isFlipped });
+    setIsFlipped(false);
+    console.log('[VitalityOrb] State updated to: false');
+  };
+
+  React.useEffect(() => {
+    console.log('[VitalityOrb] isFlipped state changed:', isFlipped);
+    console.log('[VitalityOrb] rotateY should be:', isFlipped ? 180 : 0);
+    console.log('[VitalityOrb] front face node present:', !!frontFaceRef.current);
+    console.log('[VitalityOrb] back face node present:', !!backFaceRef.current);
+    // Delay inspection to allow CSS transition to complete
+    setTimeout(inspectDOM, 700);
+  }, [isFlipped]);
+
+  React.useEffect(() => {
+    if (!backFaceRef.current) return;
+    console.log('[VitalityOrb] back face content snapshot:', backFaceRef.current.textContent?.trim().slice(0, 200));
+  }, [isFlipped]);
 
   return (
     <div className="perspective-1000 w-full h-full min-h-[520px] relative">
-      <motion.div
+      <div
+        ref={cardRef}
         className="w-full h-full relative preserve-3d"
-        initial={false}
-        animate={{ rotateY: isFlipped ? 180 : 0 }}
-        transition={{ type: "spring", stiffness: 260, damping: 20 }}
-        style={{ willChange: "transform" }}
       >
         {/* FRONT FACE */}
-        <div className="absolute inset-0 backface-hidden">
+        <div 
+          ref={frontFaceRef}
+          className="absolute inset-0 backface-hidden glass rounded-[40px] border border-white/5"
+          style={{
+            transform: `rotateY(${isFlipped ? 180 : 0}deg)`,
+            transition: 'transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1)'
+          }}
+        >
           <div className="w-full h-full flex flex-col">
             {/* Header with flip button */}
             <div className="flex justify-between items-center px-5 pt-4 pb-2">
@@ -407,7 +524,7 @@ export const VitalityOrb: React.FC<VitalityOrbProps> = ({ history, config, userA
                 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/60 font-outfit">Vitality</span>
               </div>
               <button 
-                onClick={() => setIsFlipped(true)}
+                onClick={handleFlipToBack}
                 className="w-8 h-8 rounded-full flex items-center justify-center text-white/20 hover:text-white hover:bg-white/10 transition-all active:scale-90"
               >
                 <Info size={14} />
@@ -467,13 +584,21 @@ export const VitalityOrb: React.FC<VitalityOrbProps> = ({ history, config, userA
         </div>
 
         {/* BACK FACE */}
-        <div className="absolute inset-0 backface-hidden rotate-y-180 glass rounded-[40px] border border-white/5 z-30">
+        <div 
+          ref={backFaceRef}
+          className="absolute inset-0 backface-hidden glass rounded-[40px] border border-white/5 z-30"
+          style={{
+            transform: `rotateY(${isFlipped ? 0 : -180}deg)`,
+            transition: 'transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1)',
+            background: 'rgba(10, 17, 40, 0.95)'
+          }}
+        >
           <div className="w-full h-full flex flex-col overflow-hidden">
             {/* Back Header */}
             <div className="flex justify-between items-center p-5 pb-3 border-b border-white/5">
               <span className="text-xs font-black uppercase tracking-[0.2em] text-teal-300 font-outfit">Algorithm Details</span>
               <button 
-                onClick={() => setIsFlipped(false)}
+                onClick={handleFlipToFront}
                 className="w-8 h-8 rounded-full flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-all active:scale-90"
               >
                 <RotateCcw size={14} />
@@ -541,7 +666,7 @@ export const VitalityOrb: React.FC<VitalityOrbProps> = ({ history, config, userA
             </div>
           </div>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 };
