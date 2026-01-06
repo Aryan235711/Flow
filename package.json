@@ -4,7 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "npm run dev:full",
+    "dev:web": "vite",
     "dev:full": "concurrently -k -n web,api -c auto \"vite\" \"node server.js\"",
     "build": "vite build",
     "preview": "vite preview",
