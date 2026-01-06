@@ -104,12 +104,12 @@ export const Onboarding = ({ onComplete }: OnboardingProps) => {
         className={`absolute inset-0 bg-gradient-to-br ${step === 0 ? 'from-cyan-900/20' : step === 1 ? 'from-fuchsia-900/20' : step === 2 ? 'from-indigo-900/20' : 'from-amber-900/20'} to-transparent z-0`}
       />
 
-      <div className="w-full max-w-6xl md:max-w-[92vw] relative z-10">
+      <div className="w-full max-w-full relative z-10">
         {/* Main Content */}
-        <div className="mx-auto w-full rounded-[48px] border border-white/10 bg-[#020617]/70 backdrop-blur-3xl shadow-2xl p-6 md:p-14 lg:p-16 flex flex-col gap-12 items-center justify-center min-h-[70vh] md:min-h-[65vh] transition-all duration-700">
+        <div className="mx-auto w-full rounded-[48px] border border-white/10 bg-[#020617]/70 backdrop-blur-3xl shadow-2xl p-6 md:p-14 lg:p-16 flex flex-col gap-12 items-center justify-center min-h-[75vh] md:min-h-[80vh] transition-all duration-700">
 
           {/* Slides */}
-          <div className="flex-1 w-full max-w-3xl">
+          <div className="flex-1 w-full max-w-4xl">
             <AnimatePresence mode="wait">
               <motion.div
                 key={step}
@@ -117,10 +117,10 @@ export const Onboarding = ({ onComplete }: OnboardingProps) => {
                 initial="hidden"
                 animate="visible"
                 exit="exit"
-                className="flex flex-col items-center md:items-start text-center md:text-left space-y-10"
+                className="flex flex-col items-center text-center space-y-10"
               >
                 {/* Liquid Glass Icon Container */}
-                <motion.div variants={itemVariants} className="relative group mx-auto md:mx-0">
+                   <motion.div variants={itemVariants} className="relative group mx-auto">
                    <motion.div 
                      animate={{ scale: [1, 1.15, 1], opacity: [0, 0.4, 0] }} 
                      transition={{ duration: 4, repeat: Infinity }}
@@ -147,7 +147,7 @@ export const Onboarding = ({ onComplete }: OnboardingProps) => {
                 </motion.div>
 
                 <div className="space-y-5 px-2">
-                  <motion.div variants={itemVariants} className="flex items-center justify-center md:justify-start gap-2 mb-2">
+                  <motion.div variants={itemVariants} className="flex items-center justify-center gap-2 mb-2">
                      <div className={`h-1 w-8 rounded-full ${slides[step].bg.replace('/10', '')}`} />
                      <span className={`text-[10px] font-black uppercase tracking-[0.4em] ${slides[step].color}`}>Phase 0{step + 1}</span>
                      <div className={`h-1 w-8 md:hidden rounded-full ${slides[step].bg.replace('/10', '')}`} />
@@ -166,7 +166,7 @@ export const Onboarding = ({ onComplete }: OnboardingProps) => {
 
             <div className="mt-12 md:mt-20 space-y-8">
                {/* Pagination Dots */}
-              <div className="flex justify-center md:justify-start gap-3">
+              <div className="flex justify-center gap-3">
                 {slides.map((_, idx) => (
                   <div 
                     key={idx} 
