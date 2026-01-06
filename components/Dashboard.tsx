@@ -190,7 +190,7 @@ export const Dashboard = memo(({ history, config, onAddNotif, isMockData, user, 
   };
 
   return (
-    <motion.div variants={staggerChildren} initial="hidden" animate="show" className="px-5 pb-40 space-y-8 mt-20">
+    <motion.div variants={staggerChildren} initial="hidden" animate="show" className="px-5 pb-40 space-y-8 mt-20 md:mt-36">
       
       {/* PERSONALIZED GREETING */}
       <motion.div variants={fadeUp} className="flex justify-between items-end mb-2">
