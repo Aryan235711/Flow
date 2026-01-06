@@ -27,6 +27,7 @@
     "cors": "2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.22.1",
+    "express-rate-limit": "^8.2.1",
     "framer-motion": "11.0.8",
     "google-auth-library": "9.15.0",
     "lucide-react": "0.303.0",

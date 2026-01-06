@@ -1,7 +1,7 @@
 
 import React, { memo } from 'react';
 import { motion } from 'framer-motion';
-import { X, Check, Zap, Crown, BrainCircuit, Activity } from 'lucide-react';
+import { X, Zap, Crown, BrainCircuit, Activity } from 'lucide-react';
 import { FlowLogo } from './FlowLogo.tsx';
 
 interface PaywallProps {

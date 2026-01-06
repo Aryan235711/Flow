@@ -1,6 +1,6 @@
 
 import React, { memo } from 'react';
-import { Lock, Sparkles, Crown } from 'lucide-react';
+import { Lock } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface PremiumGateProps {

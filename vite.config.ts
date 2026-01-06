@@ -12,6 +12,18 @@ export default defineConfig(({ mode }) => {
           '/api': 'http://localhost:4000'
         }
       },
+      build: {
+        chunkSizeWarningLimit: 300, // Warn if chunks exceed 300KB
+        rollupOptions: {
+          output: {
+            manualChunks: {
+              'react-vendor': ['react', 'react-dom'],
+              'motion': ['framer-motion'],
+              'icons': ['lucide-react']
+            }
+          }
+        }
+      },
       plugins: [react()],
       resolve: {
         alias: {

@@ -22,6 +22,19 @@ export const LogInput = memo(({ config, onSave, initialData }: LogInputProps) =>
 
   // Hydrate form if editing
   useEffect(() => {
+    const freshDefault = {
+      sleep: '',
+      rhr: '',
+      hrv: '',
+      protein: '',
+      gut: 0,
+      sun: 0,
+      exercise: 0,
+      cognition: 0,
+      symptomScore: 0,
+      symptomName: ''
+    };
+    
     if (initialData) {
       // Convert decimal sleep back to HH:MM
       const h = Math.floor(initialData.rawValues.sleep);
@@ -41,7 +54,7 @@ export const LogInput = memo(({ config, onSave, initialData }: LogInputProps) =>
         symptomName: initialData.symptomName
       });
     } else {
-      setFormData(defaultState);
+      setFormData(freshDefault);
     }
   }, [initialData]);
 

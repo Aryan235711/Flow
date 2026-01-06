@@ -3,7 +3,7 @@ import React, { useMemo, memo, useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MetricEntry, UserConfig } from '../../types.ts';
 import { triggerHaptic } from '../../utils.ts';
-import { Calendar, Activity, Info, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Calendar, Activity, CheckCircle2, AlertCircle } from 'lucide-react';
 
 interface HeatmapDay {
   date: string;

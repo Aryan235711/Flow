@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { OAuth2Client } from 'google-auth-library';
 import { GoogleGenAI } from '@google/genai';
 import dotenv from 'dotenv';
+import rateLimit from 'express-rate-limit';
 import { pool, runQuery, initSchema } from './db.js';
 
 // Load local env files for development. Does not override existing process.env.
@@ -29,6 +30,16 @@ const oauthClient = (googleClientId && googleClientSecret) ? new OAuth2Client({
 app.use(cors());
 app.use(express.json({ limit: '512kb' }));
 
+// Rate limiting: 100 requests per 15 minutes per IP
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please try again later.' }
+});
+app.use('/api/', limiter);
+
 // Minimal request logger for debugging prod vs. local flow
 app.use((req, _res, next) => {
   console.log(`[req] ${req.method} ${req.originalUrl} ua=${req.get('user-agent')}`);
@@ -37,7 +48,8 @@ app.use((req, _res, next) => {
 
 // HMAC-signed token (not JWT) for lightweight auth between client and API
 const issueToken = (payload) => {
-  const data = Buffer.from(JSON.stringify(payload)).toString('base64url');
+  const exp = Date.now() + 24 * 60 * 60 * 1000; // 24 hours from now
+  const data = Buffer.from(JSON.stringify({ ...payload, exp })).toString('base64url');
   const sig = crypto.createHmac('sha256', sessionSecret).update(data).digest('base64url');
   return `${data}.${sig}`;
 };
@@ -76,7 +88,14 @@ const verifyToken = (req, res, next) => {
   const expected = crypto.createHmac('sha256', sessionSecret).update(data).digest('base64url');
   if (expected !== sig) return res.status(401).json({ error: 'bad signature' });
   try {
-    req.userToken = JSON.parse(Buffer.from(data, 'base64url').toString('utf8'));
+    const payload = JSON.parse(Buffer.from(data, 'base64url').toString('utf8'));
+    
+    // Check token expiration
+    if (payload.exp && Date.now() > payload.exp) {
+      return res.status(401).json({ error: 'token expired' });
+    }
+    
+    req.userToken = payload;
     return next();
   } catch (e) {
     return res.status(401).json({ error: 'token parse error' });
@@ -348,6 +367,14 @@ if (process.env.NODE_ENV !== 'test') {
     } else {
       console.warn('[startup] DATABASE_URL not set; persistence disabled');
     }
+  });
+  
+  // Graceful shutdown: close DB pool on SIGTERM
+  process.on('SIGTERM', async () => {
+    console.log('[shutdown] SIGTERM received, closing DB pool...');
+    await pool.end();
+    console.log('[shutdown] DB pool closed');
+    process.exit(0);
   });
 }
 

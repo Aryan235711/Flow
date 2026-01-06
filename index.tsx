@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef, lazy, Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
 import { 
   Plus, 
@@ -11,30 +11,30 @@ import {
   LogOut,
   BellRing,
   Trash2,
-  Chrome,
   Download,
   Target,
   Scan,
   Crown,
   RefreshCcw,
   Edit2,
-  Fingerprint,
-  Cpu
+  Fingerprint
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { AppStage, AppView, UserProfile, MetricEntry, UserConfig, Notification } from './types.ts';
 import { STORAGE_KEYS, DEFAULT_CONFIG, getSafeStorage, setSafeStorage, generateMockData, triggerHaptic, generateFreezeEntry, getLocalDate, clearAppStorage } from './utils.ts';
 import { BackgroundOrbs } from './components/BackgroundOrbs.tsx';
-import { Dashboard } from './components/Dashboard.tsx';
-import { LogInput } from './components/LogInput.tsx';
-import { HistoryView } from './components/HistoryView.tsx';
 import { Header } from './components/Header.tsx';
 import { Toast } from './components/Toast.tsx';
 import { GoalSettings } from './components/GoalSettings.tsx';
 import { Onboarding } from './components/Onboarding.tsx';
 import { FlowLogo } from './components/FlowLogo.tsx';
 import { Paywall } from './components/Paywall.tsx';
+
+// Lazy load heavy components
+const Dashboard = lazy(() => import('./components/Dashboard.tsx').then(m => ({ default: m.Dashboard })));
+const LogInput = lazy(() => import('./components/LogInput.tsx').then(m => ({ default: m.LogInput })));
+const HistoryView = lazy(() => import('./components/HistoryView.tsx').then(m => ({ default: m.HistoryView })));
 
 // AESTHETIC AVATAR CONFIGURATION (Notion Style)
 const AVATAR_OPTIONS = [
@@ -66,6 +66,7 @@ const App = () => {
   const [user, setUser] = useState<UserProfile>(() => getSafeStorage(STORAGE_KEYS.USER, { isAuthenticated: false, isPremium: false, name: '', email: '', picture: '', avatarSeed: 'Felix' }));
   const [history, setHistory] = useState<MetricEntry[]>(() => getSafeStorage(STORAGE_KEYS.HISTORY, []));
   const [notifications, setNotifications] = useState<Notification[]>(() => getSafeStorage(STORAGE_KEYS.NOTIFS, []));
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   const isLocalDev = useMemo(() => {
     if (typeof window === 'undefined') return false;
@@ -122,6 +123,7 @@ const App = () => {
   // Local dev: completely bypass login (no API, no OAuth)
   useEffect(() => {
     if (!isLocalDev) return;
+    if (stage !== 'AUTH') return; // Only run in AUTH stage
     if (user.isAuthenticated && user.token) return;
 
     // Instantly create a fake dev user with a mock token
@@ -137,7 +139,7 @@ const App = () => {
 
     setUser(fakeDevUser);
     setStage('ONBOARDING');
-  }, [isLocalDev, user.isAuthenticated, user.token]);
+  }, [isLocalDev, stage, user.isAuthenticated, user.token]);
 
 
   // Notify when using mock data (no user entries)
@@ -280,6 +282,7 @@ const App = () => {
 
   const handleLogin = useCallback(async () => {
     triggerHaptic();
+    setIsLoggingIn(true);
     const redirectUri = `${window.location.origin}/auth/callback`;
     const url = `/api/auth/google/start?redirect_uri=${encodeURIComponent(redirectUri)}`;
     console.log('[login] redirecting to', url);
@@ -463,7 +466,17 @@ const App = () => {
     if (typeof window === 'undefined') return;
     const url = new URL(window.location.href);
     if (url.pathname.startsWith('/auth/callback')) {
+      const error = url.searchParams.get('error');
       const payload = url.searchParams.get('auth_payload');
+      
+      if (error) {
+        console.error('[auth callback] OAuth error:', error);
+        addNotification('Login Failed', 'Authentication error. Please try again.', 'SYSTEM');
+        window.history.replaceState({}, '', '/');
+        setStage('AUTH');
+        return;
+      }
+      
       if (payload) {
         try {
           const decoded = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
@@ -479,11 +492,16 @@ const App = () => {
           setStage('ONBOARDING');
         } catch (e) {
           console.error('[auth callback] decode error', e);
+          addNotification('Login Failed', 'Could not process login. Please try again.', 'SYSTEM');
+          setStage('AUTH');
         }
+      } else {
+        addNotification('Login Failed', 'No authentication data received.', 'SYSTEM');
+        setStage('AUTH');
       }
       window.history.replaceState({}, '', '/');
     }
-  }, []);
+  }, [addNotification]);
 
   if (stage === 'AUTH') return (
     <div className="fixed inset-0 z-[300] bg-[#020617] flex flex-col justify-center items-center overflow-hidden">
@@ -575,14 +593,20 @@ const App = () => {
           initial={{ opacity: 0, scale: 0.9, y: 20 }} 
           animate={{ opacity: 1, scale: 1, y: 0 }} 
           transition={{ delay: 1.2, type: "spring" }}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.98 }}
+          whileHover={{ scale: isLoggingIn || isLocalDev ? 1 : 1.05 }}
+          whileTap={{ scale: isLoggingIn || isLocalDev ? 1 : 0.98 }}
           onClick={handleLogin} 
-          disabled={isLocalDev}
-          className="w-full py-6 bg-white text-[#020617] font-black rounded-[32px] text-xl shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] flex items-center justify-center gap-4 font-outfit relative overflow-hidden group"
+          disabled={isLocalDev || isLoggingIn}
+          className="w-full py-6 bg-white text-[#020617] font-black rounded-[32px] text-xl shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] flex items-center justify-center gap-4 font-outfit relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed"
         >
            <div className="absolute inset-0 bg-gradient-to-r from-indigo-50/0 via-indigo-50/50 to-indigo-50/0 translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700 ease-in-out" />
-           <span className="relative z-10 flex items-center gap-3"><Fingerprint size={24} className="text-indigo-600" /> INITIALIZE LINK</span>
+           <span className="relative z-10 flex items-center gap-3">
+             {isLoggingIn ? (
+               <><motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-6 h-6 border-3 border-indigo-600 border-t-transparent rounded-full" /> CONNECTING...</>
+             ) : (
+               <><Fingerprint size={24} className="text-indigo-600" /> INITIALIZE LINK</>
+             )}
+           </span>
         </motion.button>
 
         {isLocalDev && (
@@ -668,36 +692,42 @@ const App = () => {
       <AnimatePresence mode="wait">
         {view === 'DASHBOARD' && (
           <PageTransition key="dashboard" className="relative z-10">
-            <Dashboard 
-              history={displayHistory} 
-              config={config} 
-              onAddNotif={addNotification} 
-              isMockData={isMockData}
-              user={user} 
-              onTriggerPaywall={() => setShowPaywall(true)}
-              onLogToday={handlePlusClick}
-            />
+            <Suspense fallback={<div className="flex items-center justify-center h-screen"><motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full" /></div>}>
+              <Dashboard 
+                history={displayHistory} 
+                config={config} 
+                onAddNotif={addNotification} 
+                isMockData={isMockData}
+                user={user} 
+                onTriggerPaywall={() => setShowPaywall(true)}
+                onLogToday={handlePlusClick}
+              />
+            </Suspense>
           </PageTransition>
         )}
         {view === 'LOG' && (
           <PageTransition key="log" className="relative z-10">
-            <LogInput 
-              config={config} 
-              initialData={entryToEdit}
-              onSave={handleSaveEntry} 
-            />
+            <Suspense fallback={<div className="flex items-center justify-center h-screen"><motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full" /></div>}>
+              <LogInput 
+                config={config} 
+                initialData={entryToEdit}
+                onSave={handleSaveEntry} 
+              />
+            </Suspense>
           </PageTransition>
         )}
         {view === 'HISTORY' && (
           <PageTransition key="history" className="relative z-10">
-            <HistoryView 
-              history={displayHistory} 
-              isMockData={isMockData} 
-              onDelete={handleDeleteEntry} 
-              onEdit={handleEditEntry}
-              isPremium={user.isPremium} 
-              onTriggerPaywall={() => setShowPaywall(true)} 
-            />
+            <Suspense fallback={<div className="flex items-center justify-center h-screen"><motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full" /></div>}>
+              <HistoryView 
+                history={displayHistory} 
+                isMockData={isMockData} 
+                onDelete={handleDeleteEntry} 
+                onEdit={handleEditEntry}
+                isPremium={user.isPremium} 
+                onTriggerPaywall={() => setShowPaywall(true)} 
+              />
+            </Suspense>
           </PageTransition>
         )}
       </AnimatePresence>
@@ -736,13 +766,14 @@ const App = () => {
             transition={{ type: 'spring', damping: 25, stiffness: 200, mass: 0.8 }} 
             className="fixed inset-0 z-[400] bg-[#020617]/95 backdrop-blur-[50px] p-6 pt-safe flex flex-col"
           >
-            <div className="flex justify-between items-center mb-10"><h2 className="text-3xl font-black font-outfit tracking-tighter">Profile</h2><button onClick={() => setShowProfile(false)} className="w-12 h-12 glass rounded-2xl flex items-center justify-center text-white/50"><X size={24} /></button></div>
+            <div className="flex justify-between items-center mb-10"><h2 className="text-3xl font-black font-outfit tracking-tighter">Profile</h2><button onClick={() => setShowProfile(false)} aria-label="Close profile" className="w-12 h-12 glass rounded-2xl flex items-center justify-center text-white/50"><X size={24} /></button></div>
             <div className="space-y-8 flex-1 overflow-y-auto scrollbar-hide">
               {/* Profile Card */}
               <div className="glass p-6 rounded-[32px] border-white/5 shadow-xl relative overflow-hidden flex flex-col gap-6">
                 <div className="flex items-center gap-5 relative z-10">
                     <button 
                         onClick={toggleAvatar}
+                        aria-label="Change avatar"
                         className="w-20 h-20 rounded-[28px] overflow-hidden border-2 border-indigo-500/30 relative group flex-shrink-0 active:scale-95 transition-all"
                     >
                         <img src={user.picture} alt="Avatar" className="w-full h-full object-cover" />

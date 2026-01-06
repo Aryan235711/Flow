@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
-import { Activity, BrainCircuit, Zap, ChevronRight, Check, Sparkles, Orbit, Timer } from 'lucide-react';
+import { BrainCircuit, Zap, ChevronRight, Check, Orbit, Timer } from 'lucide-react';
 import { triggerHaptic } from '../utils.ts';
 
 interface OnboardingProps {

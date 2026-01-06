@@ -1,7 +1,7 @@
 
 import React, { useEffect, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, Sparkles, CheckCircle, AlertCircle, Snowflake } from 'lucide-react';
+import { Sparkles, CheckCircle, AlertCircle, Snowflake } from 'lucide-react';
 import { Notification } from '../types.ts';
 
 interface ToastProps {

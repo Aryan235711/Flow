@@ -25,9 +25,16 @@
             background: var(--bg-deep);
             color: white;
             overflow-x: hidden;
+            overflow-y: auto;
             margin: 0;
             padding: 0;
             user-select: none;
+            /* iOS safe-area-insets for notch support */
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+            padding-left: env(safe-area-inset-left);
+            padding-right: env(safe-area-inset-right);
+        }
             -webkit-font-smoothing: antialiased;
             letter-spacing: -0.01em;
             font-display: swap;

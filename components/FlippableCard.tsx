@@ -1,7 +1,7 @@
 
 import React, { useState, memo } from 'react';
 import { motion } from 'framer-motion';
-import { Info, RotateCcw, LucideIcon, Scan } from 'lucide-react';
+import { Info, RotateCcw, LucideIcon } from 'lucide-react';
 
 interface FlippableCardProps {
   children: React.ReactNode;

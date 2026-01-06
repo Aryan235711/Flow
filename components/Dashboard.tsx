@@ -1,16 +1,18 @@
-import React, { useMemo, useState, useCallback, memo } from 'react';
+import React, { useMemo, useState, useCallback, memo, lazy, Suspense } from 'react';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
-import { Moon, Wind, Activity, Sun, Sparkles, Database, Target, Zap, Flame, Disc, Snowflake, ScanLine, Fingerprint, Waves, RefreshCw, ArrowUp, ArrowDown, Calendar, Edit3, Plus, BrainCircuit, CloudFog, BatteryWarning, Utensils, Coffee, Dumbbell } from 'lucide-react';
+import { Moon, Activity, Sun, Sparkles, Database, Target, Zap, Flame, Disc, Snowflake, ScanLine, Fingerprint, RefreshCw, Calendar, Edit3, Plus, BrainCircuit, CloudFog, BatteryWarning, Coffee, Dumbbell } from 'lucide-react';
 import { MetricEntry, UserConfig, Notification, UserProfile } from '../types.ts';
 import { useFlowAI } from '../hooks/useFlowAI.ts';
 import { Deferred } from './Deferred.tsx';
 import { FlippableCard } from './FlippableCard.tsx';
-import { VelocityChart } from './charts/VelocityChart.tsx';
-import { RadarMesh } from './charts/RadarMesh.tsx';
-import { ConsistencyHeatmap } from './charts/ConsistencyHeatmap.tsx';
-import { CognitiveDriftChart } from './charts/CognitiveDriftChart.tsx';
 import { PremiumGate } from './PremiumGate.tsx';
 import { triggerHaptic, getLocalDate } from '../utils.ts';
+
+// Lazy load chart components
+const VelocityChart = lazy(() => import('./charts/VelocityChart.tsx').then(m => ({ default: m.VelocityChart })));
+const RadarMesh = lazy(() => import('./charts/RadarMesh.tsx').then(m => ({ default: m.RadarMesh })));
+const ConsistencyHeatmap = lazy(() => import('./charts/ConsistencyHeatmap.tsx').then(m => ({ default: m.ConsistencyHeatmap })));
+const CognitiveDriftChart = lazy(() => import('./charts/CognitiveDriftChart.tsx').then(m => ({ default: m.CognitiveDriftChart })));
 
 interface DashboardProps {
   history: MetricEntry[];
@@ -414,7 +416,7 @@ export const Dashboard = memo(({ history, config, onAddNotif, isMockData, user, 
                     {hasGenerated && (
                       <div className="flex justify-between items-center px-1">
                         <span className="text-[9px] font-bold text-white/20 uppercase tracking-widest">Analysis based on recent logs</span>
-                        <button onClick={() => handleGenerateInsight(true)} className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-indigo-400 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-lg"><RefreshCw size={12} className={loading ? 'animate-spin' : ''} /> Regenerate</button>
+                        <button onClick={() => handleGenerateInsight(true)} aria-label="Regenerate AI insight" className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-indigo-400 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-lg"><RefreshCw size={12} className={loading ? 'animate-spin' : ''} /> Regenerate</button>
                       </div>
                     )}
                   </div>
@@ -445,28 +447,28 @@ export const Dashboard = memo(({ history, config, onAddNotif, isMockData, user, 
           <div className="h-[280px] w-full">
             <PremiumGate isPremium={user.isPremium} triggerPaywall={onTriggerPaywall} label="Velocity Tracking">
               <FlippableCard title="Velocity" icon={Activity} color="text-emerald-400" backContent="Velocity tracks the correlation between metabolic protein intake and physical exertion.">
-                <div className="h-full w-full pb-6"><Deferred><VelocityChart data={chartData} proteinGoal={config.manualTargets.protein} /></Deferred></div>
+                <div className="h-full w-full pb-6"><Deferred><Suspense fallback={<div/>}><VelocityChart data={chartData} proteinGoal={config.manualTargets.protein} /></Suspense></Deferred></div>
               </FlippableCard>
             </PremiumGate>
           </div>
           <div className="h-[240px] w-full">
             <PremiumGate isPremium={user.isPremium} triggerPaywall={onTriggerPaywall} label="Drift Analysis">
               <FlippableCard title="Cognitive Drift" icon={Zap} color="text-pink-400" backContent="Drift visualizes the stability of your subjective mental state over time.">
-                <div className="h-full w-full pb-4"><Deferred><CognitiveDriftChart data={driftData} /></Deferred></div>
+                <div className="h-full w-full pb-4"><Deferred><Suspense fallback={<div/>}><CognitiveDriftChart data={driftData} /></Suspense></Deferred></div>
               </FlippableCard>
             </PremiumGate>
           </div>
           <div className="h-[320px] w-full">
             <PremiumGate isPremium={user.isPremium} triggerPaywall={onTriggerPaywall} label="Flow Heatmap">
               <FlippableCard title="Flow Persistence" icon={Calendar} color="text-fuchsia-400" backContent="The Heatmap displays your consistency density over the last 28 days.">
-                <div className="h-full w-full mt-2"><Deferred><ConsistencyHeatmap history={history} config={config} /></Deferred></div>
+                <div className="h-full w-full mt-2"><Deferred><Suspense fallback={<div/>}><ConsistencyHeatmap history={history} config={config} /></Suspense></Deferred></div>
               </FlippableCard>
             </PremiumGate>
           </div>
           <div className="h-[300px] w-full">
              <PremiumGate isPremium={user.isPremium} triggerPaywall={onTriggerPaywall} label="Bio-Mesh">
                 <FlippableCard title="Bio-Mesh Alignment" icon={Sun} color="text-amber-400" backContent="The Radar Mesh maps the symmetry of your current physiological state.">
-                  <div className="h-full w-full"><Deferred><RadarMesh latest={latest} /></Deferred></div>
+                  <div className="h-full w-full"><Deferred><Suspense fallback={<div/>}><RadarMesh latest={latest} /></Suspense></Deferred></div>
                 </FlippableCard>
              </PremiumGate>
           </div>
