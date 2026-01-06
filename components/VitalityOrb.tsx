@@ -176,6 +176,8 @@ const ParticleRing: React.FC<{ theme: ReturnType<typeof getOrbTheme> }> = ({ the
   const lastFrameTimeRef = useRef(0);
   const velocityRef = useRef(0);
   const currentRadiusRef = useRef(0);
+  const lastPhaseRef = useRef<'contracting' | 'expanding'>('expanding');
+  const shockwavesRef = useRef<Array<{ startTime: number; startRadius: number }>>([]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -292,6 +294,17 @@ const ParticleRing: React.FC<{ theme: ReturnType<typeof getOrbTheme> }> = ({ the
       const pulseFactor = currentRadiusRef.current;
       const pulseIntensity = Math.abs(pulseFactor) / 12;
       
+      // Detect peak contraction (phase transition) and trigger shockwave
+      const currentPhase: 'contracting' | 'expanding' = isContracting ? 'contracting' : 'expanding';
+      if (lastPhaseRef.current === 'contracting' && currentPhase === 'expanding') {
+        // Peak snap reached! Emit pulse echo
+        shockwavesRef.current.push({ 
+          startTime: timeRef.current, 
+          startRadius: baseInnerRadius + pulseFactor * 0.5 
+        });
+      }
+      lastPhaseRef.current = currentPhase;
+      
       // Dynamic ring dimensions with sub-pixel precision
       const currentInnerRadius = baseInnerRadius + pulseFactor * 0.5;
       const currentOuterRadius = baseOuterRadius + pulseFactor;
@@ -307,7 +320,37 @@ const ParticleRing: React.FC<{ theme: ReturnType<typeof getOrbTheme> }> = ({ the
       // Slow rotation
       rotationRef.current += 0.0015;
 
+      // Draw shockwave pulse echoes first (behind particles)
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.shadowBlur = 0; // No blur for crisp shockwave
+      
+      shockwavesRef.current = shockwavesRef.current.filter(wave => {
+        const elapsed = timeRef.current - wave.startTime;
+        if (elapsed > 0.5) return false; // Remove after 500ms
+        
+        const progress = elapsed / 0.5; // 0 to 1
+        const easeOut = 1 - Math.pow(1 - progress, 2); // Quadratic ease-out
+        
+        const waveRadius = wave.startRadius + easeOut * (baseOuterRadius * 2 - wave.startRadius);
+        const waveOpacity = 0.3 * (1 - easeOut); // Fade from 0.3 to 0
+        
+        ctx.strokeStyle = theme.primary;
+        ctx.globalAlpha = waveOpacity;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, waveRadius, 0, Math.PI * 2);
+        ctx.stroke();
+        
+        return true; // Keep for next frame
+      });
+      
+      ctx.restore();
+
       // Draw particles using pre-rendered texture (10x faster)
+      ctx.shadowBlur = globalBlur;
+      ctx.shadowColor = theme.glow;
+      
       particles.forEach(p => {
         const currentAngle = p.angle + rotationRef.current;
         
