@@ -283,8 +283,8 @@ app.get('/api/auth/google/callback', async (req, res) => {
     const picture = payload?.picture;
     const avatarSeed = 'Felix';
 
-    // Ensure user exists in DB
-    await upsertUser({ email, name, picture, avatarSeed });
+    // Ensure user exists in DB and fetch premium flag
+    const dbUser = await upsertUser({ email, name, picture, avatarSeed });
 
     const token = issueToken({ email, ts: Date.now() });
     const user = {
@@ -293,7 +293,7 @@ app.get('/api/auth/google/callback', async (req, res) => {
       avatarSeed,
       picture,
       isAuthenticated: true,
-      isPremium: false,
+      isPremium: !!dbUser?.is_premium,
       token
     };
 
@@ -307,7 +307,7 @@ app.get('/api/auth/google/callback', async (req, res) => {
   }
 });
 
-app.post('/api/insight', async (req, res) => {
+app.post('/api/insight', verifyToken, async (req, res) => {
   const apiKey = process.env.GEMINI_API_KEY;
   try {
     if (!apiKey) {
