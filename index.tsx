@@ -67,7 +67,7 @@ const App = () => {
   // Safe initialization
   const [stage, setStage] = useState<AppStage>(() => getSafeStorage(STORAGE_KEYS.STAGE, 'AUTH'));
   const [view, setView] = useState<AppView>('DASHBOARD');
-  const [user, setUser] = useState<UserProfile>(() => getSafeStorage(STORAGE_KEYS.USER, { isAuthenticated: false, isPremium: false, name: '', email: '', picture: '', avatarSeed: 'Felix' }));
+  const [user, setUser] = useState<UserProfile>(() => getSafeStorage(STORAGE_KEYS.USER, { isAuthenticated: false, isPremium: true, name: '', email: '', picture: '', avatarSeed: 'Felix' }));
   const [history, setHistory] = useState<MetricEntry[]>(() => getSafeStorage(STORAGE_KEYS.HISTORY, []));
   const [notifications, setNotifications] = useState<Notification[]>(() => getSafeStorage(STORAGE_KEYS.NOTIFS, []));
   const [isLoggingIn, setIsLoggingIn] = useState(false);
@@ -117,6 +117,13 @@ const App = () => {
     setActiveToast(newNotif); 
     triggerHaptic();
   }, []);
+
+  // Always operate in premium mode
+  useEffect(() => {
+    if (!user.isPremium) {
+      setUser(prev => ({ ...prev, isPremium: true }));
+    }
+  }, [user.isPremium]);
 
   // Persistence
   useEffect(() => setSafeStorage(STORAGE_KEYS.STAGE, stage), [stage]);
@@ -250,6 +257,10 @@ const App = () => {
     setShowPaywall(false);
     setShowGoals(false);
     setShowProfile(true);
+  }, []);
+
+  const suppressPaywall = useCallback(() => {
+    setShowPaywall(false);
   }, []);
 
   useEffect(() => {
@@ -734,7 +745,7 @@ const App = () => {
                 onAddNotif={addNotification} 
                 isMockData={isMockData}
                 user={user} 
-                onTriggerPaywall={() => setShowPaywall(true)}
+                onTriggerPaywall={suppressPaywall}
                 onLogToday={handlePlusClick}
               />
             </Suspense>
@@ -760,7 +771,7 @@ const App = () => {
                 onDelete={handleDeleteEntry} 
                 onEdit={handleEditEntry}
                 isPremium={user.isPremium} 
-                onTriggerPaywall={() => setShowPaywall(true)} 
+                onTriggerPaywall={suppressPaywall} 
               />
             </Suspense>
           </PageTransition>
