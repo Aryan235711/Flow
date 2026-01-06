@@ -189,14 +189,26 @@ const observer = new IntersectionObserver(
 
 ## Browser Compatibility
 
-| Feature | Chrome | Safari | Firefox | Edge |
-|---------|--------|--------|---------|------|
-| Web Worker | ✅ | ✅ | ✅ | ✅ |
-| OffscreenCanvas | ✅ | ✅ (16.4+) | ✅ | ✅ |
-| Float32Array | ✅ | ✅ | ✅ | ✅ |
-| Intersection Observer | ✅ | ✅ | ✅ | ✅ |
+| Feature | Chrome | Safari | Firefox | Edge | iOS Capacitor |
+|---------|--------|--------|---------|------|---------------|
+| Web Worker | ✅ | ✅ | ✅ | ✅ | ❌ (fallback) |
+| OffscreenCanvas | ✅ | ✅ (16.4+) | ✅ | ✅ | ❌ (fallback) |
+| Float32Array | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Intersection Observer | ✅ | ✅ | ✅ | ✅ | ✅ |
 
-**Fallback:** If OffscreenCanvas is not supported, the code gracefully falls back to main thread rendering (with a console warning).
+**iOS Capacitor Note:**  
+Even though Safari 16.4+ supports OffscreenCanvas, Capacitor's WKWebView wrapper does NOT support `transferControlToOffscreen()`. The app automatically detects this and falls back to main thread rendering with TypedArray optimization (zero GC).
+
+**Platform Behavior:**
+- **Desktop browsers:** Web Worker + OffscreenCanvas (optimal)
+- **iOS Capacitor:** Main Thread + TypedArray (optimized fallback)
+- **Mobile Safari:** Main Thread + TypedArray (optimized fallback)
+
+**Console Logs:**
+```
+[VitalityOrb] Using Web Worker (desktop mode)          // Desktop
+[VitalityOrb] Using main thread rendering (iOS/Capacitor mode)  // iOS
+```
 
 ---
 
