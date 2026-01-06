@@ -70,7 +70,11 @@ const App = () => {
   const isLocalDev = useMemo(() => {
     if (typeof window === 'undefined') return false;
     const host = window.location.hostname;
-    return import.meta.env.DEV && (host === 'localhost' || host === '127.0.0.1');
+    const protocol = window.location.protocol;
+    // Bypass login for: Vite dev mode OR Capacitor (iOS/Android)
+    const isViteDev = import.meta.env.DEV && (host === 'localhost' || host === '127.0.0.1');
+    const isCapacitor = protocol === 'capacitor:' || protocol === 'ionic:';
+    return isViteDev || isCapacitor;
   }, []);
   
   const [config, setConfig] = useState<UserConfig>(() => {
