@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Activity, AlertTriangle, Info, RotateCcw } from 'lucide-react';
 import { MetricEntry, UserConfig } from '../types.ts';
@@ -138,29 +138,132 @@ const calculateVitality = (history: MetricEntry[], config: UserConfig, chronolog
 
 const getOrbTheme = (agingFactor: number) => {
   if (agingFactor <= 0.85) return {
-    gradient: ['#14b8a6', '#06b6d4', '#10b981'], // teal/cyan/emerald
-    glow: 'rgba(20, 184, 166, 0.4)',
+    primary: '#14b8a6', // teal
+    secondary: '#10b981', // emerald
+    glow: 'rgba(20, 184, 166, 0.6)',
     label: 'EXCEPTIONAL',
     color: 'text-emerald-400'
   };
   if (agingFactor <= 1.0) return {
-    gradient: ['#06b6d4', '#3b82f6', '#14b8a6'], // cyan/blue/teal
-    glow: 'rgba(6, 182, 212, 0.3)',
+    primary: '#06b6d4', // cyan
+    secondary: '#3b82f6', // blue
+    glow: 'rgba(6, 182, 212, 0.5)',
     label: 'OPTIMAL',
     color: 'text-cyan-400'
   };
   if (agingFactor <= 1.2) return {
-    gradient: ['#f59e0b', '#f97316', '#eab308'], // amber/orange/yellow
-    glow: 'rgba(245, 158, 11, 0.3)',
+    primary: '#f59e0b', // amber
+    secondary: '#f97316', // orange
+    glow: 'rgba(245, 158, 11, 0.5)',
     label: 'DECLINING',
     color: 'text-amber-400'
   };
   return {
-    gradient: ['#f43f5e', '#ef4444', '#dc2626'], // rose/red
-    glow: 'rgba(244, 63, 94, 0.4)',
+    primary: '#f43f5e', // rose
+    secondary: '#ef4444', // red
+    glow: 'rgba(244, 63, 94, 0.6)',
     label: 'CRITICAL',
     color: 'text-rose-400'
   };
+};
+
+// Particle Ring Canvas Component
+const ParticleRing: React.FC<{ theme: ReturnType<typeof getOrbTheme> }> = ({ theme }) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const animationRef = useRef<number>();
+  const rotationRef = useRef(0);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const size = 300;
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = size * dpr;
+    canvas.height = size * dpr;
+    canvas.style.width = `${size}px`;
+    canvas.style.height = `${size}px`;
+    ctx.scale(dpr, dpr);
+
+    const centerX = size / 2;
+    const centerY = size / 2;
+    const innerRadius = 65;
+    const outerRadius = 95;
+    const particleCount = 3500;
+
+    // Generate particles with Gaussian distribution
+    const particles: Array<{ angle: number; radius: number; opacity: number; size: number }> = [];
+    
+    for (let i = 0; i < particleCount; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      
+      // Gaussian distribution for radius (density in middle of ring)
+      const u1 = Math.random();
+      const u2 = Math.random();
+      const gaussian = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+      const normalizedGaussian = (gaussian + 3) / 6; // Normalize to 0-1 range
+      const radius = innerRadius + normalizedGaussian * (outerRadius - innerRadius);
+      
+      // Random opacity and size for organic look
+      const opacity = 0.3 + Math.random() * 0.7;
+      const size = 1 + Math.random() * 1.5;
+      
+      particles.push({ angle, radius, opacity, size });
+    }
+
+    // Animation loop
+    const animate = () => {
+      ctx.clearRect(0, 0, size, size);
+      
+      // Apply global glow/bloom effect
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.shadowBlur = 3;
+      ctx.shadowColor = theme.glow;
+
+      // Slow rotation
+      rotationRef.current += 0.0015;
+
+      // Draw particles
+      particles.forEach(p => {
+        const currentAngle = p.angle + rotationRef.current;
+        const x = centerX + Math.cos(currentAngle) * p.radius;
+        const y = centerY + Math.sin(currentAngle) * p.radius;
+
+        // Create radial gradient for each particle (sparkle effect)
+        const gradient = ctx.createRadialGradient(x, y, 0, x, y, p.size * 2);
+        gradient.addColorStop(0, theme.primary);
+        gradient.addColorStop(0.5, theme.secondary);
+        gradient.addColorStop(1, 'transparent');
+
+        ctx.globalAlpha = p.opacity;
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(x, y, p.size * 1.5, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      animationRef.current = requestAnimationFrame(animate);
+    };
+
+    animate();
+
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, [theme]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="absolute inset-0 m-auto"
+      style={{ filter: 'blur(0.5px)' }}
+    />
+  );
 };
 
 export const VitalityOrb: React.FC<VitalityOrbProps> = ({ history, config, userAge = 30 }) => {
@@ -198,147 +301,31 @@ export const VitalityOrb: React.FC<VitalityOrbProps> = ({ history, config, userA
 
             {/* Orb Content */}
             <div className="flex-1 flex flex-col items-center justify-center px-6 pb-4">
-              {/* Hyperrealistic Orb */}
-              <div className="relative w-44 h-44 mb-4">
+              {/* Luminous Particle Ring */}
+              <div className="relative w-[300px] h-[300px] mb-4 flex items-center justify-center">
                 {/* Ambient Background Glow */}
                 <div 
-                  className="absolute inset-0 rounded-full blur-3xl opacity-30"
-                  style={{ background: `radial-gradient(circle at 50% 50%, ${theme.gradient[0]}, transparent 70%)` }}
+                  className="absolute inset-0 rounded-full blur-3xl opacity-40"
+                  style={{ background: `radial-gradient(circle at 50% 50%, ${theme.primary}, transparent 70%)` }}
                 />
 
-                {/* Core Orb SVG */}
-                <svg className="w-full h-full relative z-10" viewBox="0 0 200 200">
-                  <defs>
-                    {/* Main Sphere Gradient */}
-                    <radialGradient id="sphereGradient" cx="35%" cy="35%">
-                      <stop offset="0%" stopColor={theme.gradient[0]} stopOpacity="1" />
-                      <stop offset="40%" stopColor={theme.gradient[1]} stopOpacity="0.9" />
-                      <stop offset="70%" stopColor={theme.gradient[2]} stopOpacity="0.6" />
-                      <stop offset="100%" stopColor="#000000" stopOpacity="0.3" />
-                    </radialGradient>
-
-                    {/* Specular Highlight */}
-                    <radialGradient id="specular" cx="30%" cy="30%">
-                      <stop offset="0%" stopColor="#ffffff" stopOpacity="0.8" />
-                      <stop offset="30%" stopColor="#ffffff" stopOpacity="0.3" />
-                      <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
-                    </radialGradient>
-
-                    {/* Fresnel Edge Lighting */}
-                    <radialGradient id="fresnel" cx="50%" cy="50%">
-                      <stop offset="0%" stopColor="transparent" stopOpacity="0" />
-                      <stop offset="75%" stopColor="transparent" stopOpacity="0" />
-                      <stop offset="90%" stopColor={theme.gradient[0]} stopOpacity="0.6" />
-                      <stop offset="100%" stopColor={theme.gradient[1]} stopOpacity="0.9" />
-                    </radialGradient>
-
-                    {/* Soft Shadow */}
-                    <radialGradient id="shadow" cx="50%" cy="80%">
-                      <stop offset="0%" stopColor="#000000" stopOpacity="0.4" />
-                      <stop offset="50%" stopColor="#000000" stopOpacity="0.2" />
-                      <stop offset="100%" stopColor="#000000" stopOpacity="0" />
-                    </radialGradient>
-
-                    {/* Professional Glow Filter */}
-                    <filter id="professionalGlow" x="-50%" y="-50%" width="200%" height="200%">
-                      <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur"/>
-                      <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0.3 0" result="glow"/>
-                      <feMerge>
-                        <feMergeNode in="glow"/>
-                        <feMergeNode in="glow"/>
-                        <feMergeNode in="SourceGraphic"/>
-                      </feMerge>
-                    </filter>
-                  </defs>
-
-                  {/* Drop Shadow */}
-                  <ellipse cx="100" cy="160" rx="50" ry="8" fill="url(#shadow)" opacity="0.5" />
-
-                  {/* Main Sphere */}
-                  <motion.circle
-                    cx="100"
-                    cy="100"
-                    r="65"
-                    fill="url(#sphereGradient)"
-                    filter="url(#professionalGlow)"
-                    animate={{ r: [65, 67, 65] }}
-                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                  />
-
-                  {/* Fresnel Rim Light */}
-                  <circle cx="100" cy="100" r="65" fill="url(#fresnel)" opacity="0.7" />
-
-                  {/* Specular Highlight */}
-                  <ellipse cx="80" cy="75" rx="25" ry="30" fill="url(#specular)" opacity="0.6" />
-
-                  {/* Subtle Energy Field Lines */}
-                  {[...Array(3)].map((_, i) => (
-                    <motion.circle
-                      key={`ring-${i}`}
-                      cx="100"
-                      cy="100"
-                      r={70 + i * 10}
-                      fill="none"
-                      stroke={theme.gradient[0]}
-                      strokeWidth="0.5"
-                      opacity="0.15"
-                      animate={{ 
-                        r: [70 + i * 10, 75 + i * 10, 70 + i * 10],
-                        opacity: [0.1, 0.2, 0.1]
-                      }}
-                      transition={{ 
-                        duration: 4 + i, 
-                        repeat: Infinity, 
-                        ease: "easeInOut",
-                        delay: i * 0.5
-                      }}
-                    />
-                  ))}
-
-                  {/* Floating Data Particles */}
-                  {[...Array(6)].map((_, i) => {
-                    const angle = (i / 6) * Math.PI * 2;
-                    const radius = 80;
-                    const baseX = 100 + Math.cos(angle) * radius;
-                    const baseY = 100 + Math.sin(angle) * radius;
-                    return (
-                      <motion.g key={`particle-${i}`}>
-                        <motion.circle
-                          r="1.5"
-                          fill={theme.gradient[0]}
-                          opacity="0.7"
-                          filter="url(#professionalGlow)"
-                          animate={{
-                            cx: [baseX, 100 + Math.cos(angle + 0.3) * (radius + 15), baseX],
-                            cy: [baseY, 100 + Math.sin(angle + 0.3) * (radius + 15), baseY],
-                            opacity: [0.4, 0.8, 0.4]
-                          }}
-                          transition={{
-                            duration: 5,
-                            repeat: Infinity,
-                            ease: "easeInOut",
-                            delay: i * 0.4
-                          }}
-                        />
-                      </motion.g>
-                    );
-                  })}
-                </svg>
+                {/* Canvas Particle Ring */}
+                <ParticleRing theme={theme} />
 
                 {/* Center Stats Overlay */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10">
                   <motion.div 
                     className={`text-5xl font-black font-outfit tracking-tighter ${theme.color}`}
                     style={{ 
                       textShadow: `0 0 20px ${theme.glow}, 0 0 40px ${theme.glow}`,
-                      filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.5))'
+                      filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.8))'
                     }}
                     animate={{ scale: [1, 1.02, 1] }}
                     transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                   >
                     {vitality.biologicalAge}
                   </motion.div>
-                  <div className="text-[9px] font-bold text-white/50 uppercase tracking-widest mt-1">Bio Age</div>
+                  <div className="text-[10px] font-bold text-white/60 uppercase tracking-widest mt-1">Bio Age</div>
                 </div>
               </div>
 
