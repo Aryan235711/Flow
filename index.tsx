@@ -66,6 +66,12 @@ const App = () => {
   const [user, setUser] = useState<UserProfile>(() => getSafeStorage(STORAGE_KEYS.USER, { isAuthenticated: false, isPremium: false, name: '', email: '', picture: '', avatarSeed: 'Felix' }));
   const [history, setHistory] = useState<MetricEntry[]>(() => getSafeStorage(STORAGE_KEYS.HISTORY, []));
   const [notifications, setNotifications] = useState<Notification[]>(() => getSafeStorage(STORAGE_KEYS.NOTIFS, []));
+
+  const [showDevPass, setShowDevPass] = useState(false);
+  const [devEmail, setDevEmail] = useState('dev@flow.local');
+  const [devPass, setDevPass] = useState('');
+  const [devLoading, setDevLoading] = useState(false);
+  const [devError, setDevError] = useState<string | null>(null);
   
   const [config, setConfig] = useState<UserConfig>(() => {
     const stored = getSafeStorage(STORAGE_KEYS.CONFIG, DEFAULT_CONFIG);
@@ -254,6 +260,46 @@ const App = () => {
     console.log('[login] redirecting to', url);
     window.location.href = url;
   }, []);
+
+  const handleDevLogin = useCallback(async () => {
+    triggerHaptic();
+    setDevLoading(true);
+    setDevError(null);
+    try {
+      const res = await fetch('/api/dev-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pass: devPass, email: devEmail })
+      });
+
+      if (!res.ok) {
+        const msg = res.status === 404
+          ? 'Developer pass not enabled on this environment.'
+          : 'Invalid developer pass.';
+        throw new Error(msg);
+      }
+
+      const data = await res.json();
+      const u = data?.user;
+      if (!u?.token) throw new Error('Dev login failed.');
+
+      setUser({
+        name: u.name || 'Dev User',
+        email: u.email || devEmail,
+        avatarSeed: u.avatarSeed || 'Felix',
+        picture: u.picture || '',
+        isAuthenticated: true,
+        isPremium: !!u.isPremium,
+        token: u.token
+      });
+      setStage('ONBOARDING');
+    } catch (e: any) {
+      console.error('[dev-login] error', e);
+      setDevError(e?.message || 'Dev login failed.');
+    } finally {
+      setDevLoading(false);
+    }
+  }, [devEmail, devPass]);
 
   const handleSignOut = useCallback(() => {
     setUser({ name: '', email: '', picture: '', avatarSeed: 'Felix', isAuthenticated: false, isPremium: false });
@@ -552,6 +598,55 @@ const App = () => {
            <div className="absolute inset-0 bg-gradient-to-r from-indigo-50/0 via-indigo-50/50 to-indigo-50/0 translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700 ease-in-out" />
            <span className="relative z-10 flex items-center gap-3"><Fingerprint size={24} className="text-indigo-600" /> INITIALIZE LINK</span>
         </motion.button>
+
+        <div className="w-full">
+          <button
+            onClick={() => setShowDevPass(v => !v)}
+            className="w-full text-center text-[10px] uppercase tracking-[0.3em] text-white/30 font-black"
+          >
+            {showDevPass ? 'Hide Developer Pass' : 'Developer Pass'}
+          </button>
+
+          <AnimatePresence>
+            {showDevPass && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                transition={{ duration: 0.25 }}
+                className="mt-4 space-y-3"
+              >
+                <input
+                  value={devEmail}
+                  onChange={(e) => setDevEmail(e.target.value)}
+                  placeholder="dev email"
+                  className="w-full px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-white text-sm outline-none"
+                />
+                <input
+                  value={devPass}
+                  onChange={(e) => setDevPass(e.target.value)}
+                  placeholder="developer pass"
+                  type="password"
+                  className="w-full px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-white text-sm outline-none"
+                />
+
+                {devError && (
+                  <div className="text-xs text-rose-200/80 font-medium">
+                    {devError}
+                  </div>
+                )}
+
+                <button
+                  onClick={handleDevLogin}
+                  disabled={devLoading || !devPass}
+                  className="w-full py-3 rounded-2xl bg-white/10 border border-white/10 text-white text-sm font-bold disabled:opacity-50"
+                >
+                  {devLoading ? 'Authorizing…' : 'Bypass Login'}
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
       
       {/* SYSTEM FOOTER */}

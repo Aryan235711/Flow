@@ -42,6 +42,14 @@ const issueToken = (payload) => {
   return `${data}.${sig}`;
 };
 
+const timingSafeEqualString = (a, b) => {
+  if (typeof a !== 'string' || typeof b !== 'string') return false;
+  const bufA = Buffer.from(a);
+  const bufB = Buffer.from(b);
+  if (bufA.length !== bufB.length) return false;
+  return crypto.timingSafeEqual(bufA, bufB);
+};
+
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok' });
 });
@@ -63,6 +71,41 @@ app.post('/api/login', (req, res) => {
   };
 
   res.json({ user });
+});
+
+// Developer bypass login (disabled unless DEV_BYPASS_PASS is set)
+// Use this for staging/dev only; do not enable on public production environments unless you trust the pass.
+app.post('/api/dev-login', async (req, res) => {
+  const passEnv = process.env.DEV_BYPASS_PASS;
+  if (!passEnv) return res.status(404).json({ error: 'dev login not enabled' });
+
+  const { pass, email = 'dev@flow.local', name = 'Dev User', avatarSeed = 'Felix' } = req.body || {};
+  if (!timingSafeEqualString(String(pass || ''), String(passEnv))) {
+    return res.status(401).json({ error: 'invalid dev pass' });
+  }
+
+  const picture = `https://api.dicebear.com/9.x/notionists/svg?seed=${avatarSeed}&backgroundColor=c0aede,d1d4f9,b6e3f4,ffd5dc,ffdfbf`;
+  const token = issueToken({ email, ts: Date.now(), dev: true });
+
+  try {
+    if (process.env.DATABASE_URL) {
+      await upsertUser({ email, name, picture, avatarSeed });
+    }
+  } catch (e) {
+    console.error('[api/dev-login] upsert failed (continuing)', e);
+  }
+
+  return res.json({
+    user: {
+      name,
+      email,
+      avatarSeed,
+      picture,
+      isAuthenticated: true,
+      isPremium: false,
+      token
+    }
+  });
 });
 
 // Token middleware
