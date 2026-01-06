@@ -184,6 +184,7 @@ const ParticleRing: React.FC<{ theme: ReturnType<typeof getOrbTheme> }> = ({ the
   const lastPhaseRef = useRef<'contracting' | 'expanding'>('expanding');
   const shockwavesRef = useRef<Array<{ startTime: number; startRadius: number }>>([]);
   const particlesRef = useRef<TypedParticleData | null>(null);
+  const [useWorker, setUseWorker] = React.useState<boolean | null>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -199,6 +200,7 @@ const ParticleRing: React.FC<{ theme: ReturnType<typeof getOrbTheme> }> = ({ the
     // Check Web Worker + OffscreenCanvas support (NOT supported in iOS Capacitor WebView)
     const supportsOffscreenCanvas = 'OffscreenCanvas' in window && typeof (canvas as any).transferControlToOffscreen === 'function';
     const isCapacitor = !!(window as any).Capacitor;
+    let workerInitialized = false;
 
     // Use Web Worker only on desktop browsers (NOT on iOS/Capacitor)
     if (supportsOffscreenCanvas && !isCapacitor) {
@@ -241,19 +243,38 @@ const ParticleRing: React.FC<{ theme: ReturnType<typeof getOrbTheme> }> = ({ the
 
         observerRef.current.observe(canvas);
         console.log('[VitalityOrb] Using Web Worker (desktop mode)');
-        return;
+        workerInitialized = true;
+        setUseWorker(true);
+        return () => {
+          if (workerRef.current) {
+            workerRef.current.postMessage({ type: 'pause' });
+            workerRef.current.terminate();
+          }
+          if (observerRef.current) {
+            observerRef.current.disconnect();
+          }
+        };
       } catch (error) {
-        console.warn('[VitalityOrb] Web Worker failed, using main thread:', error);
+        console.warn('[VitalityOrb] Web Worker failed, falling back to main thread:', error);
+        if (workerRef.current) {
+          workerRef.current.terminate();
+          workerRef.current = null;
+        }
+        // Re-initialize canvas for main thread rendering
+        canvas.width = size * dpr;
+        canvas.height = size * dpr;
       }
-    } else {
-      console.log('[VitalityOrb] Using main thread rendering (iOS/Capacitor mode)');
     }
 
-    // FALLBACK: Main thread rendering (iOS Capacitor, Safari < 16.4)
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    // FALLBACK: Main thread rendering (if worker failed or not supported)
+    if (!workerInitialized) {
+      console.log('[VitalityOrb] Using main thread rendering (iOS/Capacitor mode)');
+      setUseWorker(false);
 
-    ctx.scale(dpr, dpr);
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      ctx.scale(dpr, dpr);
 
     const centerX = size / 2;
     const centerY = size / 2;
@@ -418,20 +439,14 @@ const ParticleRing: React.FC<{ theme: ReturnType<typeof getOrbTheme> }> = ({ the
       animationRef.current = requestAnimationFrame(animate);
     };
 
-    animationRef.current = requestAnimationFrame(animate);
+      animationRef.current = requestAnimationFrame(animate);
 
-    return () => {
-      if (workerRef.current) {
-        workerRef.current.postMessage({ type: 'pause' });
-        workerRef.current.terminate();
-      }
-      if (observerRef.current) {
-        observerRef.current.disconnect();
-      }
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-    };
+      return () => {
+        if (animationRef.current) {
+          cancelAnimationFrame(animationRef.current);
+        }
+      };
+    } // End of !workerInitialized block
   }, [theme]);
 
   return (
