@@ -7,7 +7,8 @@ import { Deferred } from './Deferred.tsx';
 import { FlippableCard } from './FlippableCard.tsx';
 import { PremiumGate } from './PremiumGate.tsx';
 import { VitalityOrb } from './VitalityOrb.tsx';
-import { triggerHaptic, getLocalDate } from '../utils.ts';
+import { triggerHaptic } from '../utils.ts';
+import { useHistorySummary } from '../hooks/useHistorySummary.ts';
 
 // Lazy load chart components
 const VelocityChart = lazy(() => import('./charts/VelocityChart.tsx').then(m => ({ default: m.VelocityChart })));
@@ -26,18 +27,6 @@ interface DashboardProps {
 }
 
 const DailySnapshot = memo(({ entry, onLog }: { entry?: MetricEntry, onLog: () => void }) => {
-  const isSystem = entry?.isSystemGenerated;
-  
-  const getTheme = (c?: string) => {
-    if (isSystem) return { color: 'text-cyan-400', gradient: 'from-cyan-500/20 to-blue-600/20', icon: Snowflake };
-    switch (c) {
-      case 'PEAK': return { color: 'text-teal-400', gradient: 'from-teal-500/20 to-cyan-500/20', icon: Zap };
-      case 'FOGGY': return { color: 'text-slate-400', gradient: 'from-slate-500/20 to-gray-500/20', icon: CloudFog };
-      case 'DRAINED': return { color: 'text-rose-400', gradient: 'from-rose-500/20 to-orange-600/20', icon: BatteryWarning };
-      default: return { color: 'text-emerald-400', gradient: 'from-emerald-500/20 to-teal-500/20', icon: BrainCircuit };
-    }
-  };
-
   if (!entry) {
     return (
       <motion.button
@@ -60,8 +49,22 @@ const DailySnapshot = memo(({ entry, onLog }: { entry?: MetricEntry, onLog: () =
     );
   }
 
-  const theme = getTheme(entry.rawValues.cognition);
-  const StatusIcon = theme.icon;
+  const isSystem = entry.isSystemGenerated;
+  const cognition = entry.rawValues?.cognition;
+
+  const theme = useMemo(() => {
+    if (isSystem) {
+      return { color: 'text-cyan-400', gradient: 'from-cyan-500/20 to-blue-600/20', icon: Snowflake };
+    }
+    switch (cognition) {
+      case 'PEAK': return { color: 'text-teal-400', gradient: 'from-teal-500/20 to-cyan-500/20', icon: Zap };
+      case 'FOGGY': return { color: 'text-slate-400', gradient: 'from-slate-500/20 to-gray-500/20', icon: CloudFog };
+      case 'DRAINED': return { color: 'text-rose-400', gradient: 'from-rose-500/20 to-orange-600/20', icon: BatteryWarning };
+      default: return { color: 'text-emerald-400', gradient: 'from-emerald-500/20 to-teal-500/20', icon: BrainCircuit };
+    }
+  }, [isSystem, cognition]);
+
+    const StatusIcon = theme.icon;
 
   return (
     <div className="relative w-full group">
@@ -136,14 +139,8 @@ export const Dashboard = memo(({ history, config, onAddNotif, isMockData, user, 
   const [isExpanded, setIsExpanded] = useState(false);
   const [hasGenerated, setHasGenerated] = useState(false);
 
-  const latest = useMemo(() => history[history.length - 1], [history]);
-  
-  // Find today's entry
-  const todayEntry = useMemo(() => {
-    const todayStr = getLocalDate();
-    return history.find(h => h.date === todayStr);
-  }, [history]);
-  
+  const { latest, todayEntry, streak, chartData, driftData } = useHistorySummary(history, config);
+
   const getGreeting = () => {
     const hour = new Date().getHours();
     const firstName = user.name ? user.name.split(' ')[0] : 'Traveler';
@@ -151,31 +148,6 @@ export const Dashboard = memo(({ history, config, onAddNotif, isMockData, user, 
     if (hour < 18) return `Good Afternoon, ${firstName}.`;
     return `Good Evening, ${firstName}.`;
   };
-
-  const streak = useMemo(() => {
-    if (!history || history.length === 0) return 0;
-    try {
-        const sorted = [...history]
-            .filter(h => h.date && !isNaN(new Date(h.date).getTime()))
-            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-        const uniqueDates = Array.from(new Set(sorted.map(h => h.date)));
-        if (uniqueDates.length === 0) return 0;
-        const today = new Date().toISOString().split('T')[0];
-        const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
-        const lastEntryDate = uniqueDates[0];
-        if (lastEntryDate !== today && lastEntryDate !== yesterday) return 0; 
-        let currentStreak = 1;
-        let currentTs = new Date(lastEntryDate).setUTCHours(12,0,0,0);
-        for (let i = 1; i < uniqueDates.length; i++) {
-            const prevTs = new Date(uniqueDates[i]).setUTCHours(12,0,0,0);
-            if (Math.round((currentTs - prevTs) / 86400000) === 1) {
-                currentStreak++;
-                currentTs = prevTs;
-            } else break;
-        }
-        return currentStreak;
-    } catch (e) { return 0; }
-  }, [history]);
 
   const dailyFocus = useMemo(() => {
     if (!latest) return { title: "CALIBRATE", desc: "Initialize protocol.", color: "text-white", border: "border-white/10" };
@@ -188,18 +160,6 @@ export const Dashboard = memo(({ history, config, onAddNotif, isMockData, user, 
     if (sleep > 7.2 && hrv > 55) return { title: "HIGH EXERTION", desc: "Push limits.", color: "text-emerald-400", icon: Flame, border: "border-emerald-500/20" };
     return { title: "MAINTENANCE", desc: "Sustain output.", color: "text-teal-400", icon: Activity, border: "border-teal-500/20" };
   }, [latest]);
-
-  const chartData = useMemo(() => history.slice(-7).map(h => ({
-      day: h.date.split('-')[2],
-      protein: h.rawValues?.protein || 0,
-      hrv: h.rawValues?.hrv || 0,
-      exertion: h.processedState?.exercise === 'GREEN' ? 100 : h.processedState?.exercise === 'YELLOW' ? 60 : 20
-  })), [history]);
-
-  const driftData = useMemo(() => history.slice(-7).map(h => ({
-    day: h.date.split('-')[2],
-    value: h.rawValues?.cognition === 'PEAK' ? 100 : h.rawValues?.cognition === 'FOGGY' ? 40 : h.rawValues?.cognition === 'DRAINED' ? 15 : h.rawValues?.cognition === 'FROZEN' ? 5 : 75
-  })), [history]);
 
   const handleGenerateInsight = useCallback(async (force = false) => {
     triggerHaptic();
