@@ -190,26 +190,26 @@ const ParticleRing: React.FC<{ theme: ReturnType<typeof getOrbTheme> }> = ({ the
 
     const centerX = size / 2;
     const centerY = size / 2;
-    const innerRadius = 65;
-    const outerRadius = 95;
-    const particleCount = 3500;
+    const innerRadius = 60;
+    const outerRadius = 105;
+    const particleCount = 900;
 
-    // Generate particles with Gaussian distribution
+    // Generate particles with more uniform distribution
     const particles: Array<{ angle: number; radius: number; opacity: number; size: number }> = [];
     
     for (let i = 0; i < particleCount; i++) {
       const angle = Math.random() * Math.PI * 2;
       
-      // Gaussian distribution for radius (density in middle of ring)
+      // More uniform distribution across ring thickness with slight center bias
       const u1 = Math.random();
       const u2 = Math.random();
       const gaussian = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-      const normalizedGaussian = (gaussian + 3) / 6; // Normalize to 0-1 range
+      const normalizedGaussian = Math.max(0, Math.min(1, (gaussian + 2) / 4)); // Wider spread
       const radius = innerRadius + normalizedGaussian * (outerRadius - innerRadius);
       
-      // Random opacity and size for organic look
-      const opacity = 0.3 + Math.random() * 0.7;
-      const size = 1 + Math.random() * 1.5;
+      // Lower opacity and smaller particles for airier look
+      const opacity = 0.2 + Math.random() * 0.5;
+      const size = 0.8 + Math.random() * 1.0;
       
       particles.push({ angle, radius, opacity, size });
     }
