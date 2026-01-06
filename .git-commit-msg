@@ -1,0 +1,50 @@
+fix: add iOS Capacitor fallback for VitalityOrb (Web Worker not supported)
+
+CRITICAL iOS BUG FIX:
+
+Problem:
+- Web Worker + OffscreenCanvas not supported in iOS Capacitor WebView
+- transferControlToOffscreen() threw InvalidStateError on iOS
+- App crashed on startup with blank screen
+
+Root Cause:
+- Even though Safari 16.4+ supports OffscreenCanvas, Capacitor's
+  WKWebView wrapper does NOT support transferControlToOffscreen()
+- Web Worker implementation only works on desktop browsers
+
+Solution - Smart Detection & Graceful Fallback:
+
+1. Detect Capacitor environment:
+   const isCapacitor = !!(window as any).Capacitor;
+
+2. Check actual transferControlToOffscreen support:
+   typeof (canvas as any).transferControlToOffscreen === 'function'
+
+3. Use Web Worker ONLY on desktop browsers:
+   if (supportsOffscreenCanvas && !isCapacitor) {
+     // Web Worker path (desktop)
+   } else {
+     // Main thread path (iOS/Capacitor)
+   }
+
+4. Keep TypedArray optimization on both paths:
+   - Zero GC even on main thread
+   - Float32Array for 900 particles
+   - Same performance benefits
+
+Platform Support Matrix:
+- Desktop Chrome/Edge: Web Worker ✓
+- Desktop Safari 16.4+: Web Worker ✓
+- iOS Capacitor: Main Thread (TypedArray) ✓
+- Mobile Safari: Main Thread (TypedArray) ✓
+
+Console Logging:
+- '[VitalityOrb] Using Web Worker (desktop mode)'
+- '[VitalityOrb] Using main thread rendering (iOS/Capacitor mode)'
+
+Benefits:
+✓ Works on ALL platforms (desktop + iOS)
+✓ Zero GC on both paths (TypedArray)
+✓ Optimal performance per platform
+✓ Graceful degradation
+✓ No more InvalidStateError crashes

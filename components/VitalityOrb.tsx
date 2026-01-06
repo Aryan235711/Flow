@@ -3,6 +3,9 @@ import { motion } from 'framer-motion';
 import { Activity, AlertTriangle, Info, RotateCcw } from 'lucide-react';
 import { MetricEntry, UserConfig } from '../types.ts';
 
+// TypedArray for zero-GC particle storage
+type TypedParticleData = Float32Array;
+
 interface VitalityOrbProps {
   history: MetricEntry[];
   config: UserConfig;
@@ -167,37 +170,44 @@ const getOrbTheme = (agingFactor: number) => {
   };
 };
 
-// Particle Ring Canvas Component - Web Worker Optimized
-// Runs on separate CPU thread, keeping Main Thread 100% responsive
+// Particle Ring Canvas Component - Web Worker Optimized with iOS Fallback
 const ParticleRing: React.FC<{ theme: ReturnType<typeof getOrbTheme> }> = ({ theme }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const workerRef = useRef<Worker | null>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
+  const animationRef = useRef<number>();
+  const timeRef = useRef(0);
+  const lastFrameTimeRef = useRef(0);
+  const velocityRef = useRef(0);
+  const currentRadiusRef = useRef(0);
+  const rotationRef = useRef(0);
+  const lastPhaseRef = useRef<'contracting' | 'expanding'>('expanding');
+  const shockwavesRef = useRef<Array<{ startTime: number; startRadius: number }>>([]);
+  const particlesRef = useRef<TypedParticleData | null>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    // Check OffscreenCanvas support
-    const supportsOffscreenCanvas = 'OffscreenCanvas' in window;
-
-    // Initialize canvas
     const size = 300;
-    canvas.width = size;
-    canvas.height = size;
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = size * dpr;
+    canvas.height = size * dpr;
     canvas.style.width = `${size}px`;
     canvas.style.height = `${size}px`;
 
-    // Initialize Web Worker with OffscreenCanvas (if supported)
-    if (supportsOffscreenCanvas) {
+    // Check Web Worker + OffscreenCanvas support (NOT supported in iOS Capacitor WebView)
+    const supportsOffscreenCanvas = 'OffscreenCanvas' in window && typeof (canvas as any).transferControlToOffscreen === 'function';
+    const isCapacitor = !!(window as any).Capacitor;
+
+    // Use Web Worker only on desktop browsers (NOT on iOS/Capacitor)
+    if (supportsOffscreenCanvas && !isCapacitor) {
       try {
-        // Create worker from separate file
         workerRef.current = new Worker(new URL('../workers/particleWorker.ts', import.meta.url), {
           type: 'module'
         });
 
-        // Transfer canvas control to worker thread (zero-copy transfer)
-        const offscreen = canvas.transferControlToOffscreen();
+        const offscreen = (canvas as any).transferControlToOffscreen();
         workerRef.current.postMessage(
           {
             type: 'init',
@@ -213,10 +223,9 @@ const ParticleRing: React.FC<{ theme: ReturnType<typeof getOrbTheme> }> = ({ the
               }
             }
           },
-          [offscreen] // Transfer ownership (no serialization overhead)
+          [offscreen]
         );
 
-        // Set up Intersection Observer for smart pause/resume
         observerRef.current = new IntersectionObserver(
           (entries) => {
             entries.forEach((entry) => {
@@ -227,24 +236,200 @@ const ParticleRing: React.FC<{ theme: ReturnType<typeof getOrbTheme> }> = ({ the
               }
             });
           },
-          { threshold: 0.1 } // Pause when <10% visible
+          { threshold: 0.1 }
         );
 
         observerRef.current.observe(canvas);
+        console.log('[VitalityOrb] Using Web Worker (desktop mode)');
+        return;
       } catch (error) {
-        console.error('Web Worker initialization failed, falling back to main thread:', error);
-        // Fallback to main thread rendering if worker fails
+        console.warn('[VitalityOrb] Web Worker failed, using main thread:', error);
       }
+    } else {
+      console.log('[VitalityOrb] Using main thread rendering (iOS/Capacitor mode)');
     }
 
+    // FALLBACK: Main thread rendering (iOS Capacitor, Safari < 16.4)
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    ctx.scale(dpr, dpr);
+
+    const centerX = size / 2;
+    const centerY = size / 2;
+    const baseInnerRadius = 60;
+    const baseOuterRadius = 105;
+    const particleCount = 900;
+    const springTension = 120;
+    const springFriction = 14;
+    const cycleDuration = 2.8;
+
+    // TypedArray particle storage (zero GC even on main thread)
+    type TypedParticleData = Float32Array;
+    const FLOATS_PER_PARTICLE = 6;
+    const particles: TypedParticleData = new Float32Array(particleCount * FLOATS_PER_PARTICLE);
+    particlesRef.current = particles;
+
+    // Initialize particles
+    for (let i = 0; i < particleCount; i++) {
+      const offset = i * FLOATS_PER_PARTICLE;
+      const angle = Math.random() * Math.PI * 2;
+      const u1 = Math.random();
+      const u2 = Math.random();
+      const gaussian = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+      const normalizedGaussian = Math.max(0, Math.min(1, (gaussian + 2) / 4));
+      const baseRadius = baseInnerRadius + normalizedGaussian * (baseOuterRadius - baseInnerRadius);
+      const opacity = 0.2 + Math.random() * 0.5;
+      const particleSize = 0.8 + Math.random() * 1.0;
+      const shimmerPhase = Math.random() * Math.PI * 2;
+      const radiusRatio = (baseRadius - baseInnerRadius) / (baseOuterRadius - baseInnerRadius);
+
+      particles[offset] = angle;
+      particles[offset + 1] = baseRadius;
+      particles[offset + 2] = opacity;
+      particles[offset + 3] = particleSize;
+      particles[offset + 4] = shimmerPhase;
+      particles[offset + 5] = radiusRatio;
+    }
+
+    // Pre-render particle texture
+    const offscreenParticle = document.createElement('canvas');
+    const offscreenCtx = offscreenParticle.getContext('2d')!;
+    const particleTextureSize = 20;
+    offscreenParticle.width = particleTextureSize;
+    offscreenParticle.height = particleTextureSize;
+    const gradient = offscreenCtx.createRadialGradient(
+      particleTextureSize / 2, particleTextureSize / 2, 0,
+      particleTextureSize / 2, particleTextureSize / 2, particleTextureSize / 2
+    );
+    gradient.addColorStop(0, theme.primary);
+    gradient.addColorStop(0.5, theme.secondary);
+    gradient.addColorStop(1, 'transparent');
+    offscreenCtx.fillStyle = gradient;
+    offscreenCtx.fillRect(0, 0, particleTextureSize, particleTextureSize);
+
+    // Main thread animation loop
+    const animate = (currentTime: number) => {
+      const deltaTime = lastFrameTimeRef.current === 0 ? 0.016 : (currentTime - lastFrameTimeRef.current) / 1000;
+      lastFrameTimeRef.current = currentTime;
+      timeRef.current += deltaTime;
+
+      ctx.clearRect(0, 0, size, size);
+
+      const cycleProgress = (timeRef.current % cycleDuration) / cycleDuration;
+      const contractionPhase = 0.2;
+
+      let targetRadius: number;
+      let isContracting: boolean;
+
+      if (cycleProgress < contractionPhase) {
+        const snapProgress = cycleProgress / contractionPhase;
+        const backEase = snapProgress * snapProgress * ((2.5 + 1) * snapProgress - 2.5);
+        targetRadius = -12 * backEase;
+        isContracting = true;
+      } else {
+        const driftProgress = (cycleProgress - contractionPhase) / (1 - contractionPhase);
+        const driftEase = 1 - Math.pow(1 - driftProgress, 3);
+        targetRadius = -12 + (12 * driftEase);
+        isContracting = false;
+      }
+
+      const displacement = targetRadius - currentRadiusRef.current;
+      const springForce = displacement * springTension;
+      const dampingForce = -velocityRef.current * springFriction;
+      const acceleration = (springForce + dampingForce) / 100;
+
+      velocityRef.current += acceleration * deltaTime;
+      currentRadiusRef.current += velocityRef.current * deltaTime;
+
+      const pulseFactor = currentRadiusRef.current;
+      const pulseIntensity = Math.abs(pulseFactor) / 12;
+
+      const currentPhase: 'contracting' | 'expanding' = isContracting ? 'contracting' : 'expanding';
+      if (lastPhaseRef.current === 'contracting' && currentPhase === 'expanding') {
+        shockwavesRef.current.push({
+          startTime: timeRef.current,
+          startRadius: baseInnerRadius + pulseFactor * 0.5
+        });
+      }
+      lastPhaseRef.current = currentPhase;
+
+      const globalBlur = isContracting ? 4 + pulseIntensity * 3 : 3;
+      const opacityMultiplier = isContracting ? 1 + pulseIntensity * 0.4 : 1 - pulseIntensity * 0.15;
+
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.shadowBlur = globalBlur;
+      ctx.shadowColor = theme.glow;
+
+      rotationRef.current += 0.0015;
+
+      // Draw shockwaves
+      ctx.save();
+      ctx.shadowBlur = 0;
+
+      shockwavesRef.current = shockwavesRef.current.filter(wave => {
+        const elapsed = timeRef.current - wave.startTime;
+        if (elapsed > 0.5) return false;
+
+        const progress = elapsed / 0.5;
+        const easeOut = 1 - Math.pow(1 - progress, 2);
+        const waveRadius = wave.startRadius + easeOut * (baseOuterRadius * 2 - wave.startRadius);
+        const waveOpacity = 0.3 * (1 - easeOut);
+
+        ctx.strokeStyle = theme.primary;
+        ctx.globalAlpha = waveOpacity;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, waveRadius, 0, Math.PI * 2);
+        ctx.stroke();
+
+        return true;
+      });
+
+      ctx.restore();
+
+      // Draw particles from TypedArray
+      ctx.shadowBlur = globalBlur;
+      ctx.shadowColor = theme.glow;
+
+      for (let i = 0; i < particleCount; i++) {
+        const offset = i * FLOATS_PER_PARTICLE;
+        const angle = particles[offset];
+        const baseRadius = particles[offset + 1];
+        const opacity = particles[offset + 2];
+        const particleSize = particles[offset + 3];
+        const shimmerPhase = particles[offset + 4];
+        const radiusRatio = particles[offset + 5];
+
+        const currentAngle = angle + rotationRef.current;
+        const lagFactor = isContracting ? radiusRatio * 0.5 : 0;
+        const laggedPulse = pulseFactor * (1 - lagFactor);
+        const shimmer = Math.cos(timeRef.current * 2.5 + shimmerPhase) * 1.5;
+        const radius = baseRadius + laggedPulse + shimmer;
+
+        const x = centerX + Math.cos(currentAngle) * radius;
+        const y = centerY + Math.sin(currentAngle) * radius;
+
+        ctx.globalAlpha = opacity * opacityMultiplier;
+        const renderSize = particleSize * 3;
+        ctx.drawImage(offscreenParticle, x - renderSize / 2, y - renderSize / 2, renderSize, renderSize);
+      }
+
+      animationRef.current = requestAnimationFrame(animate);
+    };
+
+    animationRef.current = requestAnimationFrame(animate);
+
     return () => {
-      // Cleanup
       if (workerRef.current) {
         workerRef.current.postMessage({ type: 'pause' });
         workerRef.current.terminate();
       }
       if (observerRef.current) {
         observerRef.current.disconnect();
+      }
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
       }
     };
   }, [theme]);
