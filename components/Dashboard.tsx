@@ -287,7 +287,7 @@ export const Dashboard = memo(({ history, config, onAddNotif, isMockData, user, 
       </motion.div>
 
       {/* 3. VITALITY ORB (Free) */}
-      <motion.div variants={fadeUp} className="glass rounded-[40px] border-white/5 relative overflow-hidden bg-gradient-to-br from-teal-500/[0.02] to-cyan-500/[0.02]">
+      <motion.div variants={fadeUp} className="glass rounded-[40px] border-white/5 relative overflow-hidden bg-gradient-to-br from-teal-500/[0.02] to-cyan-500/[0.02] min-h-[520px]">
         <VitalityOrb history={history} config={config} userAge={30} />
       </motion.div>
 

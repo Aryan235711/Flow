@@ -387,7 +387,7 @@ export const VitalityOrb: React.FC<VitalityOrbProps> = ({ history, config, userA
   const [isFlipped, setIsFlipped] = useState(false);
 
   return (
-    <div className="w-full h-full min-h-[280px] relative" style={{ perspective: '1000px' }}>
+    <div className="w-full h-full min-h-[520px] relative" style={{ perspective: '1000px' }}>
       <motion.div
         className="w-full h-full relative"
         style={{ transformStyle: 'preserve-3d' }}
@@ -415,9 +415,9 @@ export const VitalityOrb: React.FC<VitalityOrbProps> = ({ history, config, userA
             </div>
 
             {/* Orb Content */}
-            <div className="flex-1 flex flex-col items-center justify-center px-6 pb-6">
+            <div className="flex-1 flex flex-col items-center justify-start px-6 py-4">
               {/* Luminous Particle Ring */}
-              <div className="relative w-[300px] h-[300px] mb-6 flex items-center justify-center shrink-0">
+              <div className="relative w-[280px] h-[280px] mb-4 flex items-center justify-center shrink-0">
                 {/* Ambient Background Glow */}
                 <div 
                   className="absolute inset-0 rounded-full blur-3xl opacity-40"
@@ -430,7 +430,7 @@ export const VitalityOrb: React.FC<VitalityOrbProps> = ({ history, config, userA
                 {/* Center Stats Overlay */}
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10">
                   <motion.div 
-                    className={`text-6xl font-black font-outfit tracking-tighter ${theme.color}`}
+                    className={`text-5xl font-black font-outfit tracking-tighter ${theme.color}`}
                     style={{ 
                       textShadow: `0 0 20px ${theme.glow}, 0 0 40px ${theme.glow}`,
                       filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.8))'
@@ -468,14 +468,14 @@ export const VitalityOrb: React.FC<VitalityOrbProps> = ({ history, config, userA
 
         {/* BACK FACE */}
         <div 
-          className="absolute inset-0" 
+          className="absolute inset-0 glass rounded-[40px] border border-white/5" 
           style={{ 
             backfaceVisibility: 'hidden', 
             WebkitBackfaceVisibility: 'hidden',
             transform: 'rotateY(180deg)'
           }}
         >
-          <div className="w-full h-full glass rounded-[32px] flex flex-col overflow-hidden border border-white/5">
+          <div className="w-full h-full flex flex-col overflow-hidden">
             {/* Back Header */}
             <div className="flex justify-between items-center p-5 pb-3 border-b border-white/5">
               <span className="text-xs font-black uppercase tracking-[0.2em] text-teal-300 font-outfit">Algorithm Details</span>
