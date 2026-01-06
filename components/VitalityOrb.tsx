@@ -415,9 +415,9 @@ export const VitalityOrb: React.FC<VitalityOrbProps> = ({ history, config, userA
             </div>
 
             {/* Orb Content */}
-            <div className="flex-1 flex flex-col items-center justify-center px-6 pb-4">
+            <div className="flex-1 flex flex-col items-center justify-center px-6 pb-6">
               {/* Luminous Particle Ring */}
-              <div className="relative w-[300px] h-[300px] mb-4 flex items-center justify-center">
+              <div className="relative w-[300px] h-[300px] mb-6 flex items-center justify-center shrink-0">
                 {/* Ambient Background Glow */}
                 <div 
                   className="absolute inset-0 rounded-full blur-3xl opacity-40"
@@ -430,7 +430,7 @@ export const VitalityOrb: React.FC<VitalityOrbProps> = ({ history, config, userA
                 {/* Center Stats Overlay */}
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10">
                   <motion.div 
-                    className={`text-5xl font-black font-outfit tracking-tighter ${theme.color}`}
+                    className={`text-6xl font-black font-outfit tracking-tighter ${theme.color}`}
                     style={{ 
                       textShadow: `0 0 20px ${theme.glow}, 0 0 40px ${theme.glow}`,
                       filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.8))'
@@ -440,26 +440,26 @@ export const VitalityOrb: React.FC<VitalityOrbProps> = ({ history, config, userA
                   >
                     {vitality.biologicalAge}
                   </motion.div>
-                  <div className="text-[10px] font-bold text-white/60 uppercase tracking-widest mt-1">Bio Age</div>
+                  <div className="text-[11px] font-bold text-white/60 uppercase tracking-widest mt-2">Bio Age</div>
                 </div>
               </div>
 
               {/* Aging Factor Badge */}
-              <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm mb-2">
-                <Activity size={14} className={theme.color} />
+              <div className="flex items-center gap-3 px-5 py-3 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm mb-3">
+                <Activity size={16} className={theme.color} />
                 <div className="flex flex-col items-start">
-                  <div className="text-[8px] font-bold text-white/40 uppercase tracking-wider">Aging Rate</div>
-                  <div className={`text-lg font-black font-outfit ${theme.color}`}>{vitality.agingFactor}x</div>
+                  <div className="text-[9px] font-bold text-white/40 uppercase tracking-wider">Aging Rate</div>
+                  <div className={`text-xl font-black font-outfit ${theme.color}`}>{vitality.agingFactor}x</div>
                 </div>
               </div>
 
               {/* Status Label */}
-              <div className={`text-[9px] font-black uppercase tracking-[0.25em] ${theme.color}`}>
+              <div className={`text-[10px] font-black uppercase tracking-[0.25em] ${theme.color} mb-2`}>
                 {theme.label}
               </div>
 
               {/* Health Score */}
-              <div className="text-xs text-white/30 mt-2">
+              <div className="text-xs text-white/30">
                 Vitality Score: <span className="text-white/50 font-bold">{vitality.healthScore}/100</span>
               </div>
             </div>
@@ -488,62 +488,64 @@ export const VitalityOrb: React.FC<VitalityOrbProps> = ({ history, config, userA
             </div>
 
             {/* Back Content */}
-            <div className="flex-1 overflow-y-auto scrollbar-hide p-5 space-y-3">{/* Warning Banner */}
-      <div className="flex items-start gap-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
-        <AlertTriangle size={16} className="text-amber-500 mt-0.5 shrink-0" />
-        <div className="text-[10px] leading-relaxed text-amber-200/80">
-          <span className="font-bold block mb-1">Medical Disclaimer</span>
-          This is a <span className="font-bold">theoretical estimation</span> based solely on self-reported metrics. 
-          Not a medical diagnosis. Consult healthcare professionals for health decisions.
-        </div>
-      </div>
+            <div className="flex-1 overflow-y-auto scrollbar-hide p-5 space-y-3">
+              {/* Warning Banner */}
+              <div className="flex items-start gap-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                <AlertTriangle size={16} className="text-amber-500 mt-0.5 shrink-0" />
+                <div className="text-[10px] leading-relaxed text-amber-200/80">
+                  <span className="font-bold block mb-1">Medical Disclaimer</span>
+                  This is a <span className="font-bold">theoretical estimation</span> based solely on self-reported metrics. 
+                  Not a medical diagnosis. Consult healthcare professionals for health decisions.
+                </div>
+              </div>
 
-      {/* How It Works */}
-      <div className="space-y-2">
-        <h3 className="text-xs font-black uppercase tracking-wider text-teal-300">Vitality Algorithm</h3>
-        <div className="text-[10px] leading-relaxed text-white/50">
-          Biological age and aging rate are calculated using a weighted formula across 7 health dimensions:
-        </div>
+              {/* How It Works */}
+              <div className="space-y-2">
+                <h3 className="text-xs font-black uppercase tracking-wider text-teal-300">Vitality Algorithm</h3>
+                <div className="text-[10px] leading-relaxed text-white/50">
+                  Biological age and aging rate are calculated using a weighted formula across 7 health dimensions:
+                </div>
 
-        <div className="space-y-1.5 pl-2">
-          <div className="flex justify-between items-center">
-            <span className="text-[9px] text-white/40">Sleep Quality (20%)</span>
-            <span className="text-[9px] font-bold text-teal-400">{vitality.breakdown.sleep}%</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-[9px] text-white/40">HRV Recovery (15%)</span>
-            <span className="text-[9px] font-bold text-cyan-400">{vitality.breakdown.hrv}%</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-[9px] text-white/40">Cognitive State (20%)</span>
-            <span className="text-[9px] font-bold text-teal-400">{vitality.breakdown.cognitive}%</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-[9px] text-white/40">Symptom Control (15%)</span>
-            <span className="text-[9px] font-bold text-emerald-400">{vitality.breakdown.symptoms}%</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-[9px] text-white/40">Logging Consistency (10%)</span>
-            <span className="text-[9px] font-bold text-cyan-400">{vitality.breakdown.consistency}%</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-[9px] text-white/40">Physical Activity (10%)</span>
-            <span className="text-[9px] font-bold text-teal-400">{vitality.breakdown.activity}%</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-[9px] text-white/40">Nutrition Quality (10%)</span>
-            <span className="text-[9px] font-bold text-emerald-400">{vitality.breakdown.nutrition}%</span>
-          </div>
-        </div>
-      </div>
+                <div className="space-y-1.5 pl-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[9px] text-white/40">Sleep Quality (20%)</span>
+                    <span className="text-[9px] font-bold text-teal-400">{vitality.breakdown.sleep}%</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[9px] text-white/40">HRV Recovery (15%)</span>
+                    <span className="text-[9px] font-bold text-cyan-400">{vitality.breakdown.hrv}%</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[9px] text-white/40">Cognitive State (20%)</span>
+                    <span className="text-[9px] font-bold text-teal-400">{vitality.breakdown.cognitive}%</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[9px] text-white/40">Symptom Control (15%)</span>
+                    <span className="text-[9px] font-bold text-emerald-400">{vitality.breakdown.symptoms}%</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[9px] text-white/40">Logging Consistency (10%)</span>
+                    <span className="text-[9px] font-bold text-cyan-400">{vitality.breakdown.consistency}%</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[9px] text-white/40">Physical Activity (10%)</span>
+                    <span className="text-[9px] font-bold text-teal-400">{vitality.breakdown.activity}%</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[9px] text-white/40">Nutrition Quality (10%)</span>
+                    <span className="text-[9px] font-bold text-emerald-400">{vitality.breakdown.nutrition}%</span>
+                  </div>
+                </div>
+              </div>
 
-      {/* Interpretation */}
-      <div className="space-y-1 pt-2 border-t border-white/5">
-        <div className="text-[10px] leading-relaxed text-white/50">
-          <span className="font-bold text-white/70">Aging Factor:</span> {vitality.agingFactor < 1 ? 'You are aging slower than average' : vitality.agingFactor > 1 ? 'You are aging faster than average' : 'You are aging at a normal rate'}.
-          A factor of <span className="font-bold text-teal-400">{vitality.agingFactor}x</span> suggests your biological systems are {vitality.agingFactor < 0.9 ? 'highly optimized' : vitality.agingFactor > 1.1 ? 'under significant stress' : 'functioning normally'}.
-        </div>
-      </div></div>
+              {/* Interpretation */}
+              <div className="space-y-1 pt-2 border-t border-white/5">
+                <div className="text-[10px] leading-relaxed text-white/50">
+                  <span className="font-bold text-white/70">Aging Factor:</span> {vitality.agingFactor < 1 ? 'You are aging slower than average' : vitality.agingFactor > 1 ? 'You are aging faster than average' : 'You are aging at a normal rate'}.
+                  A factor of <span className="font-bold text-teal-400">{vitality.agingFactor}x</span> suggests your biological systems are {vitality.agingFactor < 0.9 ? 'highly optimized' : vitality.agingFactor > 1.1 ? 'under significant stress' : 'functioning normally'}.
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </motion.div>
