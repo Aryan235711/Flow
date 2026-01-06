@@ -179,7 +179,7 @@ export const Onboarding = ({ onComplete }: OnboardingProps) => {
                 whileTap={{ scale: 0.95 }}
                 whileHover={{ scale: 1.02 }}
                 onClick={handleNext}
-                className="w-full md:w-auto md:px-12 py-6 bg-white text-black font-black rounded-[32px] md:rounded-[40px] text-xl shadow-[0_0_50px_-10px_rgba(255,255,255,0.2)] flex items-center justify-center gap-3 font-outfit relative overflow-hidden group"
+                className="w-full py-6 bg-white text-black font-black rounded-[32px] md:rounded-[40px] text-xl shadow-[0_0_50px_-10px_rgba(255,255,255,0.2)] flex items-center justify-center gap-3 font-outfit relative overflow-hidden group"
               >
                 <span className="relative z-10">{step === slides.length - 1 ? 'ENTER REGISTRY' : 'NEXT SEQUENCE'}</span>
                 {step === slides.length - 1 ? <Check size={24} className="relative z-10" /> : <ChevronRight size={24} className="relative z-10" />}
