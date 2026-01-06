@@ -1,8 +1,7 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Activity, AlertTriangle } from 'lucide-react';
+import { Activity, AlertTriangle, Info, RotateCcw } from 'lucide-react';
 import { MetricEntry, UserConfig } from '../types.ts';
-import { FlippableCard } from './FlippableCard.tsx';
 
 interface VitalityOrbProps {
   history: MetricEntry[];
@@ -144,10 +143,37 @@ const getOrbTheme = (agingFactor: number) => {
 export const VitalityOrb: React.FC<VitalityOrbProps> = ({ history, config, userAge = 30 }) => {
   const vitality = useMemo(() => calculateVitality(history, config, userAge), [history, config, userAge]);
   const theme = getOrbTheme(vitality.agingFactor);
+  const [isFlipped, setIsFlipped] = useState(false);
 
-  const frontContent = (
-    <div className="relative w-full h-full flex flex-col items-center justify-center p-6">
-      {/* Animated Orb */}
+  return (
+    <div className="perspective-1000 w-full h-full min-h-[280px] relative">
+      <motion.div
+        className="w-full h-full relative preserve-3d"
+        initial={false}
+        animate={{ rotateY: isFlipped ? 180 : 0 }}
+        transition={{ type: "spring", stiffness: 260, damping: 20 }}
+      >
+        {/* FRONT FACE */}
+        <div className="absolute inset-0 backface-hidden">
+          <div className="w-full h-full flex flex-col">
+            {/* Header with flip button */}
+            <div className="flex justify-between items-center px-5 pt-4 pb-2">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 rounded-lg bg-white/5 text-teal-400 backdrop-blur-md">
+                  <Activity size={14} />
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/60 font-outfit">Vitality</span>
+              </div>
+              <button 
+                onClick={() => setIsFlipped(true)}
+                className="w-8 h-8 rounded-full flex items-center justify-center text-white/20 hover:text-white hover:bg-white/10 transition-all active:scale-90"
+              >
+                <Info size={14} />
+              </button>
+            </div>
+
+            {/* Orb Content */}
+            <div className="flex-1 flex flex-col items-center justify-center px-6 pb-4">{/* Animated Orb */}
       <div className="relative w-40 h-40 mb-4">
         {/* Outer Glow Rings */}
         <motion.div
@@ -243,13 +269,26 @@ export const VitalityOrb: React.FC<VitalityOrbProps> = ({ history, config, userA
       {/* Health Score */}
       <div className="text-xs text-white/30 mt-2">
         Vitality Score: <span className="text-white/50 font-bold">{vitality.healthScore}/100</span>
-      </div>
-    </div>
-  );
+      </div></div>
+          </div>
+        </div>
 
-  const backContent = (
-    <div className="w-full h-full flex flex-col p-6 space-y-3 overflow-y-auto scrollbar-hide">
-      {/* Warning Banner */}
+        {/* BACK FACE */}
+        <div className="absolute inset-0 backface-hidden" style={{ transform: 'rotateY(180deg)' }}>
+          <div className="w-full h-full glass rounded-[32px] flex flex-col overflow-hidden border border-white/5">
+            {/* Back Header */}
+            <div className="flex justify-between items-center p-5 pb-3 border-b border-white/5">
+              <span className="text-xs font-black uppercase tracking-[0.2em] text-teal-300 font-outfit">Algorithm Details</span>
+              <button 
+                onClick={() => setIsFlipped(false)}
+                className="w-8 h-8 rounded-full flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-all active:scale-90"
+              >
+                <RotateCcw size={14} />
+              </button>
+            </div>
+
+            {/* Back Content */}
+            <div className="flex-1 overflow-y-auto scrollbar-hide p-5 space-y-3">{/* Warning Banner */}
       <div className="flex items-start gap-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
         <AlertTriangle size={16} className="text-amber-500 mt-0.5 shrink-0" />
         <div className="text-[10px] leading-relaxed text-amber-200/80">
@@ -304,15 +343,10 @@ export const VitalityOrb: React.FC<VitalityOrbProps> = ({ history, config, userA
           <span className="font-bold text-white/70">Aging Factor:</span> {vitality.agingFactor < 1 ? 'You are aging slower than average' : vitality.agingFactor > 1 ? 'You are aging faster than average' : 'You are aging at a normal rate'}.
           A factor of <span className="font-bold text-teal-400">{vitality.agingFactor}x</span> suggests your biological systems are {vitality.agingFactor < 0.9 ? 'highly optimized' : vitality.agingFactor > 1.1 ? 'under significant stress' : 'functioning normally'}.
         </div>
-      </div>
+      </div></div>
+          </div>
+        </div>
+      </motion.div>
     </div>
-  );
-
-  return (
-    <FlippableCard
-      frontContent={frontContent}
-      backContent={backContent}
-      className="col-span-2"
-    />
   );
 };
