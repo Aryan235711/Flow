@@ -190,188 +190,197 @@ export const Dashboard = memo(({ history, config, onAddNotif, isMockData, user, 
   };
 
   return (
-    <motion.div variants={staggerChildren} initial="hidden" animate="show" className="px-5 pb-40 space-y-6 mt-20">
+    <motion.div variants={staggerChildren} initial="hidden" animate="show" className="px-5 pb-40 space-y-8 mt-20">
       
       {/* PERSONALIZED GREETING */}
       <motion.div variants={fadeUp} className="flex justify-between items-end mb-2">
          <div>
-            <h3 className="text-2xl font-black font-outfit text-white leading-none tracking-tight">
+            <h3 className="text-2xl md:text-4xl font-black font-outfit text-white leading-none tracking-tight">
                {getGreeting()}
             </h3>
-            <p className="text-sm font-medium text-teal-300/40">Your biometrics are synced.</p>
+            <p className="text-sm md:text-base font-medium text-teal-300/40">Your biometrics are synced.</p>
          </div>
          {isMockData && (
-          <div className="flex items-center gap-1.5 opacity-50 bg-white/5 px-2 py-1 rounded-lg">
+          <div className="flex items-center gap-1.5 opacity-50 bg-white/5 px-3 py-1.5 rounded-xl border border-white/5 backdrop-blur-md">
              <Database size={10} className="text-teal-400" />
-             <span className="text-[9px] font-black uppercase tracking-widest text-teal-400">Sim</span>
+             <span className="text-[10px] font-black uppercase tracking-widest text-teal-400">Simulation Mode</span>
           </div>
         )}
       </motion.div>
 
-      {/* 1. HERO CARD (Streak) */}
-      <motion.div variants={fadeUp} className={`glass rounded-[48px] p-6 sm:p-8 relative overflow-hidden group border-t-2 ${dailyFocus.border || 'border-white/10'}`}>
-        {/* Subtle Gradient wash that breathes */}
-        <div className={`absolute inset-0 bg-gradient-to-br ${dailyFocus.color === 'text-emerald-400' ? 'from-emerald-900/10' : dailyFocus.color === 'text-rose-400' ? 'from-rose-900/10' : 'from-teal-900/10'} to-transparent opacity-50`} />
+      {/* CORE STATS GRID */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
         
-        {/* Scan line */}
-        <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent animate-[scan_6s_ease-in-out_infinite]" />
-        <style>{`@keyframes scan { 0%,100% { transform: translateY(0); opacity: 0; } 50% { transform: translateY(200px); opacity: 1; } }`}</style>
-        
-        <div className="relative z-10 flex flex-col gap-4 sm:gap-6">
-          <div className="flex justify-between items-start gap-4 sm:gap-6">
-            <div className="space-y-2 sm:space-y-3 flex-1 min-w-0">
-                     <div className="flex items-center gap-2">
-                        <Fingerprint size={14} className={`animate-pulse ${dailyFocus.color}`} />
-                        <span className={`text-[10px] font-black uppercase tracking-[0.3em] ${dailyFocus.color} opacity-80`}>Protocol</span>
-                     </div>
-               <h2 className="text-3xl sm:text-4xl font-black font-outfit tracking-tighter leading-none text-white drop-shadow-lg">{dailyFocus.title}</h2>
-               <p className="text-xs sm:text-sm font-bold text-white/50 leading-relaxed sm:leading-relaxed">{dailyFocus.desc}</p>
-                </div>
-            <div className="flex flex-col items-end shrink-0">
-              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-[24px] bg-white/5 border border-white/10 flex items-center justify-center shadow-2xl backdrop-blur-md relative mb-3">
-                <span className="text-2xl sm:text-3xl font-black font-outfit text-white">{streak}</span>
-                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-amber-500 rounded-full animate-pulse shadow-[0_0_15px_#f59e0b]" />
-                    </div>
-                    <div className="flex items-center gap-1.5 bg-black/20 px-3 py-1.5 rounded-full border border-white/5 backdrop-blur-sm">
-                       <Snowflake size={10} className="text-cyan-400" />
-                       <span className="text-[9px] font-black text-cyan-400 tracking-wider font-outfit">{config.streakLogic?.freezesAvailable ?? 2}/2</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-      </motion.div>
-
-      {/* 2. TODAY'S SNAPSHOT (NEW) */}
-      <motion.div variants={fadeUp}>
-         <DailySnapshot entry={todayEntry} onLog={onLogToday} />
-      </motion.div>
-
-      {/* 3. VITALITY ORB (Free) */}
-      <motion.div variants={fadeUp} className="glass rounded-[40px] border-white/5 relative overflow-hidden bg-gradient-to-br from-teal-500/[0.02] to-cyan-500/[0.02] min-h-[520px]">
-        <VitalityOrb history={history} config={config} userAge={30} />
-      </motion.div>
-
-      {/* 4. CORTEX UPLINK (PREMIUM GATE) */}
-      <motion.div variants={fadeUp} className="relative group mt-4">
-        <PremiumGate isPremium={user.isPremium} triggerPaywall={onTriggerPaywall} label="Neural Cortex" className="rounded-[32px]">
-          <div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-[34px] opacity-30 group-hover:opacity-60 blur transition duration-500" />
-          <div className="glass rounded-[32px] p-1 relative bg-[#020617]">
-            <div className="flex justify-between items-center p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-indigo-500/10 flex items-center justify-center">
-                  <Sparkles size={18} className={`text-indigo-400 ${loading ? 'animate-spin' : ''}`} />
-                </div>
-                <div>
-                  <div className="text-[9px] font-black text-indigo-300/60 uppercase tracking-[0.2em] font-outfit">Cortex Uplink</div>
-                  <div className="text-xs font-bold text-white">Neural Analysis Engine</div>
-                </div>
-              </div>
-              
-              {user.isPremium && (
-                <button 
-                  onClick={() => handleGenerateInsight(false)}
-                  disabled={loading}
-                  className={`px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-[10px] font-black uppercase tracking-widest text-indigo-400 transition-all active:scale-95 disabled:opacity-50 flex items-center gap-2 ${isExpanded ? 'bg-white/10 text-white' : ''}`}
-                >
-                  {loading ? 'Scanning...' : hasGenerated ? (isExpanded ? 'Collapse' : 'View Insight') : 'Ping AI'} <ScanLine size={12} />
-                </button>
-              )}
-            </div>
-            
-            {/* Conditional Content: Real UI or "Fake" Placeholder for Blur */}
-            <AnimatePresence>
-              {isExpanded ? (
-                <motion.div 
-                   initial={{ height: 0, opacity: 0 }} 
-                   animate={{ height: 'auto', opacity: 1, transition: { type: 'spring', stiffness: 300, damping: 30 } }} 
-                   exit={{ height: 0, opacity: 0 }} 
-                   className="overflow-hidden"
-                >
-                  <div className="px-5 pb-5 pt-0 space-y-3">
-                    <div className="p-4 rounded-2xl bg-indigo-500/5 border border-indigo-500/10">
-                      <p className="text-sm font-medium font-outfit text-indigo-100/90 leading-relaxed">{aiText}</p>
-                    </div>
-                    {hasGenerated && (
-                      <div className="flex justify-between items-center px-1">
-                        <span className="text-[9px] font-bold text-white/20 uppercase tracking-widest">Analysis based on recent logs</span>
-                        <button onClick={() => handleGenerateInsight(true)} aria-label="Regenerate AI insight" className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-indigo-400 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-lg"><RefreshCw size={12} className={loading ? 'animate-spin' : ''} /> Regenerate</button>
+        {/* 1. HERO CARD (Streak) */}
+        <motion.div variants={fadeUp} className={`glass rounded-[48px] p-6 sm:p-8 md:p-10 relative overflow-hidden group border-t-2 ${dailyFocus.border || 'border-white/10'} h-full flex flex-col justify-center`}>
+          {/* Subtle Gradient wash that breathes */}
+          <div className={`absolute inset-0 bg-gradient-to-br ${dailyFocus.color === 'text-emerald-400' ? 'from-emerald-900/10' : dailyFocus.color === 'text-rose-400' ? 'from-rose-900/10' : 'from-teal-900/10'} to-transparent opacity-50`} />
+          
+          {/* Scan line */}
+          <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent animate-[scan_6s_ease-in-out_infinite]" />
+          
+          <div className="relative z-10 flex flex-col gap-4 sm:gap-6">
+            <div className="flex justify-between items-start gap-4 sm:gap-6">
+              <div className="space-y-4 flex-1 min-w-0">
+                       <div className="flex items-center gap-2">
+                          <Fingerprint size={14} className={`animate-pulse ${dailyFocus.color}`} />
+                          <span className={`text-[10px] font-black uppercase tracking-[0.3em] ${dailyFocus.color} opacity-80`}>Protocol Active</span>
+                       </div>
+                 <h2 className="text-3xl sm:text-5xl font-black font-outfit tracking-tighter leading-none text-white drop-shadow-lg">{dailyFocus.title}</h2>
+                 <p className="text-xs sm:text-lg font-bold text-white/50 leading-relaxed max-w-xs">{dailyFocus.desc}</p>
+                  </div>
+              <div className="flex flex-col items-end shrink-0">
+                <div className="w-16 h-16 md:w-24 md:h-24 rounded-[28px] md:rounded-[40px] bg-white/5 border border-white/10 flex items-center justify-center shadow-2xl backdrop-blur-md relative mb-4 group-hover:scale-105 transition-transform">
+                  <span className="text-3xl md:text-5xl font-black font-outfit text-white">{streak}</span>
+                          <div className="absolute -top-1 -right-1 md:-top-2 md:-right-2 w-4 h-4 md:w-6 md:h-6 bg-amber-500 rounded-full animate-pulse shadow-[0_0_20px_#f59e0b]" />
                       </div>
-                    )}
+                      <div className="flex items-center gap-2 bg-black/20 px-4 py-2 rounded-full border border-white/5 backdrop-blur-sm">
+                         <Snowflake size={12} className="text-cyan-400" />
+                         <span className="text-[10px] font-black text-cyan-400 tracking-wider font-outfit">{config.streakLogic?.freezesAvailable ?? 2}/2</span>
+                      </div>
                   </div>
-                </motion.div>
-              ) : !user.isPremium ? (
-                 // SIMULATED INSIGHT FOR BLUR
-                 <div className="px-5 pb-5 pt-0 opacity-50">
-                    <div className="p-4 rounded-2xl bg-indigo-500/5 border border-indigo-500/10">
-                      <p className="text-sm font-medium font-outfit text-indigo-100/90 leading-relaxed blur-[3px]">
-                        Metabolic indicators suggest a 15% increase in cognitive drift. Optimize protein intake to stabilize circadian rhythm output.
-                      </p>
-                    </div>
-                 </div>
-              ) : null}
-            </AnimatePresence>
-          </div>
-        </PremiumGate>
-      </motion.div>
-
-      {/* 5. TELEMETRY DECK (PREMIUM GATE) */}
-      <div className="space-y-4 pt-4">
-        <div className="flex items-center gap-2 px-2 opacity-60">
-           <Disc size={12} className="text-emerald-400 animate-spin-slow" />
-           <span className="text-[9px] font-black uppercase tracking-[0.3em] text-white">Advanced Telemetry</span>
-        </div>
-
-        <motion.div variants={fadeUp} className="space-y-4">
-          <div className="h-[280px] w-full">
-            <PremiumGate isPremium={user.isPremium} triggerPaywall={onTriggerPaywall} label="Velocity Tracking">
-              <FlippableCard title="Velocity" icon={Activity} color="text-emerald-400" backContent="Velocity tracks the correlation between metabolic protein intake and physical exertion.">
-                {history.length >= 3 ? (
-                  <div className="h-full w-full pb-6"><Deferred><Suspense fallback={<div/>}><VelocityChart data={chartData} proteinGoal={config.manualTargets.protein} /></Suspense></Deferred></div>
-                ) : (
-                  <div className="h-full w-full flex flex-col items-center justify-center gap-3 opacity-40">
-                    <Database size={32} className="text-emerald-400" />
-                    <p className="text-xs text-white/50 text-center px-4">Need 3+ entries to visualize velocity trends</p>
-                  </div>
-                )}
-              </FlippableCard>
-            </PremiumGate>
-          </div>
-          <div className="h-[240px] w-full">
-            <PremiumGate isPremium={user.isPremium} triggerPaywall={onTriggerPaywall} label="Drift Analysis">
-              <FlippableCard title="Cognitive Drift" icon={Zap} color="text-pink-400" backContent="Drift visualizes the stability of your subjective mental state over time.">
-                {history.length >= 3 ? (
-                  <div className="h-full w-full pb-4"><Deferred><Suspense fallback={<div/>}><CognitiveDriftChart data={driftData} /></Suspense></Deferred></div>
-                ) : (
-                  <div className="h-full w-full flex flex-col items-center justify-center gap-3 opacity-40">
-                    <Zap size={32} className="text-pink-400" />
-                    <p className="text-xs text-white/50 text-center px-4">Need 3+ entries to analyze cognitive drift</p>
-                  </div>
-                )}
-              </FlippableCard>
-            </PremiumGate>
-          </div>
-          <div className="h-[400px] w-full">
-            <PremiumGate isPremium={user.isPremium} triggerPaywall={onTriggerPaywall} label="Flow Heatmap">
-              <FlippableCard title="Flow Persistence" icon={Calendar} color="text-cyan-400" backContent="The Heatmap displays your consistency density over the last 28 days.">
-                {history.length >= 3 ? (
-                  <div className="h-full w-full mt-2"><Deferred><Suspense fallback={<div/>}><ConsistencyHeatmap history={history} config={config} /></Suspense></Deferred></div>
-                ) : (
-                  <div className="h-full w-full flex flex-col items-center justify-center gap-3 opacity-40">
-                    <Calendar size={32} className="text-cyan-400" />
-                    <p className="text-xs text-white/50 text-center px-4">Need 3+ entries to show consistency heatmap</p>
-                  </div>
-                )}
-              </FlippableCard>
-            </PremiumGate>
-          </div>
-          <div className="h-[300px] w-full">
-             <PremiumGate isPremium={user.isPremium} triggerPaywall={onTriggerPaywall} label="Bio-Mesh">
-                <FlippableCard title="Bio-Mesh Alignment" icon={Sun} color="text-amber-400" backContent="The Radar Mesh maps the symmetry of your current physiological state.">
-                  <div className="h-full w-full"><Deferred><Suspense fallback={<div/>}><RadarMesh latest={latest} /></Suspense></Deferred></div>
-                </FlippableCard>
-             </PremiumGate>
+              </div>
           </div>
         </motion.div>
+
+        {/* 2. TODAY'S SNAPSHOT */}
+        <motion.div variants={fadeUp} className="h-full">
+           <DailySnapshot entry={todayEntry} onLog={onLogToday} />
+        </motion.div>
+      </div>
+
+      {/* ADAPTIVE VISUALIZATION GRID */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
+        
+        {/* 3. VITALITY ORB (Left on iPad) */}
+        <motion.div variants={fadeUp} className="md:col-span-5 lg:col-span-4 glass rounded-[48px] border-white/5 relative overflow-hidden bg-gradient-to-br from-teal-500/[0.02] to-cyan-500/[0.02] min-h-[520px]">
+          <VitalityOrb history={history} config={config} userAge={30} />
+        </motion.div>
+
+        {/* 4. CORTEX + TELEMETRY (Right on iPad) */}
+        <div className="md:col-span-7 lg:col-span-8 space-y-8">
+          
+          {/* CORTEX UPLINK */}
+          <motion.div variants={fadeUp} className="relative group">
+            <PremiumGate isPremium={user.isPremium} triggerPaywall={onTriggerPaywall} label="Neural Cortex" className="rounded-[32px]">
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-[34px] opacity-30 group-hover:opacity-60 blur transition duration-500" />
+              <div className="glass rounded-[32px] p-2 relative bg-[#020617]">
+                <div className="flex justify-between items-center p-6">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20">
+                      <Sparkles size={22} className={`text-indigo-400 ${loading ? 'animate-spin' : ''}`} />
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-black text-indigo-300/60 uppercase tracking-[0.3em] font-outfit">Cortex Uplink</div>
+                      <div className="text-sm font-bold text-white">Neural Analysis Engine</div>
+                    </div>
+                  </div>
+                  
+                  {user.isPremium && (
+                    <button 
+                      onClick={() => handleGenerateInsight(false)}
+                      disabled={loading}
+                      className={`px-6 py-3 rounded-2xl bg-white/5 hover:bg-white/10 text-[11px] font-black uppercase tracking-widest text-indigo-400 transition-all active:scale-95 disabled:opacity-50 flex items-center gap-2 ${isExpanded ? 'bg-white/10 text-white' : ''}`}
+                    >
+                      {loading ? 'Scanning...' : hasGenerated ? (isExpanded ? 'Collapse' : 'View Insight') : 'Ping AI'} <ScanLine size={14} />
+                    </button>
+                  )}
+                </div>
+                
+                <AnimatePresence>
+                  {isExpanded ? (
+                    <motion.div 
+                       initial={{ height: 0, opacity: 0 }} 
+                       animate={{ height: 'auto', opacity: 1, transition: { type: 'spring', stiffness: 300, damping: 30 } }} 
+                       exit={{ height: 0, opacity: 0 }} 
+                       className="overflow-hidden"
+                    >
+                      <div className="px-6 pb-6 pt-0 space-y-4">
+                        <div className="p-6 rounded-3xl bg-indigo-500/5 border border-indigo-500/10">
+                          <p className="text-base md:text-lg font-medium font-outfit text-indigo-100/90 leading-relaxed">{aiText}</p>
+                        </div>
+                        {hasGenerated && (
+                          <div className="flex justify-between items-center px-1">
+                            <span className="text-[10px] font-bold text-white/20 uppercase tracking-widest">Analysis based on recent biometric history</span>
+                            <button onClick={() => handleGenerateInsight(true)} aria-label="Regenerate AI insight" className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-indigo-400 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-xl"><RefreshCw size={14} className={loading ? 'animate-spin' : ''} /> Regenerate</button>
+                          </div>
+                        )}
+                      </div>
+                    </motion.div>
+                  ) : !user.isPremium ? (
+                    <div className="px-6 pb-6 pt-0 opacity-50">
+                        <div className="p-6 rounded-3xl bg-indigo-500/5 border border-indigo-500/10 line-clamp-2">
+                          <p className="text-base font-medium font-outfit text-indigo-100/90 leading-relaxed blur-[4px]">
+                            Metabolic indicators suggest a 15% increase in cognitive drift. Optimize protein intake to stabilize circadian rhythm output and improve biological resilience.
+                          </p>
+                        </div>
+                    </div>
+                  ) : null}
+                </AnimatePresence>
+              </div>
+            </PremiumGate>
+          </motion.div>
+
+          {/* TELEMETRY DECK GRID */}
+          <div className="space-y-6">
+            <div className="flex items-center gap-2 px-2 opacity-60">
+               <Disc size={12} className="text-emerald-400 animate-spin-slow" />
+               <span className="text-[10px] font-black uppercase tracking-[0.4em] text-white">Advanced Telemetry Deck</span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-4">
+              <div className="h-[280px]">
+                <PremiumGate isPremium={user.isPremium} triggerPaywall={onTriggerPaywall} label="Velocity Tracking">
+                  <FlippableCard title="Velocity" icon={Activity} color="text-emerald-400" backContent="Velocity tracks the correlation between metabolic protein intake and physical exertion.">
+                    {history.length >= 3 ? (
+                      <div className="h-full w-full pb-6"><Deferred><Suspense fallback={<div/>}><VelocityChart data={chartData} proteinGoal={config.manualTargets.protein} /></Suspense></Deferred></div>
+                    ) : (
+                      <div className="h-full w-full flex flex-col items-center justify-center gap-3 opacity-40">
+                        <Database size={32} className="text-emerald-400" />
+                        <p className="text-xs text-white/50 text-center px-4">Need 3+ entries to visualize velocity trends</p>
+                      </div>
+                    )}
+                  </FlippableCard>
+                </PremiumGate>
+              </div>
+              <div className="h-[280px]">
+                <PremiumGate isPremium={user.isPremium} triggerPaywall={onTriggerPaywall} label="Drift Analysis">
+                  <FlippableCard title="Cognitive Drift" icon={Zap} color="text-pink-400" backContent="Drift visualizes the stability of your subjective mental state over time.">
+                    {history.length >= 3 ? (
+                      <div className="h-full w-full pb-6"><Deferred><Suspense fallback={<div/>}><CognitiveDriftChart data={driftData} /></Suspense></Deferred></div>
+                    ) : (
+                      <div className="h-full w-full flex flex-col items-center justify-center gap-3 opacity-40">
+                        <Zap size={32} className="text-pink-400" />
+                        <p className="text-xs text-white/50 text-center px-4">Need 3+ entries to analyze cognitive drift</p>
+                      </div>
+                    )}
+                  </FlippableCard>
+                </PremiumGate>
+              </div>
+              <div className="h-[400px] md:col-span-2">
+                <PremiumGate isPremium={user.isPremium} triggerPaywall={onTriggerPaywall} label="Flow Heatmap">
+                  <FlippableCard title="Flow Persistence" icon={Calendar} color="text-cyan-400" backContent="The Heatmap displays your consistency density over the last 28 days.">
+                    {history.length >= 3 ? (
+                      <div className="h-full w-full mt-2"><Deferred><Suspense fallback={<div/>}><ConsistencyHeatmap history={history} config={config} /></Suspense></Deferred></div>
+                    ) : (
+                      <div className="h-full w-full flex flex-col items-center justify-center gap-3 opacity-40">
+                        <Calendar size={32} className="text-cyan-400" />
+                        <p className="text-xs text-white/50 text-center px-4">Need 3+ entries to show consistency heatmap</p>
+                      </div>
+                    )}
+                  </FlippableCard>
+                </PremiumGate>
+              </div>
+              <div className="h-[300px] md:col-span-2">
+                 <PremiumGate isPremium={user.isPremium} triggerPaywall={onTriggerPaywall} label="Bio-Mesh">
+                    <FlippableCard title="Bio-Mesh Alignment" icon={Sun} color="text-amber-400" backContent="The Radar Mesh maps the symmetry of your current physiological state.">
+                      <div className="h-full w-full"><Deferred><Suspense fallback={<div/>}><RadarMesh latest={latest} /></Suspense></Deferred></div>
+                    </FlippableCard>
+                 </PremiumGate>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </motion.div>
   );

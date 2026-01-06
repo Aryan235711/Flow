@@ -134,127 +134,137 @@ export const LogInput = memo(({ config, onSave, initialData }: LogInputProps) =>
       initial="hidden" 
       animate="visible" 
       variants={{ visible: { transition: { staggerChildren: 0.08 } } }}
-      className="px-5 pb-40 pt-24 space-y-8"
+      className="px-5 pb-40 pt-24 md:pt-32 space-y-10"
     >
-      <header className="px-2">
-        <h2 className="text-teal-400/50 text-[10px] font-black uppercase tracking-[0.4em] mb-1 font-outfit">Biological Registry</h2>
-        <h1 className="text-5xl font-black font-outfit tracking-tighter text-white">
+      <header className="px-2 md:px-0">
+        <h2 className="text-teal-400/50 text-[10px] md:text-xs font-black uppercase tracking-[0.4em] mb-2 font-outfit">Biological Registry</h2>
+        <h1 className="text-5xl md:text-7xl font-black font-outfit tracking-tighter text-white">
           {initialData ? 'Update' : 'Sync'}
         </h1>
       </header>
 
-      <motion.section variants={sectionVariants} className="glass rounded-[32px] p-6 space-y-6 border-white/5 shadow-xl">
-        <div className="flex items-center gap-3"><Target size={18} className="text-teal-400" /><h3 className="text-[10px] font-black text-teal-300/40 uppercase tracking-[0.3em] font-outfit">Neural Load</h3></div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
         
-        <div className="flex justify-between gap-2 p-1.5 bg-white/5 rounded-[24px]" role="radiogroup" aria-label="Load intensity">
-          {[1,2,3,4,5].map(v => (
-            <button 
-              key={v} 
-              onClick={() => updateField('symptomScore', v)} 
-              className={`flex-1 h-12 rounded-[18px] font-black transition-all active:scale-95 touch-manipulation ${formData.symptomScore === v ? 'bg-teal-500 text-white shadow-lg scale-105' : 'text-teal-300/20'}`}
-            >
-              {v}
-            </button>
-          ))}
-        </div>
-        
-        <input 
-          placeholder="Log Name (Optional)" 
-          value={formData.symptomName} 
-          onChange={(e) => setFormData(p => ({...p, symptomName: e.target.value}))} 
-          className="w-full bg-white/5 p-5 rounded-[24px] outline-none border border-white/5 focus:border-indigo-500/50 focus:bg-white/10 transition-all font-bold text-white text-lg placeholder:text-white/20" 
-        />
-      </motion.section>
-
-      <motion.section variants={sectionVariants} className="grid grid-cols-2 gap-4">
-        <div className="glass rounded-[28px] p-5 text-center border-white/5 shadow-lg relative overflow-hidden group focus-within:scale-[1.02] transition-transform">
-            <div className="absolute inset-0 bg-indigo-500/5 opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none" />
-            <label className="text-[9px] font-black text-indigo-400/30 uppercase mb-2 block font-outfit tracking-widest">Sleep (HH:MM)</label>
+        <div className="space-y-8">
+          {/* NEURAL LOAD SECTION */}
+          <motion.section variants={sectionVariants} className="glass rounded-[32px] p-6 md:p-8 space-y-6 border-white/5 shadow-xl">
+            <div className="flex items-center gap-3"><Target size={20} className="text-teal-400" /><h3 className="text-[11px] font-black text-teal-300/40 uppercase tracking-[0.3em] font-outfit">Neural Load</h3></div>
+            
+            <div className="flex justify-between gap-2 p-1.5 bg-white/5 rounded-[24px]" role="radiogroup" aria-label="Load intensity">
+              {[1,2,3,4,5].map(v => (
+                <button 
+                  key={v} 
+                  onClick={() => updateField('symptomScore', v)} 
+                  className={`flex-1 h-14 rounded-[18px] font-black text-lg transition-all active:scale-95 touch-manipulation ${formData.symptomScore === v ? 'bg-teal-500 text-white shadow-lg scale-105' : 'text-teal-300/20'}`}
+                >
+                  {v}
+                </button>
+              ))}
+            </div>
+            
             <input 
-              type="text" 
-              inputMode="decimal"
-              value={formData.sleep} 
-              onChange={(e) => handleSleepChange(e.target.value)} 
-              className="w-full bg-transparent text-center text-2xl font-bold font-outfit outline-none text-white placeholder:text-white/10" 
-              placeholder="00:00"
+              placeholder="Log Name (Optional)" 
+              value={formData.symptomName} 
+              onChange={(e) => setFormData(p => ({...p, symptomName: e.target.value}))} 
+              className="w-full bg-white/5 p-6 rounded-[24px] outline-none border border-white/5 focus:border-indigo-500/50 focus:bg-white/10 transition-all font-bold text-white text-xl placeholder:text-white/20" 
             />
-        </div>
-        {[
-          { k: 'rhr', l: 'RHR', t: 'numeric' },
-          { k: 'hrv', l: 'HRV', t: 'numeric' },
-          { k: 'protein', l: 'Protein (g)', t: 'numeric' }
-        ].map(i => (
-          <div key={i.k} className="glass rounded-[28px] p-5 text-center border-white/5 shadow-lg relative overflow-hidden group focus-within:scale-[1.02] transition-transform">
-            <div className="absolute inset-0 bg-indigo-500/5 opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none" />
-            <label className="text-[9px] font-black text-indigo-400/30 uppercase mb-2 block font-outfit tracking-widest">{i.l}</label>
-            <input 
-              type="text"
-              inputMode="decimal"
-              pattern="[0-9]*"
-              value={(formData as any)[i.k]} 
-              onChange={(e) => setFormData(p => ({...p, [i.k]: e.target.value}))} 
-              className="w-full bg-transparent text-center text-2xl font-bold font-outfit outline-none text-white placeholder:text-white/10" 
-            />
-          </div>
-        ))}
-      </motion.section>
+          </motion.section>
 
-      <motion.section variants={sectionVariants} className="glass rounded-[32px] p-6 space-y-7 border-white/5 shadow-xl">
-        <div className="space-y-4">
-          <label className="text-[9px] font-black text-indigo-200/40 uppercase tracking-widest flex items-center gap-2"><BrainCircuit size={12}/> Cognitive State</label>
-          <div className="grid grid-cols-2 gap-3">
-            {cogOptions.map(opt => (
-              <button 
-                key={opt.id} 
-                onClick={() => updateField('cognition', opt.id)}
-                className={`
-                  relative p-4 rounded-[20px] flex flex-col items-center gap-2 transition-all overflow-hidden active:scale-95 touch-manipulation
-                  ${formData.cognition === opt.id ? `${opt.bg} ${opt.text} shadow-lg scale-[1.02]` : 'bg-white/5 text-white/30 hover:bg-white/10'}
-                `}
-              >
-                 <opt.icon size={22} />
-                 <span className="text-[10px] font-black uppercase tracking-widest">{opt.label}</span>
-              </button>
+          {/* NUMERICAL METRICS GRID */}
+          <motion.section variants={sectionVariants} className="grid grid-cols-2 md:grid-cols-2 gap-4">
+            <div className="glass rounded-[28px] p-6 text-center border-white/5 shadow-lg relative overflow-hidden group focus-within:ring-2 ring-indigo-500/30 transition-all">
+                <div className="absolute inset-0 bg-indigo-500/5 opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none" />
+                <label className="text-[10px] font-black text-indigo-400/30 uppercase mb-3 block font-outfit tracking-widest">Sleep (HH:MM)</label>
+                <input 
+                  type="text" 
+                  inputMode="decimal"
+                  value={formData.sleep} 
+                  onChange={(e) => handleSleepChange(e.target.value)} 
+                  className="w-full bg-transparent text-center text-3xl font-bold font-outfit outline-none text-white placeholder:text-white/10" 
+                  placeholder="00:00"
+                />
+            </div>
+            {[
+              { k: 'rhr', l: 'RHR', t: 'numeric' },
+              { k: 'hrv', l: 'HRV', t: 'numeric' },
+              { k: 'protein', l: 'Protein (g)', t: 'numeric' }
+            ].map(i => (
+              <div key={i.k} className="glass rounded-[28px] p-6 text-center border-white/5 shadow-lg relative overflow-hidden group focus-within:ring-2 ring-indigo-500/30 transition-all">
+                <div className="absolute inset-0 bg-indigo-500/5 opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none" />
+                <label className="text-[10px] font-black text-indigo-400/30 uppercase mb-3 block font-outfit tracking-widest">{i.l}</label>
+                <input 
+                  type="text"
+                  inputMode="decimal"
+                  pattern="[0-9]*"
+                  value={(formData as any)[i.k]} 
+                  onChange={(e) => setFormData(p => ({...p, [i.k]: e.target.value}))} 
+                  className="w-full bg-transparent text-center text-3xl font-bold font-outfit outline-none text-white placeholder:text-white/10" 
+                />
+              </div>
             ))}
-          </div>
+          </motion.section>
         </div>
 
-        <div className="space-y-3">
-          <div className="flex justify-between items-center"><label className="text-[9px] font-black text-indigo-200/40 uppercase tracking-widest flex items-center gap-2"><Coffee size={12}/> Gut Stability</label><span className="text-indigo-400 font-bold">{formData.gut}/5</span></div>
-          <div className="flex gap-2 h-10">
-            {[1,2,3,4,5].map(v => (
-              <button key={v} onClick={() => updateField('gut', v)} className={`flex-1 rounded-xl transition-all active:scale-95 touch-manipulation ${formData.gut >= v ? 'bg-indigo-500 shadow-sm' : 'bg-white/5'}`}></button>
-            ))}
-          </div>
-        </div>
+        <div className="space-y-8">
+          {/* BEHAVIORAL & COGNITIVE SECTION */}
+          <motion.section variants={sectionVariants} className="glass rounded-[32px] p-8 space-y-8 border-white/5 shadow-xl h-full flex flex-col justify-between">
+            <div className="space-y-5">
+              <label className="text-[10px] font-black text-indigo-200/40 uppercase tracking-[0.2em] flex items-center gap-2"><BrainCircuit size={14}/> Cognitive State</label>
+              <div className="grid grid-cols-2 gap-4">
+                {cogOptions.map(opt => (
+                  <button 
+                    key={opt.id} 
+                    onClick={() => updateField('cognition', opt.id)}
+                    className={`
+                      relative p-5 rounded-[24px] flex flex-col items-center gap-3 transition-all overflow-hidden active:scale-95 touch-manipulation
+                      ${formData.cognition === opt.id ? `${opt.bg} ${opt.text} shadow-xl scale-[1.02]` : 'bg-white/5 text-white/30 hover:bg-white/10'}
+                    `}
+                  >
+                     <opt.icon size={24} />
+                     <span className="text-[11px] font-black uppercase tracking-widest">{opt.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
 
-        <div className="space-y-3">
-          <label className="text-[9px] font-black text-indigo-200/40 uppercase tracking-widest flex items-center gap-2"><Sun size={12}/> Solar Capture</label>
-          <div className="flex gap-2">
-            {['None', 'Partial', 'Full'].map(s => (
-              <button key={s} onClick={() => updateField('sun', s)} className={`flex-1 py-3.5 rounded-2xl text-[10px] font-black transition-all active:scale-95 touch-manipulation ${formData.sun === s ? 'bg-amber-500 text-black shadow-lg' : 'bg-white/5 text-white/30'}`}>{s.toUpperCase()}</button>
-            ))}
-          </div>
-        </div>
+            <div className="space-y-4">
+              <div className="flex justify-between items-center"><label className="text-[10px] font-black text-indigo-200/40 uppercase tracking-widest flex items-center gap-2"><Coffee size={14}/> Gut Stability</label><span className="text-indigo-400 font-bold">{formData.gut}/5</span></div>
+              <div className="flex gap-2.5 h-12">
+                {[1,2,3,4,5].map(v => (
+                  <button key={v} onClick={() => updateField('gut', v)} className={`flex-1 rounded-xl transition-all active:scale-95 touch-manipulation ${formData.gut >= v ? 'bg-indigo-500 shadow-md' : 'bg-white/5'}`}></button>
+                ))}
+              </div>
+            </div>
 
-        <div className="space-y-3">
-          <label className="text-[9px] font-black text-indigo-200/40 uppercase tracking-widest flex items-center gap-2"><Dumbbell size={12}/> Exertion</label>
-          <div className="flex gap-2">
-            {['None', 'Low', 'Medium', 'Hard'].map(e => (
-              <button key={e} onClick={() => updateField('exercise', e)} className={`flex-1 py-3.5 rounded-2xl text-[9px] font-black transition-all active:scale-95 touch-manipulation ${formData.exercise === e ? 'bg-emerald-500 text-black shadow-lg' : 'bg-white/5 text-white/30'}`}>{e.toUpperCase()}</button>
-            ))}
-          </div>
+            <div className="space-y-4">
+              <label className="text-[10px] font-black text-indigo-200/40 uppercase tracking-widest flex items-center gap-2"><Sun size={14}/> Solar Capture</label>
+              <div className="flex gap-3">
+                {['None', 'Partial', 'Full'].map(s => (
+                  <button key={s} onClick={() => updateField('sun', s)} className={`flex-1 py-4 rounded-2xl text-[11px] font-black transition-all active:scale-95 touch-manipulation ${formData.sun === s ? 'bg-amber-500 text-black shadow-lg' : 'bg-white/5 text-white/30'}`}>{s.toUpperCase()}</button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <label className="text-[10px] font-black text-indigo-200/40 uppercase tracking-widest flex items-center gap-2"><Dumbbell size={14}/> Exertion</label>
+              <div className="flex gap-3">
+                {['None', 'Low', 'Medium', 'Hard'].map(e => (
+                  <button key={e} onClick={() => updateField('exercise', e)} className={`flex-1 py-4 rounded-2xl text-[11px] font-black transition-all active:scale-95 touch-manipulation ${formData.exercise === e ? 'bg-emerald-500 text-black shadow-lg' : 'bg-white/5 text-white/30'}`}>{e.toUpperCase()}</button>
+                ))}
+              </div>
+            </div>
+          </motion.section>
         </div>
-      </motion.section>
+      </div>
 
       <motion.button 
          variants={sectionVariants}
          whileTap={{ scale: 0.95 }}
          onClick={handleSubmit} 
-         className="w-full py-7 bg-gradient-to-r from-indigo-500 to-fuchsia-600 text-white font-black rounded-[32px] text-xl shadow-2xl transition-all font-outfit uppercase tracking-wider relative overflow-hidden touch-manipulation flex items-center justify-center gap-3"
+         className="w-full py-8 md:py-10 bg-gradient-to-r from-indigo-500 to-fuchsia-600 text-white font-black rounded-[32px] md:rounded-[40px] text-xl md:text-2xl shadow-2xl transition-all font-outfit uppercase tracking-wider relative overflow-hidden touch-manipulation flex items-center justify-center gap-4"
       >
-        <span className="relative z-10">{initialData ? 'UPDATE ENTRY' : 'COMMIT BASELINE'}</span>
-        {initialData && <RefreshCw size={20} className="relative z-10" />}
+        <span className="relative z-10">{initialData ? 'UPDATE ENTRY' : 'COMMIT BIOMETRIC BASELINE'}</span>
+        {initialData && <RefreshCw size={24} className="relative z-10" />}
         <div className="absolute inset-0 bg-white/10 opacity-0 hover:opacity-100 transition-opacity" />
       </motion.button>
     </motion.div>

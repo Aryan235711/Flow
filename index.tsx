@@ -698,8 +698,7 @@ const App = () => {
   );
 
   return (
-    <div className="max-w-md mx-auto min-h-screen bg-[#020617] text-white font-quicksand overflow-x-hidden selection:bg-teal-500/30">
-      <BackgroundOrbs />
+      <div className="max-w-md md:max-w-4xl lg:max-w-6xl mx-auto min-h-screen bg-[#020617] text-white font-quicksand overflow-x-hidden selection:bg-teal-500/30">
 
       <Header 
         user={user} 

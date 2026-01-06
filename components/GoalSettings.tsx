@@ -45,27 +45,27 @@ export const GoalSettings = memo(({ config, onSave, onClose }: GoalSettingsProps
       transition={{ type: 'spring', damping: 25, stiffness: 200 }} 
       className="fixed inset-0 z-[450] bg-[#020617] flex flex-col pt-safe"
     >
-      <div className="px-6 py-5 flex justify-between items-center border-b border-white/5 bg-[#020617]/95 backdrop-blur-xl z-10 shrink-0">
-        <h2 className="text-2xl font-black font-outfit tracking-tighter">Calibration</h2>
-        <button onClick={onClose} className="w-10 h-10 glass rounded-xl flex items-center justify-center text-white/50 active:scale-95 touch-manipulation">
+      <div className="w-full max-w-2xl mx-auto px-6 py-5 flex justify-between items-center border-b border-white/5 bg-[#020617]/95 backdrop-blur-xl z-20 shrink-0">
+        <h2 className="text-2xl md:text-3xl font-black font-outfit tracking-tighter">Calibration</h2>
+        <button onClick={onClose} className="w-10 h-10 md:w-12 md:h-12 glass rounded-xl flex items-center justify-center text-white/50 active:scale-95 touch-manipulation">
           <X size={20} />
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-6 py-6 space-y-8 pb-32">
+      <div className="flex-1 w-full max-w-2xl mx-auto overflow-y-auto px-6 py-6 space-y-8 pb-32">
         <div className="space-y-6">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-xl bg-teal-500/10 flex items-center justify-center text-teal-400">
+          <div className="flex items-center gap-4 mb-4">
+            <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-teal-500/10 flex items-center justify-center text-teal-400">
               <Activity size={20} />
             </div>
             <div>
-              <h3 className="text-lg font-bold font-outfit">Wearable Baselines</h3>
-              <p className="text-xs text-white/40">Set your biometric thresholds.</p>
+              <h3 className="text-lg md:text-xl font-bold font-outfit">Wearable Baselines</h3>
+              <p className="text-xs md:text-sm text-white/40">Set your biometric thresholds.</p>
             </div>
           </div>
 
-          <div className="grid gap-4">
-            <div className="glass p-5 rounded-[24px] border-white/5">
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="glass p-5 rounded-[24px] border-white/5 md:col-span-2">
               <div className="flex justify-between items-center mb-2">
                 <label className="text-[10px] font-black uppercase tracking-widest text-teal-300/50 flex items-center gap-2">
                   <Moon size={12} /> Sleep Target (h)
@@ -145,10 +145,10 @@ export const GoalSettings = memo(({ config, onSave, onClose }: GoalSettingsProps
         </div>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 p-6 pb-safe bg-gradient-to-t from-[#020617] via-[#020617] to-transparent z-20">
+      <div className="fixed bottom-0 left-0 right-0 p-6 pb-safe bg-gradient-to-t from-[#020617] via-[#020617] to-transparent z-30 flex justify-center">
         <button 
           onClick={handleSave} 
-          className="w-full py-5 bg-white text-black font-black rounded-[24px] text-lg shadow-2xl active:scale-95 transition-all flex items-center justify-center gap-3 font-outfit touch-manipulation"
+          className="w-full max-w-2xl py-5 bg-white text-black font-black rounded-[24px] text-lg shadow-2xl active:scale-[0.98] transition-all flex items-center justify-center gap-3 font-outfit touch-manipulation"
         >
           <Save size={20} /> SAVE CALIBRATION
         </button>

@@ -217,8 +217,8 @@ export const HistoryView = memo(({ history, isMockData, onDelete, onEdit, isPrem
   };
 
   return (
-    <div className="px-5 pb-40 pt-28 space-y-8">
-      <header className="px-2 flex justify-between items-end">
+    <div className="px-5 pb-40 pt-28 space-y-8 md:px-10 md:pt-40 max-w-6xl mx-auto">
+      <header className="px-2 flex justify-between items-end mb-4 md:mb-8">
         <div>
           {isMockData && (
              <div className="flex items-center gap-2 mb-2 opacity-50">
@@ -226,19 +226,19 @@ export const HistoryView = memo(({ history, isMockData, onDelete, onEdit, isPrem
                <span className="text-[9px] font-black uppercase tracking-widest text-teal-400">Simulation Mode</span>
              </div>
           )}
-          <h1 className="text-5xl font-black font-outfit tracking-tighter text-white">Registry</h1>
-          <p className="text-teal-300/40 text-sm font-medium mt-2">Historical telemetry logs.</p>
+          <h1 className="text-5xl md:text-7xl font-black font-outfit tracking-tighter text-white">Registry</h1>
+          <p className="text-teal-300/40 text-sm md:text-lg font-medium mt-2">Historical telemetry logs.</p>
         </div>
         
         {/* DATE FILTER BUTTON */}
         <button 
           onClick={handleFilterClick}
           className={`
-            w-12 h-12 rounded-2xl flex items-center justify-center border transition-all active:scale-90
+            w-12 h-12 md:w-16 md:h-16 rounded-2xl md:rounded-[24px] flex items-center justify-center border transition-all active:scale-90
             ${showFilter ? 'bg-teal-500 text-white border-teal-500 shadow-lg' : 'bg-white/5 border-white/5 text-white/50 hover:bg-white/10'}
           `}
         >
-          {isPremium ? <Calendar size={20} /> : <Lock size={20} className="text-amber-500" />}
+          {isPremium ? <Calendar size={24} /> : <Lock size={24} className="text-amber-500" />}
         </button>
       </header>
 
@@ -251,16 +251,16 @@ export const HistoryView = memo(({ history, isMockData, onDelete, onEdit, isPrem
             exit={{ height: 0, opacity: 0 }}
             className="overflow-hidden"
           >
-            <div className="bg-teal-500/10 border border-teal-500/20 rounded-2xl p-4 mb-4">
-              <p className="text-xs font-bold text-teal-300 text-center">Date Filtering Enabled</p>
+            <div className="bg-teal-500/10 border border-teal-500/20 rounded-2xl md:rounded-[32px] p-4 md:p-8 mb-4">
+              <p className="text-xs md:text-sm font-bold text-teal-300 text-center">Date Filtering Enabled</p>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      <div className="space-y-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {history.length === 0 ? (
-          <div className="text-center py-24 opacity-10">
+          <div className="col-span-full text-center py-24 opacity-10">
             <Database size={48} className="mx-auto mb-4" />
             <p className="text-sm uppercase tracking-widest font-black">Registry Empty</p>
           </div>
@@ -281,7 +281,7 @@ export const HistoryView = memo(({ history, isMockData, onDelete, onEdit, isPrem
           <motion.div 
              initial={{ opacity: 0 }} animate={{ opacity: 1 }}
              onClick={onTriggerPaywall}
-             className="glass rounded-[32px] p-6 border-amber-500/20 relative overflow-hidden group cursor-pointer active:scale-95 transition-all"
+             className="md:col-span-2 glass rounded-[32px] p-6 border-amber-500/20 relative overflow-hidden group cursor-pointer active:scale-95 transition-all"
           >
             {/* Removed the amber gradient overlay */}
             <div className="relative z-10 flex flex-col items-center justify-center text-center gap-2">
