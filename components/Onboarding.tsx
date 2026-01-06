@@ -96,7 +96,7 @@ export const Onboarding = ({ onComplete }: OnboardingProps) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[250] flex flex-col items-center justify-center p-4 md:p-12 bg-[#020617] overflow-hidden">
+    <div className="fixed inset-0 z-[250] flex flex-col items-center justify-center p-4 md:p-10 lg:p-14 bg-[#020617] overflow-hidden">
       {/* Background Decor */}
       <motion.div 
         animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.2, 0.1] }}
@@ -104,12 +104,12 @@ export const Onboarding = ({ onComplete }: OnboardingProps) => {
         className={`absolute inset-0 bg-gradient-to-br ${step === 0 ? 'from-cyan-900/20' : step === 1 ? 'from-fuchsia-900/20' : step === 2 ? 'from-indigo-900/20' : 'from-amber-900/20'} to-transparent z-0`}
       />
 
-      <div className="w-full max-w-5xl relative z-10 px-4">
-        {/* Main Content Layout - Stacks on mobile, dual panel on iPad (md+) */}
-        <div className="mx-auto w-full rounded-[48px] border border-white/10 bg-[#020617]/70 backdrop-blur-3xl shadow-2xl p-6 md:p-16 flex flex-col md:flex-row gap-12 md:gap-20 items-center justify-center min-h-[50vh] transition-all duration-700">
-          
-          {/* Actionable Side (Slides) */}
-          <div className="flex-1 w-full max-w-md">
+      <div className="w-full max-w-6xl md:max-w-[92vw] relative z-10">
+        {/* Main Content */}
+        <div className="mx-auto w-full rounded-[48px] border border-white/10 bg-[#020617]/70 backdrop-blur-3xl shadow-2xl p-6 md:p-14 lg:p-16 flex flex-col gap-12 items-center justify-center min-h-[70vh] md:min-h-[65vh] transition-all duration-700">
+
+          {/* Slides */}
+          <div className="flex-1 w-full max-w-3xl">
             <AnimatePresence mode="wait">
               <motion.div
                 key={step}
@@ -157,7 +157,7 @@ export const Onboarding = ({ onComplete }: OnboardingProps) => {
                     {slides[step].title}
                   </motion.h2>
                   
-                  <motion.p variants={itemVariants} className="text-indigo-200/60 text-lg md:text-xl font-medium leading-relaxed max-w-sm">
+                  <motion.p variants={itemVariants} className="text-indigo-200/60 text-lg md:text-xl font-medium leading-relaxed max-w-2xl">
                     {slides[step].desc}
                   </motion.p>
                 </div>
@@ -190,33 +190,6 @@ export const Onboarding = ({ onComplete }: OnboardingProps) => {
               </motion.button>
             </div>
           </div>
-
-          {/* Decorative/Info Side (Visible on iPad) */}
-          <div className="hidden md:flex flex-1 items-center justify-center">
-             <div className="relative w-full aspect-square max-w-sm group">
-                <div className="absolute inset-0 bg-teal-500/20 blur-[100px] rounded-full animate-pulse opacity-40" />
-                <div className={`absolute inset-0 rounded-[80px] border border-white/5 bg-gradient-to-br from-white/10 to-transparent flex flex-col items-center justify-center p-12 text-center backdrop-blur-3xl shadow-3xl`}>
-                   <div className="space-y-8">
-                      <div className="w-20 h-20 rounded-full border border-teal-500/30 flex items-center justify-center mx-auto bg-teal-500/5">
-                        <Check className="text-teal-400" size={32} />
-                      </div>
-                      <div className="space-y-4">
-                        <h3 className="text-2xl font-black text-white">iPad Adaptive</h3>
-                        <p className="text-white/40 text-sm font-medium leading-relaxed">You're viewing the optimized iPad interface. Generous margins and expanded typography for an immersive biometric experience.</p>
-                      </div>
-                      <div className="flex gap-2 justify-center">
-                         {[1,2,3].map(i => (
-                           <div key={i} className="w-1.5 h-1.5 rounded-full bg-teal-500/40" />
-                         ))}
-                      </div>
-                   </div>
-                </div>
-                {/* Orbital Rings */}
-                <div className="absolute -inset-10 border border-teal-500/5 rounded-full animate-[spin_60s_linear_infinite]" />
-                <div className="absolute -inset-20 border border-cyan-500/5 rounded-full animate-[spin_40s_linear_infinite_reverse]" />
-             </div>
-          </div>
-
         </div>
       </div>
     </div>
