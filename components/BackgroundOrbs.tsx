@@ -17,7 +17,7 @@ export const BackgroundOrbs = memo(() => (
       animate={{ x: [0, 10, 0], y: [0, 15, 0], scale: [1, 1.05, 1] }} 
       transition={{ duration: 40, repeat: Infinity, ease: "easeInOut" }}
       style={{ willChange: 'transform' }}
-      className="absolute top-[-10%] left-[-10%] w-[120vw] h-[120vw] bg-indigo-500/[0.03] blur-[100px] rounded-full transform-gpu" 
+      className="absolute top-[-10%] left-[-10%] w-[120vw] h-[120vw] bg-teal-500/[0.03] blur-[100px] rounded-full transform-gpu" 
     />
   </div>
 ));

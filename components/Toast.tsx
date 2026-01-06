@@ -27,7 +27,17 @@ export const Toast = memo(({ notification, onDismiss }: ToastProps) => {
           transition={{ type: "spring", stiffness: 400, damping: 30 }}
           className="fixed top-24 left-0 right-0 z-[100] flex justify-center px-4 pointer-events-none"
         >
-          <div className="bg-[#0a1128]/90 backdrop-blur-md border border-indigo-500/30 text-white px-5 py-3 rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] flex items-center gap-4 max-w-sm w-full pointer-events-auto">
+          <motion.div 
+            drag="y"
+            dragConstraints={{ top: 0, bottom: 0 }}
+            dragElastic={{ top: 0.1, bottom: 0.1 }}
+            onDragEnd={(e, info) => {
+              if (Math.abs(info.offset.y) > 50) {
+                onDismiss();
+              }
+            }}
+            className="bg-[#0a1128]/90 backdrop-blur-md border border-teal-500/30 text-white px-5 py-3 rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] flex items-center gap-4 max-w-sm w-full pointer-events-auto cursor-grab active:cursor-grabbing"
+          >
             <div className={`
               w-10 h-10 rounded-xl flex items-center justify-center shrink-0
               ${notification.type === 'AI' ? 'bg-indigo-500/20 text-indigo-400' : 
@@ -44,7 +54,7 @@ export const Toast = memo(({ notification, onDismiss }: ToastProps) => {
               <h4 className="font-bold text-sm font-outfit truncate">{notification.title}</h4>
               <p className="text-xs text-white/50 truncate">{notification.message}</p>
             </div>
-          </div>
+          </motion.div>
         </motion.div>
       )}
     </AnimatePresence>

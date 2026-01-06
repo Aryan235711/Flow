@@ -36,8 +36,8 @@ export const Paywall = memo(({ onClose, onUpgrade }: PaywallProps) => {
         </button>
       </div>
 
-      <div className="flex-1 px-8 flex flex-col items-center relative z-10">
-        <div className="w-24 h-24 mb-8 relative">
+      <div className="flex-1 px-8 flex flex-col items-center relative z-10 overflow-y-auto">
+        <div className="w-24 h-24 mb-8 relative mt-8">
            <div className="absolute inset-0 bg-amber-500/30 blur-2xl rounded-full animate-pulse" />
            <FlowLogo className="w-full h-full drop-shadow-[0_0_20px_rgba(245,158,11,0.5)]" />
            <div className="absolute -top-2 -right-2 bg-gradient-to-r from-amber-400 to-orange-500 text-black text-[10px] font-black px-2 py-1 rounded-full shadow-lg">PRO</div>

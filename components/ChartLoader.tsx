@@ -11,7 +11,7 @@ export const ChartLoader = () => (
     
     {/* Scanning Line */}
     <motion.div 
-      className="absolute left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-indigo-500 to-transparent shadow-[0_0_15px_rgba(99,102,241,0.8)] z-10"
+      className="absolute left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-teal-500 to-transparent shadow-[0_0_15px_rgba(20,184,166,0.8)] z-10"
       animate={{ top: ['0%', '100%'], opacity: [0, 1, 0] }}
       transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
     />
@@ -24,11 +24,11 @@ export const ChartLoader = () => (
              key={i}
              animate={{ scaleY: [1, 1.5, 1], opacity: [0.3, 1, 0.3] }}
              transition={{ duration: 1, repeat: Infinity, delay: i * 0.1 }}
-             className="w-1 h-3 bg-indigo-500 rounded-full"
+             className="w-1 h-3 bg-teal-500 rounded-full"
            />
          ))}
        </div>
-       <span className="text-[9px] font-black tracking-[0.3em] text-indigo-400/60 font-outfit">
+       <span className="text-[9px] font-black tracking-[0.3em] text-teal-400/60 font-outfit">
          ANALYZING
        </span>
     </div>

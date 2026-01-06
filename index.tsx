@@ -512,17 +512,17 @@ const App = () => {
         <motion.div 
            animate={{ rotate: 360 }}
            transition={{ duration: 60, ease: "linear", repeat: Infinity }}
-           className="w-[80vw] h-[80vw] max-w-[600px] max-h-[600px] border border-dashed border-indigo-500/20 rounded-full"
+           className="w-[80vw] h-[80vw] max-w-[600px] max-h-[600px] border border-dashed border-teal-500/20 rounded-full"
         />
         <motion.div 
            animate={{ rotate: -360 }}
            transition={{ duration: 40, ease: "linear", repeat: Infinity }}
-           className="absolute w-[60vw] h-[60vw] max-w-[450px] max-h-[450px] border border-dotted border-fuchsia-500/20 rounded-full"
+           className="absolute w-[60vw] h-[60vw] max-w-[450px] max-h-[450px] border border-dotted border-cyan-500/20 rounded-full"
         />
         <motion.div 
            animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.3, 0.1] }}
            transition={{ duration: 4, ease: "easeInOut", repeat: Infinity }}
-           className="absolute w-[40vw] h-[40vw] bg-indigo-500/10 blur-[60px] rounded-full"
+           className="absolute w-[40vw] h-[40vw] bg-teal-500/10 blur-[60px] rounded-full"
         />
       </div>
 
@@ -536,18 +536,18 @@ const App = () => {
           className="relative group"
         >
           {/* Outer glow ring */}
-          <div className="absolute -inset-4 bg-gradient-to-tr from-indigo-500/20 to-fuchsia-500/20 rounded-full blur-xl group-hover:blur-2xl transition-all duration-700 opacity-60" />
+          <div className="absolute -inset-4 bg-gradient-to-tr from-teal-500/20 to-cyan-500/20 rounded-full blur-xl group-hover:blur-2xl transition-all duration-700 opacity-60" />
           
           <div className="w-32 h-32 bg-[#020617]/50 rounded-[40px] flex items-center justify-center shadow-2xl border border-white/10 backdrop-blur-xl relative z-10 overflow-hidden">
              {/* Scanner Light Effect */}
              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent translate-x-[-150%] group-hover:translate-x-[150%] transition-transform duration-1000 ease-in-out" />
              
-             <FlowLogo className="w-20 h-20 drop-shadow-[0_0_15px_rgba(99,102,241,0.5)] transition-transform duration-700 group-hover:scale-110 group-hover:rotate-3" />
+             <FlowLogo className="w-20 h-20 drop-shadow-[0_0_15px_rgba(20,184,166,0.5)] transition-transform duration-700 group-hover:scale-110 group-hover:rotate-3" />
           </div>
           
           {/* Connection Lines */}
-          <div className="absolute -top-12 left-1/2 w-[1px] h-12 bg-gradient-to-b from-transparent to-indigo-500/50" />
-          <div className="absolute -bottom-12 left-1/2 w-[1px] h-12 bg-gradient-to-t from-transparent to-fuchsia-500/50" />
+          <div className="absolute -top-12 left-1/2 w-[1px] h-12 bg-gradient-to-b from-transparent to-teal-500/50" />
+          <div className="absolute -bottom-12 left-1/2 w-[1px] h-12 bg-gradient-to-t from-transparent to-cyan-500/50" />
         </motion.div>
 
         {/* TYPOGRAPHY SYSTEM - REFINED FOR READABILITY */}
@@ -566,7 +566,7 @@ const App = () => {
                   stiffness: 150,
                   damping: 15
                 }}
-                className="inline-block text-[10rem] font-black font-outfit leading-none tracking-normal text-transparent bg-clip-text bg-gradient-to-b from-white via-indigo-200 to-indigo-600 drop-shadow-[0_10px_30px_rgba(99,102,241,0.6)] select-none relative pb-4"
+                className="inline-block text-[10rem] font-black font-outfit leading-none tracking-normal text-transparent bg-clip-text bg-gradient-to-b from-white via-teal-200 to-teal-600 drop-shadow-[0_10px_30px_rgba(20,184,166,0.6)] select-none relative pb-4"
                 style={{ 
                   WebkitTextStroke: '2px rgba(255,255,255,0.1)', 
                   zIndex: 4 - i 
@@ -581,7 +581,7 @@ const App = () => {
             initial={{ opacity: 0, letterSpacing: '0.5em', y: 20 }} 
             animate={{ opacity: 1, letterSpacing: '0.25em', y: 0 }} 
             transition={{ delay: 1.8, duration: 1.2, type: "spring" }}
-            className="flex items-center justify-center gap-3 text-indigo-200/40 text-xs font-bold uppercase tracking-widest mt-4"
+            className="flex items-center justify-center gap-3 text-teal-200/40 text-xs font-bold uppercase tracking-widest mt-4"
           >
              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_10px_#34d399]" />
              Biological Telemetry System
@@ -599,12 +599,12 @@ const App = () => {
           disabled={isLocalDev || isLoggingIn}
           className="w-full py-6 bg-white text-[#020617] font-black rounded-[32px] text-xl shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] flex items-center justify-center gap-4 font-outfit relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed"
         >
-           <div className="absolute inset-0 bg-gradient-to-r from-indigo-50/0 via-indigo-50/50 to-indigo-50/0 translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700 ease-in-out" />
+           <div className="absolute inset-0 bg-gradient-to-r from-teal-50/0 via-teal-50/50 to-teal-50/0 translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700 ease-in-out" />
            <span className="relative z-10 flex items-center gap-3">
              {isLoggingIn ? (
-               <><motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-6 h-6 border-3 border-indigo-600 border-t-transparent rounded-full" /> CONNECTING...</>
+               <><motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-6 h-6 border-3 border-teal-600 border-t-transparent rounded-full" /> CONNECTING...</>
              ) : (
-               <><Fingerprint size={24} className="text-indigo-600" /> INITIALIZE LINK</>
+               <><Fingerprint size={24} className="text-teal-600" /> INITIALIZE LINK</>
              )}
            </span>
         </motion.button>
@@ -629,7 +629,7 @@ const App = () => {
                key={i}
                animate={{ opacity: [0.2, 1, 0.2] }}
                transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.2 }}
-               className="w-1 h-1 bg-indigo-500 rounded-full"
+               className="w-1 h-1 bg-teal-500 rounded-full"
              />
            ))}
         </div>
@@ -650,18 +650,18 @@ const App = () => {
       <BackgroundOrbs />
       <motion.div initial="hidden" animate="visible" variants={{ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.15, delayChildren: 0.2 } } }} className="relative z-10 space-y-10 max-w-sm w-full">
         <motion.div variants={{ hidden: { scale: 0, rotate: 180 }, visible: { scale: 1, rotate: 0, transition: { type: 'spring', stiffness: 200, damping: 15 } } }} className="relative mx-auto w-32 h-32">
-          <div className="absolute inset-0 bg-indigo-500/20 rounded-full animate-ping" />
-          <div className="w-full h-full bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-[48px] flex items-center justify-center shadow-[0_0_50px_rgba(99,102,241,0.4)] border border-white/10 relative z-10">
+          <div className="absolute inset-0 bg-teal-500/20 rounded-full animate-ping" />
+          <div className="w-full h-full bg-gradient-to-br from-teal-500 to-teal-700 rounded-[48px] flex items-center justify-center shadow-[0_0_50px_rgba(20,184,166,0.4)] border border-white/10 relative z-10">
             <ShieldAlert size={64} className="text-white drop-shadow-lg" /><div className="absolute top-0 right-0 w-4 h-4 bg-rose-500 rounded-full border-2 border-[#020617] animate-pulse" />
           </div>
         </motion.div>
         <div className="space-y-6">
           <motion.h1 variants={{ hidden: { y: 20, opacity: 0 }, visible: { y: 0, opacity: 1, transition: { type: 'spring' } } }} className="text-5xl font-black font-outfit tracking-tighter text-white leading-none">Neural<br/>Mandate</motion.h1>
-          <motion.p variants={{ hidden: { y: 20, opacity: 0 }, visible: { y: 0, opacity: 1 } }} className="text-indigo-200/60 text-lg font-medium leading-relaxed px-4">Telemetry analysis is algorithmic. Registry data is <span className="text-white font-bold">non-clinical</span>. Proceed with biological autonomy.</motion.p>
+          <motion.p variants={{ hidden: { y: 20, opacity: 0 }, visible: { y: 0, opacity: 1 } }} className="text-teal-200/60 text-lg font-medium leading-relaxed px-4">Telemetry analysis is algorithmic. Registry data is <span className="text-white font-bold">non-clinical</span>. Proceed with biological autonomy.</motion.p>
         </div>
         <motion.button variants={{ hidden: { y: 50, opacity: 0 }, visible: { y: 0, opacity: 1, transition: { type: 'spring', bounce: 0.4 } } }} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => { triggerHaptic(); setStage('MAIN'); addNotification('Tunnel Link Active', 'Biometric sync verified.', 'SYSTEM'); }} className="w-full py-8 bg-white text-black font-black rounded-[40px] text-xl shadow-[0_0_60px_-15px_rgba(255,255,255,0.3)] active:scale-95 font-outfit group relative overflow-hidden">
-          <span className="relative z-10 flex items-center justify-center gap-3"><Scan size={24} className="text-indigo-600" /> ACKNOWLEDGE</span>
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-indigo-200/50 to-transparent -translate-x-full group-hover:animate-[scan_1.5s_infinite]" />
+          <span className="relative z-10 flex items-center justify-center gap-3"><Scan size={24} className="text-teal-600" /> ACKNOWLEDGE</span>
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-teal-200/50 to-transparent -translate-x-full group-hover:animate-[scan_1.5s_infinite]" />
           <style>{`@keyframes scan { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }`}</style>
         </motion.button>
       </motion.div>
@@ -670,7 +670,7 @@ const App = () => {
   );
 
   return (
-    <div className="max-w-md mx-auto min-h-screen bg-[#020617] text-white font-quicksand overflow-x-hidden selection:bg-indigo-500/30">
+    <div className="max-w-md mx-auto min-h-screen bg-[#020617] text-white font-quicksand overflow-x-hidden selection:bg-teal-500/30">
       <BackgroundOrbs />
 
       <Header 
@@ -692,7 +692,7 @@ const App = () => {
       <AnimatePresence mode="wait">
         {view === 'DASHBOARD' && (
           <PageTransition key="dashboard" className="relative z-10">
-            <Suspense fallback={<div className="flex items-center justify-center h-screen"><motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full" /></div>}>
+            <Suspense fallback={<div className="flex items-center justify-center h-screen"><motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-8 h-8 border-4 border-teal-500 border-t-transparent rounded-full" /></div>}>
               <Dashboard 
                 history={displayHistory} 
                 config={config} 
@@ -707,7 +707,7 @@ const App = () => {
         )}
         {view === 'LOG' && (
           <PageTransition key="log" className="relative z-10">
-            <Suspense fallback={<div className="flex items-center justify-center h-screen"><motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full" /></div>}>
+            <Suspense fallback={<div className="flex items-center justify-center h-screen"><motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-8 h-8 border-4 border-teal-500 border-t-transparent rounded-full" /></div>}>
               <LogInput 
                 config={config} 
                 initialData={entryToEdit}
@@ -718,7 +718,7 @@ const App = () => {
         )}
         {view === 'HISTORY' && (
           <PageTransition key="history" className="relative z-10">
-            <Suspense fallback={<div className="flex items-center justify-center h-screen"><motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full" /></div>}>
+            <Suspense fallback={<div className="flex items-center justify-center h-screen"><motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-8 h-8 border-4 border-teal-500 border-t-transparent rounded-full" /></div>}>
               <HistoryView 
                 history={displayHistory} 
                 isMockData={isMockData} 
@@ -774,7 +774,7 @@ const App = () => {
                     <button 
                         onClick={toggleAvatar}
                         aria-label="Change avatar"
-                        className="w-20 h-20 rounded-[28px] overflow-hidden border-2 border-indigo-500/30 relative group flex-shrink-0 active:scale-95 transition-all"
+                        className="w-20 h-20 rounded-[28px] overflow-hidden border-2 border-teal-500/30 relative group flex-shrink-0 active:scale-95 transition-all"
                     >
                         <img src={user.picture} alt="Avatar" className="w-full h-full object-cover" />
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -787,12 +787,12 @@ const App = () => {
                             <input 
                                 value={user.name}
                                 onChange={handleNameChange}
-                                className="bg-transparent text-2xl font-bold font-outfit text-white outline-none w-full placeholder:text-white/30 border-b border-transparent focus:border-indigo-500/50 transition-all p-0"
+                                className="bg-transparent text-2xl font-bold font-outfit text-white outline-none w-full placeholder:text-white/30 border-b border-transparent focus:border-teal-500/50 transition-all p-0"
                             />
                             <Edit2 size={12} className="text-white/20 group-hover:text-white/50 transition-colors" />
                         </div>
                         <div className="flex items-center gap-2">
-                             <p className="text-indigo-300/40 font-medium text-sm truncate">{user.email}</p>
+                             <p className="text-teal-300/40 font-medium text-sm truncate">{user.email}</p>
                              {user.isPremium && <span className="bg-amber-500 text-black text-[9px] font-black px-1.5 py-0.5 rounded-full shrink-0">PRO</span>}
                         </div>
                     </div>
@@ -803,7 +803,7 @@ const App = () => {
               </div>
               
               <div className="space-y-4">
-                <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-400/50 mb-2 px-2">Configuration</h4>
+                <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-teal-400/50 mb-2 px-2">Configuration</h4>
                 
                 {!user.isPremium && (
                   <button onClick={() => { setShowProfile(false); setShowPaywall(true); }} className="w-full p-6 bg-gradient-to-r from-amber-400 to-orange-500 rounded-[30px] flex items-center justify-between shadow-[0_10px_30px_-10px_rgba(245,158,11,0.3)] active:scale-95 transition-all group overflow-hidden relative">
@@ -817,7 +817,7 @@ const App = () => {
 
                 <button onClick={handleGoalClick} className="w-full p-6 glass rounded-[30px] flex items-center justify-between border-white/5 hover:bg-white/5 transition-all group active:scale-95">
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-indigo-500/20 rounded-xl flex items-center justify-center text-indigo-400"><Target size={20} /></div>
+                    <div className="w-10 h-10 bg-teal-500/20 rounded-xl flex items-center justify-center text-teal-400"><Target size={20} /></div>
                     <span className="font-bold font-outfit">Goals & Baselines</span>
                   </div>
                   {!user.isPremium && <div className="w-6 h-6 rounded-full bg-white/5 flex items-center justify-center"><Trash2 size={12} className="opacity-0" /><Crown size={12} className="text-amber-500" /></div>}
@@ -825,7 +825,7 @@ const App = () => {
 
                 <button onClick={exportDataCSV} className="w-full p-6 glass rounded-[30px] flex items-center justify-between border-white/5 hover:bg-white/5 transition-all group active:scale-95">
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-indigo-500/20 rounded-xl flex items-center justify-center text-indigo-400"><Download size={20} /></div>
+                    <div className="w-10 h-10 bg-teal-500/20 rounded-xl flex items-center justify-center text-teal-400"><Download size={20} /></div>
                     <span className="font-bold font-outfit">Export Telemetry</span>
                   </div>
                   {!user.isPremium ? 
@@ -860,10 +860,19 @@ const App = () => {
               ) : notifications.map((n, idx) => (
                 <motion.div 
                    key={idx} 
+                   drag="x"
+                   dragConstraints={{ left: 0, right: 0 }}
+                   dragElastic={{ left: 0, right: 0.2 }}
+                   onDragEnd={(e, info) => {
+                     if (info.offset.x < -100) {
+                       setNotifications(prev => prev.filter((_, i) => i !== idx));
+                     }
+                   }}
                    initial={{ opacity: 0, y: 20 }}
                    animate={{ opacity: 1, y: 0 }}
+                   exit={{ opacity: 0, x: -300 }}
                    transition={{ delay: idx * 0.05 }}
-                   className={`glass p-6 rounded-[30px] border-white/5 space-y-2 shadow-lg ${!n.read ? 'border-l-4 border-l-indigo-500' : ''}`}
+                   className={`glass p-6 rounded-[30px] border-white/5 space-y-2 shadow-lg cursor-grab active:cursor-grabbing ${!n.read ? 'border-l-4 border-l-teal-500' : ''}`}
                 >
                   <div className="flex justify-between">
                     <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${
@@ -874,7 +883,7 @@ const App = () => {
                     }`}>{n.type} Insight</span>
                     <span className="text-[9px] text-white/10">{n.time}</span>
                   </div>
-                  <h4 className="text-lg font-bold font-outfit">{n.title}</h4><p className="text-indigo-200/30 text-xs leading-relaxed">{n.message}</p>
+                  <h4 className="text-lg font-bold font-outfit">{n.title}</h4><p className="text-teal-200/30 text-xs leading-relaxed">{n.message}</p>
                 </motion.div>
               ))}
             </div>
@@ -882,20 +891,115 @@ const App = () => {
         )}
       </AnimatePresence>
 
-      <div className="fixed bottom-6 left-6 right-6 z-[100] max-w-sm mx-auto pointer-events-none pb-safe">
-        <motion.nav initial={{ y: 50 }} animate={{ y: 0 }} className="h-18 bg-[#0a1128]/90 backdrop-blur-[50px] rounded-[40px] flex items-center justify-around px-6 shadow-[0_35px_100px_rgba(0,0,0,0.8)] border border-white/10 pointer-events-auto">
-          <button onClick={() => changeView('DASHBOARD')} className={`p-4 relative transition-all active:scale-90 ${view === 'DASHBOARD' ? 'text-indigo-400 scale-105' : 'text-white/20'}`}><LayoutGrid size={24} /></button>
-          <div className="relative -top-8">
-            <motion.button 
-              whileHover={{ scale: 1.1, rotate: 90 }} 
-              whileTap={{ scale: 0.9 }} 
-              onClick={handlePlusClick} 
-              className="w-18 h-18 bg-gradient-to-br from-indigo-500 to-fuchsia-600 rounded-[30px] flex items-center justify-center shadow-[0_20px_40px_-10px_rgba(99,102,241,0.5)] p-4 text-white ring-4 ring-[#020617]"
-            >
-              <Plus size={32} strokeWidth={4} />
-            </motion.button>
+      {/* MOBILE-FIRST BOTTOM NAVIGATION */}
+      <div className="fixed bottom-0 left-0 right-0 z-[100] pb-safe pointer-events-none">
+        <motion.nav 
+          initial={{ y: 100, opacity: 0 }} 
+          animate={{ y: 0, opacity: 1 }} 
+          transition={{ type: "spring", damping: 25, stiffness: 250, delay: 0.1 }}
+          className="mx-4 mb-4 pointer-events-auto"
+        >
+          {/* Glass Container - Mobile Optimized */}
+          <div className="relative bg-gradient-to-b from-[#0f172a]/98 to-[#0a0f1e]/98 backdrop-blur-2xl rounded-3xl shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.06)] border border-white/[0.06] overflow-hidden">
+            
+            {/* Ambient Bottom Glow */}
+            <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-teal-500/[0.03] to-transparent pointer-events-none" />
+            
+            {/* Active Indicator Pill */}
+            <motion.div
+              className="absolute top-2 h-1 rounded-full bg-gradient-to-r from-teal-400 to-cyan-400"
+              animate={{
+                left: view === 'DASHBOARD' ? '8px' : view === 'HISTORY' ? 'calc(66.66% + 4px)' : 'calc(33.33% + 2px)',
+                width: view === 'DASHBOARD' || view === 'HISTORY' ? 'calc(33.33% - 12px)' : 'calc(33.33% - 8px)'
+              }}
+              transition={{ type: "spring", damping: 30, stiffness: 400 }}
+            />
+            
+            <div className="flex items-stretch justify-around pt-4 pb-3 px-2">
+              {/* Dashboard Button - 44px touch target */}
+              <motion.button
+                onClick={() => changeView('DASHBOARD')}
+                whileTap={{ scale: 0.90 }}
+                className="flex-1 flex flex-col items-center justify-center gap-2 min-h-[60px] active:bg-white/5 rounded-2xl transition-colors"
+              >
+                {view === 'DASHBOARD' && (
+                  <motion.div
+                    layoutId="activeGlow"
+                    className="absolute inset-0 bg-teal-500/10 rounded-2xl"
+                    transition={{ type: "spring", damping: 20, stiffness: 300 }}
+                  />
+                )}
+                <LayoutGrid 
+                  size={26} 
+                  className={`relative z-10 transition-all duration-200 ${
+                    view === 'DASHBOARD' 
+                      ? 'text-teal-400 drop-shadow-[0_0_12px_rgba(20,184,166,0.8)]' 
+                      : 'text-white/40'
+                  }`}
+                  strokeWidth={view === 'DASHBOARD' ? 2.5 : 2}
+                />
+                <span className={`text-xs font-bold tracking-wide transition-all duration-200 ${
+                  view === 'DASHBOARD' 
+                    ? 'text-teal-400' 
+                    : 'text-white/30'
+                }`}>
+                  Flow
+                </span>
+              </motion.button>
+
+              {/* Add Entry Button - 56px touch target */}
+              <motion.button
+                onClick={handlePlusClick}
+                whileTap={{ scale: 0.88 }}
+                className="flex-1 flex flex-col items-center justify-center gap-2 min-h-[60px] active:bg-white/5 rounded-2xl transition-colors"
+              >
+                <div className="relative">
+                  {/* Glow Effect */}
+                  <div className="absolute -inset-3 bg-gradient-to-br from-teal-500/40 to-cyan-500/40 rounded-2xl blur-lg" />
+                  
+                  {/* Button */}
+                  <div className="relative w-14 h-14 bg-gradient-to-br from-teal-500 to-cyan-500 rounded-2xl flex items-center justify-center shadow-[0_4px_24px_-4px_rgba(20,184,166,0.6)] border border-white/20">
+                    <Plus size={30} strokeWidth={2.5} className="text-white" />
+                    
+                    {/* Subtle Shine */}
+                    <div className="absolute inset-[1px] bg-gradient-to-br from-white/30 to-transparent rounded-[14px] opacity-40" />
+                  </div>
+                </div>
+                <span className="text-xs font-bold text-white/40 tracking-wide">Add</span>
+              </motion.button>
+
+              {/* History Button - 44px touch target */}
+              <motion.button
+                onClick={() => changeView('HISTORY')}
+                whileTap={{ scale: 0.90 }}
+                className="flex-1 flex flex-col items-center justify-center gap-2 min-h-[60px] active:bg-white/5 rounded-2xl transition-colors"
+              >
+                {view === 'HISTORY' && (
+                  <motion.div
+                    layoutId="activeGlow"
+                    className="absolute inset-0 bg-teal-500/10 rounded-2xl"
+                    transition={{ type: "spring", damping: 20, stiffness: 300 }}
+                  />
+                )}
+                <History 
+                  size={26} 
+                  className={`relative z-10 transition-all duration-200 ${
+                    view === 'HISTORY' 
+                      ? 'text-teal-400 drop-shadow-[0_0_12px_rgba(20,184,166,0.8)]' 
+                      : 'text-white/40'
+                  }`}
+                  strokeWidth={view === 'HISTORY' ? 2.5 : 2}
+                />
+                <span className={`text-xs font-bold tracking-wide transition-all duration-200 ${
+                  view === 'HISTORY' 
+                    ? 'text-teal-400' 
+                    : 'text-white/30'
+                }`}>
+                  Logs
+                </span>
+              </motion.button>
+            </div>
           </div>
-          <button onClick={() => changeView('HISTORY')} className={`p-4 relative transition-all active:scale-90 ${view === 'HISTORY' ? 'text-indigo-400 scale-105' : 'text-white/20'}`}><History size={24} /></button>
         </motion.nav>
       </div>
     </div>

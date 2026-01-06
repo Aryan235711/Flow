@@ -118,7 +118,7 @@ export const LogInput = memo(({ config, onSave, initialData }: LogInputProps) =>
   }, [formData, config, onSave, initialData]);
 
   const cogOptions = [
-    { id: 'PEAK', label: 'Peak', icon: Zap, bg: 'bg-indigo-500', text: 'text-white' },
+    { id: 'PEAK', label: 'Peak', icon: Zap, bg: 'bg-teal-500', text: 'text-white' },
     { id: 'STEADY', label: 'Steady', icon: BrainCircuit, bg: 'bg-emerald-500', text: 'text-white' },
     { id: 'FOGGY', label: 'Foggy', icon: CloudFog, bg: 'bg-slate-500', text: 'text-white' },
     { id: 'DRAINED', label: 'Drained', icon: BatteryWarning, bg: 'bg-rose-500', text: 'text-white' },
@@ -137,21 +137,21 @@ export const LogInput = memo(({ config, onSave, initialData }: LogInputProps) =>
       className="px-5 pb-40 pt-24 space-y-8"
     >
       <header className="px-2">
-        <h2 className="text-indigo-400/50 text-[10px] font-black uppercase tracking-[0.4em] mb-1 font-outfit">Biological Registry</h2>
+        <h2 className="text-teal-400/50 text-[10px] font-black uppercase tracking-[0.4em] mb-1 font-outfit">Biological Registry</h2>
         <h1 className="text-5xl font-black font-outfit tracking-tighter text-white">
           {initialData ? 'Update' : 'Sync'}
         </h1>
       </header>
 
       <motion.section variants={sectionVariants} className="glass rounded-[32px] p-6 space-y-6 border-white/5 shadow-xl">
-        <div className="flex items-center gap-3"><Target size={18} className="text-indigo-400" /><h3 className="text-[10px] font-black text-indigo-300/40 uppercase tracking-[0.3em] font-outfit">Neural Load</h3></div>
+        <div className="flex items-center gap-3"><Target size={18} className="text-teal-400" /><h3 className="text-[10px] font-black text-teal-300/40 uppercase tracking-[0.3em] font-outfit">Neural Load</h3></div>
         
         <div className="flex justify-between gap-2 p-1.5 bg-white/5 rounded-[24px]" role="radiogroup" aria-label="Load intensity">
           {[1,2,3,4,5].map(v => (
             <button 
               key={v} 
               onClick={() => updateField('symptomScore', v)} 
-              className={`flex-1 h-12 rounded-[18px] font-black transition-all active:scale-95 touch-manipulation ${formData.symptomScore === v ? 'bg-indigo-500 text-white shadow-lg scale-105' : 'text-indigo-300/20'}`}
+              className={`flex-1 h-12 rounded-[18px] font-black transition-all active:scale-95 touch-manipulation ${formData.symptomScore === v ? 'bg-teal-500 text-white shadow-lg scale-105' : 'text-teal-300/20'}`}
             >
               {v}
             </button>

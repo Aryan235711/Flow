@@ -55,7 +55,7 @@ export const GoalSettings = memo(({ config, onSave, onClose }: GoalSettingsProps
       <div className="flex-1 overflow-y-auto px-6 py-6 space-y-8 pb-32">
         <div className="space-y-6">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-400">
+            <div className="w-10 h-10 rounded-xl bg-teal-500/10 flex items-center justify-center text-teal-400">
               <Activity size={20} />
             </div>
             <div>
@@ -67,7 +67,7 @@ export const GoalSettings = memo(({ config, onSave, onClose }: GoalSettingsProps
           <div className="grid gap-4">
             <div className="glass p-5 rounded-[24px] border-white/5">
               <div className="flex justify-between items-center mb-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-indigo-300/50 flex items-center gap-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-teal-300/50 flex items-center gap-2">
                   <Moon size={12} /> Sleep Target (h)
                 </label>
                 <span className="text-xl font-bold font-outfit">{localConfig.wearableBaselines.sleep}</span>
@@ -79,13 +79,13 @@ export const GoalSettings = memo(({ config, onSave, onClose }: GoalSettingsProps
                 step="0.1" 
                 value={localConfig.wearableBaselines.sleep} 
                 onChange={(e) => handleChange('wearableBaselines', 'sleep', e.target.value)}
-                className="w-full accent-indigo-500 h-2 bg-white/10 rounded-lg appearance-none cursor-pointer touch-none" 
+                className="w-full accent-teal-500 h-2 bg-white/10 rounded-lg appearance-none cursor-pointer touch-none" 
               />
             </div>
 
             <div className="glass p-5 rounded-[24px] border-white/5">
               <div className="flex justify-between items-center mb-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-indigo-300/50 flex items-center gap-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-teal-300/50 flex items-center gap-2">
                   <Activity size={12} /> RHR Baseline (bpm)
                 </label>
                 <input 
@@ -101,7 +101,7 @@ export const GoalSettings = memo(({ config, onSave, onClose }: GoalSettingsProps
 
             <div className="glass p-5 rounded-[24px] border-white/5">
               <div className="flex justify-between items-center mb-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-indigo-300/50 flex items-center gap-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-teal-300/50 flex items-center gap-2">
                   <Wind size={12} /> HRV Baseline (ms)
                 </label>
                 <input 

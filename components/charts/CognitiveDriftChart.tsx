@@ -28,7 +28,7 @@ export const CognitiveDriftChart = memo(({ data }: DriftProps) => {
             if (active && payload && payload.length) {
               const val = payload[0].value;
               const label = val >= 90 ? 'PEAK' : val >= 70 ? 'STEADY' : val >= 30 ? 'FOGGY' : 'DRAINED';
-              const color = val >= 90 ? 'text-indigo-400' : val >= 70 ? 'text-emerald-400' : 'text-rose-400';
+              const color = val >= 90 ? 'text-teal-400' : val >= 70 ? 'text-emerald-400' : 'text-rose-400';
               return (
                  <div className="bg-[#0a1128] border border-white/10 p-3 rounded-xl shadow-xl backdrop-blur-md">
                    <p className={`text-[10px] font-black ${color} font-outfit uppercase tracking-widest`}>{label}</p>

@@ -54,7 +54,7 @@ export const FlippableCard = memo(({ children, backContent, title, icon: Icon, c
 
         {/* Back Face - Info Mode */}
         <div className="absolute inset-0 backface-hidden rotate-y-180 glass rounded-[32px] p-6 bg-[#0a1128]/98 border border-white/10 flex flex-col justify-center text-center z-30">
-          <div className="absolute inset-0 bg-gradient-to-b from-indigo-500/10 to-transparent pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-b from-teal-500/10 to-transparent pointer-events-none" />
           
           <div className={`mx-auto w-12 h-12 rounded-[16px] bg-white/5 flex items-center justify-center mb-4 ${color} shadow-lg ring-1 ring-white/10 shrink-0`}>
             <Icon size={24} />
@@ -63,7 +63,7 @@ export const FlippableCard = memo(({ children, backContent, title, icon: Icon, c
           <h4 className="text-xl font-black font-outfit mb-3 text-white">System Logic</h4>
           
           <div className="overflow-y-auto max-h-[140px] px-2 mb-4 scrollbar-hide">
-             <p className="text-indigo-200/50 leading-relaxed font-medium text-xs">
+             <p className="text-teal-200/50 leading-relaxed font-medium text-xs">
               {backContent}
             </p>
           </div>

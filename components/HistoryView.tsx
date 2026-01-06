@@ -21,7 +21,7 @@ const MiniScoreGauge = memo(({ score }: { score: number }) => {
   const progress = Math.min(100, Math.max(0, score));
   const dashoffset = circumference - (progress / 100) * circumference;
   
-  const color = score >= 80 ? 'text-emerald-400' : score >= 50 ? 'text-indigo-400' : 'text-rose-400';
+  const color = score >= 80 ? 'text-emerald-400' : score >= 50 ? 'text-teal-400' : 'text-rose-400';
 
   return (
     <div className="relative w-12 h-12 flex items-center justify-center">
@@ -96,7 +96,7 @@ const HistoryCard = memo(({
 
   const getCognitiveColor = (state: string) => {
     switch (state) {
-      case 'PEAK': return 'bg-indigo-500 shadow-indigo-500/40';
+      case 'PEAK': return 'bg-teal-500 shadow-teal-500/40';
       case 'FOGGY': return 'bg-slate-500 shadow-slate-500/40';
       case 'DRAINED': return 'bg-rose-500 shadow-rose-500/40';
       case 'FROZEN': return 'bg-cyan-500 shadow-cyan-500/40';
@@ -108,7 +108,7 @@ const HistoryCard = memo(({
   const isFrozen = entry.rawValues.cognition === 'FROZEN';
 
   // Determine strip color
-  const statusColor = score >= 80 ? 'bg-emerald-500' : score >= 50 ? 'bg-indigo-500' : 'bg-rose-500';
+  const statusColor = score >= 80 ? 'bg-emerald-500' : score >= 50 ? 'bg-teal-500' : 'bg-rose-500';
 
   return (
     <motion.div 
@@ -154,7 +154,7 @@ const HistoryCard = memo(({
                animate="show"
                variants={{ show: { transition: { staggerChildren: 0.05 } } }}
             >
-              <DetailItem label="Sleep" value={`${entry.rawValues.sleep.toFixed(1)}h`} icon={Moon} color="text-indigo-400" />
+              <DetailItem label="Sleep" value={`${entry.rawValues.sleep.toFixed(1)}h`} icon={Moon} color="text-teal-400" />
               <DetailItem label="RHR" value={`${entry.rawValues.rhr} bpm`} icon={Activity} color="text-rose-400" />
               <DetailItem label="HRV" value={`${entry.rawValues.hrv} ms`} icon={Wind} color="text-emerald-400" />
               <DetailItem label="Protein" value={`${entry.rawValues.protein}g`} icon={Utensils} color="text-amber-400" />
@@ -169,7 +169,7 @@ const HistoryCard = memo(({
                       e.stopPropagation();
                       onEdit(entry, idx);
                     }}
-                    className="flex-1 p-3 rounded-2xl bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 flex items-center justify-center gap-2 transition-colors active:scale-95 touch-manipulation border border-indigo-500/20"
+                    className="flex-1 p-3 rounded-2xl bg-teal-500/10 hover:bg-teal-500/20 text-teal-400 flex items-center justify-center gap-2 transition-colors active:scale-95 touch-manipulation border border-teal-500/20"
                   >
                     <Edit3 size={14} /> <span className="text-[10px] font-black uppercase tracking-widest">Edit Entry</span>
                   </button>
@@ -222,12 +222,12 @@ export const HistoryView = memo(({ history, isMockData, onDelete, onEdit, isPrem
         <div>
           {isMockData && (
              <div className="flex items-center gap-2 mb-2 opacity-50">
-               <Database size={10} className="text-indigo-400" />
-               <span className="text-[9px] font-black uppercase tracking-widest text-indigo-400">Simulation Mode</span>
+               <Database size={10} className="text-teal-400" />
+               <span className="text-[9px] font-black uppercase tracking-widest text-teal-400">Simulation Mode</span>
              </div>
           )}
           <h1 className="text-5xl font-black font-outfit tracking-tighter text-white">Registry</h1>
-          <p className="text-indigo-300/40 text-sm font-medium mt-2">Historical telemetry logs.</p>
+          <p className="text-teal-300/40 text-sm font-medium mt-2">Historical telemetry logs.</p>
         </div>
         
         {/* DATE FILTER BUTTON */}
@@ -235,7 +235,7 @@ export const HistoryView = memo(({ history, isMockData, onDelete, onEdit, isPrem
           onClick={handleFilterClick}
           className={`
             w-12 h-12 rounded-2xl flex items-center justify-center border transition-all active:scale-90
-            ${showFilter ? 'bg-indigo-500 text-white border-indigo-500 shadow-lg' : 'bg-white/5 border-white/5 text-white/50 hover:bg-white/10'}
+            ${showFilter ? 'bg-teal-500 text-white border-teal-500 shadow-lg' : 'bg-white/5 border-white/5 text-white/50 hover:bg-white/10'}
           `}
         >
           {isPremium ? <Calendar size={20} /> : <Lock size={20} className="text-amber-500" />}
@@ -251,8 +251,8 @@ export const HistoryView = memo(({ history, isMockData, onDelete, onEdit, isPrem
             exit={{ height: 0, opacity: 0 }}
             className="overflow-hidden"
           >
-            <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-2xl p-4 mb-4">
-              <p className="text-xs font-bold text-indigo-300 text-center">Date Filtering Enabled</p>
+            <div className="bg-teal-500/10 border border-teal-500/20 rounded-2xl p-4 mb-4">
+              <p className="text-xs font-bold text-teal-300 text-center">Date Filtering Enabled</p>
             </div>
           </motion.div>
         )}

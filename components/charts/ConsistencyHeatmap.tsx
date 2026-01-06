@@ -39,7 +39,7 @@ const HeatmapTile = memo(({
         ${isSelected ? 'ring-2 ring-white ring-offset-2 ring-offset-[#0a1128] z-10 scale-110 shadow-xl' : 'hover:scale-105 active:scale-90'}
         ${!day.hasData ? 'bg-white/5 border border-white/5' : 
           day.status === 'OPTIMAL' ? 'bg-emerald-400 shadow-[0_0_15px_rgba(52,211,153,0.3)]' : 
-          day.status === 'MODERATE' ? 'bg-indigo-400 shadow-[0_0_12px_rgba(129,140,248,0.3)]' : 
+          day.status === 'MODERATE' ? 'bg-teal-400 shadow-[0_0_12px_rgba(45,212,191,0.3)]' : 
           'bg-rose-400 shadow-[0_0_12px_rgba(251,113,133,0.3)]'}
       `}
     />
@@ -148,14 +148,14 @@ export const ConsistencyHeatmap = memo(({ history, config }: { history: MetricEn
                     <div className="flex items-center gap-2 mb-0.5">
                        <span className={`text-xs font-bold uppercase tracking-wide ${
                           selectedDate.status === 'OPTIMAL' ? 'text-emerald-400' : 
-                          selectedDate.status === 'MODERATE' ? 'text-indigo-400' : 
+                          selectedDate.status === 'MODERATE' ? 'text-teal-400' : 
                           'text-rose-400'
                        }`}>
                          {selectedDate.status}
                        </span>
                        <Activity size={12} className={
                           selectedDate.status === 'OPTIMAL' ? 'text-emerald-400' : 
-                          selectedDate.status === 'MODERATE' ? 'text-indigo-400' : 
+                          selectedDate.status === 'MODERATE' ? 'text-teal-400' : 
                           'text-rose-400'
                        } />
                     </div>
@@ -181,7 +181,7 @@ export const ConsistencyHeatmap = memo(({ history, config }: { history: MetricEn
         {/* Legend */}
         <div className="flex justify-between items-center px-2 pt-3 border-t border-white/5">
           <LegendItem color="bg-emerald-400" label="High" />
-          <LegendItem color="bg-indigo-400" label="Mid" />
+          <LegendItem color="bg-teal-400" label="Mid" />
           <LegendItem color="bg-rose-400" label="Low" />
           <LegendItem color="bg-white/10 border border-white/10" label="Empty" />
         </div>

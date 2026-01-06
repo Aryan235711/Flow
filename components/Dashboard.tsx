@@ -94,7 +94,7 @@ const BioTargetCard = ({ value, target, unit, color, label }: {
         <div className="text-[9px] font-black uppercase tracking-[0.25em] text-white/50">{label}</div>
         <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/5 backdrop-blur-sm">
            <Target size={10} className="text-indigo-300" />
-           <span className="text-[10px] font-bold text-indigo-200/80">Goal <span className="text-white">{target}</span></span>
+           <span className="text-[10px] font-bold text-teal-200/80">Goal <span className="text-white">{target}</span></span>
         </div>
       </div>
     </div>
@@ -107,7 +107,7 @@ const DailySnapshot = memo(({ entry, onLog }: { entry?: MetricEntry, onLog: () =
   const getTheme = (c?: string) => {
     if (isSystem) return { color: 'text-cyan-400', gradient: 'from-cyan-500/20 to-blue-600/20', icon: Snowflake };
     switch (c) {
-      case 'PEAK': return { color: 'text-indigo-400', gradient: 'from-indigo-500/20 to-fuchsia-600/20', icon: Zap };
+      case 'PEAK': return { color: 'text-teal-400', gradient: 'from-teal-500/20 to-cyan-500/20', icon: Zap };
       case 'FOGGY': return { color: 'text-slate-400', gradient: 'from-slate-500/20 to-gray-500/20', icon: CloudFog };
       case 'DRAINED': return { color: 'text-rose-400', gradient: 'from-rose-500/20 to-orange-600/20', icon: BatteryWarning };
       default: return { color: 'text-emerald-400', gradient: 'from-emerald-500/20 to-teal-500/20', icon: BrainCircuit };
@@ -122,7 +122,7 @@ const DailySnapshot = memo(({ entry, onLog }: { entry?: MetricEntry, onLog: () =
         whileTap={{ scale: 0.98 }}
         className="w-full relative overflow-hidden rounded-[40px] bg-[#0f172a] border border-white/5 p-8 group"
       >
-         <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+         <div className="absolute inset-0 bg-gradient-to-br from-teal-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
          <div className="relative flex flex-col items-center justify-center gap-4 text-center">
             <div className="w-16 h-16 rounded-full bg-white/5 border border-white/5 flex items-center justify-center group-hover:scale-110 transition-transform duration-500 shadow-xl">
                <Plus size={32} className="text-white/40 group-hover:text-white transition-colors" />
@@ -170,7 +170,7 @@ const DailySnapshot = memo(({ entry, onLog }: { entry?: MetricEntry, onLog: () =
           <div className="grid grid-cols-4 gap-4 mb-8 relative z-10 border-t border-white/5 pt-8">
              <div className="flex flex-col gap-1">
                 <span className="text-[9px] font-bold uppercase tracking-wider text-white/20">Sleep</span>
-                <span className="text-2xl font-black font-outfit text-indigo-200">{entry.rawValues.sleep.toFixed(1)}<span className="text-[10px] text-white/20 ml-0.5 align-top">h</span></span>
+                <span className="text-2xl font-black font-outfit text-teal-200">{entry.rawValues.sleep.toFixed(1)}<span className="text-[10px] text-white/20 ml-0.5 align-top">h</span></span>
              </div>
              <div className="flex flex-col gap-1">
                 <span className="text-[9px] font-bold uppercase tracking-wider text-white/20">HRV</span>
@@ -197,7 +197,7 @@ const DailySnapshot = memo(({ entry, onLog }: { entry?: MetricEntry, onLog: () =
                 <span className="text-[10px] font-bold text-white/70 tracking-wide">{entry.rawValues.exercise}</span>
              </div>
              <div className="px-4 py-2 rounded-full bg-white/5 border border-white/5 flex items-center gap-2.5">
-                <Coffee size={12} className={entry.processedState.gut === 'GREEN' ? 'text-indigo-400' : 'text-white/30'} />
+                <Coffee size={12} className={entry.processedState.gut === 'GREEN' ? 'text-teal-400' : 'text-white/30'} />
                 <span className="text-[10px] font-bold text-white/70 tracking-wide">Gut {entry.rawValues.gut}</span>
              </div>
           </div>
@@ -262,7 +262,7 @@ export const Dashboard = memo(({ history, config, onAddNotif, isMockData, user, 
     const hrv = latest.rawValues?.hrv || 0;
     if (sleep < 6 || hrv < 35) return { title: "DEEP REST", desc: "Prioritize recovery.", color: "text-rose-400", icon: Moon, border: "border-rose-500/20" };
     if (sleep > 7.2 && hrv > 55) return { title: "HIGH EXERTION", desc: "Push limits.", color: "text-emerald-400", icon: Flame, border: "border-emerald-500/20" };
-    return { title: "MAINTENANCE", desc: "Sustain output.", color: "text-indigo-400", icon: Activity, border: "border-indigo-500/20" };
+    return { title: "MAINTENANCE", desc: "Sustain output.", color: "text-teal-400", icon: Activity, border: "border-teal-500/20" };
   }, [latest]);
 
   const chartData = useMemo(() => history.slice(-7).map(h => ({
@@ -306,7 +306,7 @@ export const Dashboard = memo(({ history, config, onAddNotif, isMockData, user, 
   };
 
   return (
-    <motion.div variants={staggerChildren} initial="hidden" animate="show" className="px-5 pb-40 space-y-6 mt-24">
+    <motion.div variants={staggerChildren} initial="hidden" animate="show" className="px-5 pb-40 space-y-6 mt-20">
       
       {/* PERSONALIZED GREETING */}
       <motion.div variants={fadeUp} className="flex justify-between items-end mb-2">
@@ -314,12 +314,12 @@ export const Dashboard = memo(({ history, config, onAddNotif, isMockData, user, 
             <h3 className="text-2xl font-black font-outfit text-white leading-none tracking-tight">
                {getGreeting()}
             </h3>
-            <p className="text-sm font-medium text-indigo-300/40">Your biometrics are synced.</p>
+            <p className="text-sm font-medium text-teal-300/40">Your biometrics are synced.</p>
          </div>
          {isMockData && (
           <div className="flex items-center gap-1.5 opacity-50 bg-white/5 px-2 py-1 rounded-lg">
-             <Database size={10} className="text-indigo-400" />
-             <span className="text-[9px] font-black uppercase tracking-widest text-indigo-400">Sim</span>
+             <Database size={10} className="text-teal-400" />
+             <span className="text-[9px] font-black uppercase tracking-widest text-teal-400">Sim</span>
           </div>
         )}
       </motion.div>
@@ -327,7 +327,7 @@ export const Dashboard = memo(({ history, config, onAddNotif, isMockData, user, 
       {/* 1. HERO CARD (Streak) */}
       <motion.div variants={fadeUp} className={`glass rounded-[48px] p-6 sm:p-8 relative overflow-hidden group border-t-2 ${dailyFocus.border || 'border-white/10'}`}>
         {/* Subtle Gradient wash that breathes */}
-        <div className={`absolute inset-0 bg-gradient-to-br ${dailyFocus.color === 'text-emerald-400' ? 'from-emerald-900/10' : dailyFocus.color === 'text-rose-400' ? 'from-rose-900/10' : 'from-indigo-900/10'} to-transparent opacity-50`} />
+        <div className={`absolute inset-0 bg-gradient-to-br ${dailyFocus.color === 'text-emerald-400' ? 'from-emerald-900/10' : dailyFocus.color === 'text-rose-400' ? 'from-rose-900/10' : 'from-teal-900/10'} to-transparent opacity-50`} />
         
         {/* Scan line */}
         <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent animate-[scan_6s_ease-in-out_infinite]" />
@@ -365,18 +365,18 @@ export const Dashboard = memo(({ history, config, onAddNotif, isMockData, user, 
       {/* 3. BIOMETRIC ARRAY (Free) */}
       <div className="grid grid-cols-2 gap-4">
         {/* Slightly tinted glass for biometric cards to distinguish from background */}
-        <motion.div variants={fadeUp} className="glass rounded-[40px] p-4 border-white/5 relative overflow-hidden bg-indigo-500/[0.02]">
-          <BioTargetCard value={latest?.rawValues?.sleep || 0} target={config.wearableBaselines.sleep} unit="h" color="text-indigo-400" label="Sleep Depth" />
+        <motion.div variants={fadeUp} className="glass rounded-[40px] p-4 border-white/5 relative overflow-hidden bg-teal-500/[0.02]">
+          <BioTargetCard value={latest?.rawValues?.sleep || 0} target={config.wearableBaselines.sleep} unit="h" color="text-teal-400" label="Sleep Depth" />
         </motion.div>
-        <motion.div variants={fadeUp} className="glass rounded-[40px] p-4 border-white/5 relative overflow-hidden bg-fuchsia-500/[0.02]">
-          <BioTargetCard value={latest?.rawValues?.hrv || 0} target={config.wearableBaselines.hrv} unit="ms" color="text-fuchsia-400" label="Neural HRV" />
+        <motion.div variants={fadeUp} className="glass rounded-[40px] p-4 border-white/5 relative overflow-hidden bg-cyan-500/[0.02]">
+          <BioTargetCard value={latest?.rawValues?.hrv || 0} target={config.wearableBaselines.hrv} unit="ms" color="text-cyan-400" label="Neural HRV" />
         </motion.div>
       </div>
 
       {/* 4. CORTEX UPLINK (PREMIUM GATE) */}
       <motion.div variants={fadeUp} className="relative group mt-4">
         <PremiumGate isPremium={user.isPremium} triggerPaywall={onTriggerPaywall} label="Neural Cortex" className="rounded-[32px]">
-          <div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 to-fuchsia-600 rounded-[34px] opacity-30 group-hover:opacity-60 blur transition duration-500" />
+          <div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-[34px] opacity-30 group-hover:opacity-60 blur transition duration-500" />
           <div className="glass rounded-[32px] p-1 relative bg-[#020617]">
             <div className="flex justify-between items-center p-4">
               <div className="flex items-center gap-3">
@@ -472,14 +472,14 @@ export const Dashboard = memo(({ history, config, onAddNotif, isMockData, user, 
               </FlippableCard>
             </PremiumGate>
           </div>
-          <div className="h-[320px] w-full">
+          <div className="h-[400px] w-full">
             <PremiumGate isPremium={user.isPremium} triggerPaywall={onTriggerPaywall} label="Flow Heatmap">
-              <FlippableCard title="Flow Persistence" icon={Calendar} color="text-fuchsia-400" backContent="The Heatmap displays your consistency density over the last 28 days.">
+              <FlippableCard title="Flow Persistence" icon={Calendar} color="text-cyan-400" backContent="The Heatmap displays your consistency density over the last 28 days.">
                 {history.length >= 3 ? (
                   <div className="h-full w-full mt-2"><Deferred><Suspense fallback={<div/>}><ConsistencyHeatmap history={history} config={config} /></Suspense></Deferred></div>
                 ) : (
                   <div className="h-full w-full flex flex-col items-center justify-center gap-3 opacity-40">
-                    <Calendar size={32} className="text-fuchsia-400" />
+                    <Calendar size={32} className="text-cyan-400" />
                     <p className="text-xs text-white/50 text-center px-4">Need 3+ entries to show consistency heatmap</p>
                   </div>
                 )}
