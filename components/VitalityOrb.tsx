@@ -212,10 +212,8 @@ const ParticleRing: React.FC<{ theme: ReturnType<typeof getOrbTheme> }> = ({ the
     const cycleDuration = 2.8;
 
     // TypedArray particle storage (zero GC even on main thread)
-    type TypedParticleData = Float32Array;
     const FLOATS_PER_PARTICLE = 6;
-    const particles: TypedParticleData = new Float32Array(particleCount * FLOATS_PER_PARTICLE);
-    particlesRef.current = particles;
+    const particles = new Float32Array(particleCount * FLOATS_PER_PARTICLE);
 
     // Initialize particles
     for (let i = 0; i < particleCount; i++) {
