@@ -17,6 +17,14 @@ dist-ssr
 !.env.example
 *.local
 
+# Capacitor / iOS
+ios/App/App/public
+ios/App/DerivedData
+ios/App/build
+ios/App/Pods
+ios/App/.swiftpm
+*.xcuserstate
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

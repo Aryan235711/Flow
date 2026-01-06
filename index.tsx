@@ -72,6 +72,12 @@ const App = () => {
   const [devPass, setDevPass] = useState('');
   const [devLoading, setDevLoading] = useState(false);
   const [devError, setDevError] = useState<string | null>(null);
+
+  const isLocalDev = useMemo(() => {
+    if (typeof window === 'undefined') return false;
+    const host = window.location.hostname;
+    return import.meta.env.DEV && (host === 'localhost' || host === '127.0.0.1');
+  }, []);
   
   const [config, setConfig] = useState<UserConfig>(() => {
     const stored = getSafeStorage(STORAGE_KEYS.CONFIG, DEFAULT_CONFIG);
@@ -114,6 +120,45 @@ const App = () => {
   useEffect(() => setSafeStorage(STORAGE_KEYS.HISTORY, history), [history]);
   useEffect(() => setSafeStorage(STORAGE_KEYS.NOTIFS, notifications), [notifications]);
   useEffect(() => setSafeStorage(STORAGE_KEYS.CONFIG, config), [config]);
+
+  // Local dev: permanently bypass login (no OAuth needed)
+  useEffect(() => {
+    if (!isLocalDev) return;
+    if (user.isAuthenticated && user.token) return;
+    let cancelled = false;
+
+    const run = async () => {
+      try {
+        const res = await fetch('/api/dev-login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: 'dev@flow.local', name: 'Dev User', avatarSeed: 'Felix' })
+        });
+        if (!res.ok) throw new Error('Dev login failed');
+        const data = await res.json();
+        const u = data?.user;
+        if (!u?.token) throw new Error('Dev login missing token');
+        if (cancelled) return;
+        setUser({
+          name: u.name || 'Dev User',
+          email: u.email || 'dev@flow.local',
+          avatarSeed: u.avatarSeed || 'Felix',
+          picture: u.picture || '',
+          isAuthenticated: true,
+          isPremium: !!u.isPremium,
+          token: u.token
+        });
+        setStage('MAIN');
+      } catch (e) {
+        console.error('[dev-auto-login] error', e);
+      }
+    };
+
+    run();
+    return () => {
+      cancelled = true;
+    };
+  }, [isLocalDev, user.isAuthenticated, user.token]);
 
   // Notify when using mock data (no user entries)
   useEffect(() => {
@@ -593,11 +638,18 @@ const App = () => {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.98 }}
           onClick={handleLogin} 
+          disabled={isLocalDev}
           className="w-full py-6 bg-white text-[#020617] font-black rounded-[32px] text-xl shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] flex items-center justify-center gap-4 font-outfit relative overflow-hidden group"
         >
            <div className="absolute inset-0 bg-gradient-to-r from-indigo-50/0 via-indigo-50/50 to-indigo-50/0 translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700 ease-in-out" />
            <span className="relative z-10 flex items-center gap-3"><Fingerprint size={24} className="text-indigo-600" /> INITIALIZE LINK</span>
         </motion.button>
+
+        {isLocalDev && (
+          <div className="text-center text-[10px] uppercase tracking-[0.3em] text-white/20 font-black">
+            Local Dev: Login bypassed
+          </div>
+        )}
 
         <div className="w-full">
           <button

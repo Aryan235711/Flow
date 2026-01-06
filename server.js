@@ -76,11 +76,16 @@ app.post('/api/login', (req, res) => {
 // Developer bypass login (disabled unless DEV_BYPASS_PASS is set)
 // Use this for staging/dev only; do not enable on public production environments unless you trust the pass.
 app.post('/api/dev-login', async (req, res) => {
+  const isNonProd = process.env.NODE_ENV !== 'production';
   const passEnv = process.env.DEV_BYPASS_PASS;
-  if (!passEnv) return res.status(404).json({ error: 'dev login not enabled' });
+
+  // Production: require explicit enablement via env var.
+  if (!isNonProd && !passEnv) return res.status(404).json({ error: 'dev login not enabled' });
 
   const { pass, email = 'dev@flow.local', name = 'Dev User', avatarSeed = 'Felix' } = req.body || {};
-  if (!timingSafeEqualString(String(pass || ''), String(passEnv))) {
+
+  // Production: require correct pass.
+  if (!isNonProd && !timingSafeEqualString(String(pass || ''), String(passEnv))) {
     return res.status(401).json({ error: 'invalid dev pass' });
   }
 
