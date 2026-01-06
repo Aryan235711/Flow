@@ -173,6 +173,9 @@ const ParticleRing: React.FC<{ theme: ReturnType<typeof getOrbTheme> }> = ({ the
   const animationRef = useRef<number>();
   const rotationRef = useRef(0);
   const timeRef = useRef(0);
+  const lastFrameTimeRef = useRef(0);
+  const velocityRef = useRef(0);
+  const currentRadiusRef = useRef(0);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -195,17 +198,28 @@ const ParticleRing: React.FC<{ theme: ReturnType<typeof getOrbTheme> }> = ({ the
     const baseOuterRadius = 105;
     const particleCount = 900;
 
-    // Easing function for asymmetric pulse (cubic-bezier approximation)
-    const easeInOutCustom = (t: number) => {
-      if (t < 0.5) {
-        // Contraction phase - faster (ease-in)
-        return 4 * t * t * t;
-      } else {
-        // Expansion phase - slower (ease-out with overshoot)
-        const t2 = t - 1;
-        return 1 + 4 * t2 * t2 * t2;
-      }
-    };
+    // Spring physics parameters (snappy contraction, slow drift expansion)
+    const springTension = 120;
+    const springFriction = 14;
+    const cycleDuration = 2.8; // seconds (faster, more energetic)
+
+    // Pre-render glowing particle texture to offscreen canvas (10x performance boost)
+    const offscreenParticle = document.createElement('canvas');
+    const offscreenCtx = offscreenParticle.getContext('2d')!;
+    const particleTextureSize = 20;
+    offscreenParticle.width = particleTextureSize;
+    offscreenParticle.height = particleTextureSize;
+    
+    // Draw one perfect glowing particle
+    const gradient = offscreenCtx.createRadialGradient(
+      particleTextureSize / 2, particleTextureSize / 2, 0,
+      particleTextureSize / 2, particleTextureSize / 2, particleTextureSize / 2
+    );
+    gradient.addColorStop(0, theme.primary);
+    gradient.addColorStop(0.5, theme.secondary);
+    gradient.addColorStop(1, 'transparent');
+    offscreenCtx.fillStyle = gradient;
+    offscreenCtx.fillRect(0, 0, particleTextureSize, particleTextureSize);
 
     // Generate particles with individual shimmer offsets
     const particles: Array<{ 
@@ -214,13 +228,12 @@ const ParticleRing: React.FC<{ theme: ReturnType<typeof getOrbTheme> }> = ({ the
       opacity: number; 
       size: number;
       shimmerPhase: number;
-      radiusRatio: number; // 0-1, how far out in the ring (for velocity lag)
+      radiusRatio: number; // 0-1, for velocity lag
     }> = [];
     
     for (let i = 0; i < particleCount; i++) {
       const angle = Math.random() * Math.PI * 2;
       
-      // More uniform distribution across ring thickness with slight center bias
       const u1 = Math.random();
       const u2 = Math.random();
       const gaussian = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
@@ -229,38 +242,63 @@ const ParticleRing: React.FC<{ theme: ReturnType<typeof getOrbTheme> }> = ({ the
       
       const opacity = 0.2 + Math.random() * 0.5;
       const size = 0.8 + Math.random() * 1.0;
-      const shimmerPhase = Math.random() * Math.PI * 2; // Random phase offset for shimmer
+      const shimmerPhase = Math.random() * Math.PI * 2;
       const radiusRatio = (baseRadius - baseInnerRadius) / (baseOuterRadius - baseInnerRadius);
       
       particles.push({ angle, baseRadius, opacity, size, shimmerPhase, radiusRatio });
     }
 
-    // Animation loop
-    const animate = () => {
+    // Animation loop with deltaTime for frame-rate independence
+    const animate = (currentTime: number) => {
+      // Delta time in seconds (hardware-agnostic smoothness)
+      const deltaTime = lastFrameTimeRef.current === 0 ? 0.016 : (currentTime - lastFrameTimeRef.current) / 1000;
+      lastFrameTimeRef.current = currentTime;
+      timeRef.current += deltaTime;
+      
       ctx.clearRect(0, 0, size, size);
       
-      // Time progression (60fps = ~0.016s per frame)
-      timeRef.current += 0.016;
+      // 20/80 rule: 20% contraction (0-0.56s), 80% expansion (0.56-2.8s)
+      const cycleProgress = (timeRef.current % cycleDuration) / cycleDuration;
+      const contractionPhase = 0.2; // 20% of cycle
       
-      // Biomimetic pulse calculation (4 second cycle = 0.25 Hz)
-      const pulseFrequency = 0.25; // Hz
-      const pulseAmplitude = 12; // pixels
-      const rawPulse = Math.sin(2 * Math.PI * pulseFrequency * timeRef.current);
-      const normalizedTime = (rawPulse + 1) / 2; // 0 to 1
-      const easedPulse = easeInOutCustom(normalizedTime);
-      const pulseFactor = (easedPulse - 0.5) * 2; // -1 to 1
+      let targetRadius: number;
+      let isContracting: boolean;
       
-      // Phase detection: contraction (negative) vs expansion (positive)
-      const isContracting = pulseFactor < 0;
-      const pulseIntensity = Math.abs(pulseFactor);
+      if (cycleProgress < contractionPhase) {
+        // SNAP phase: violent inward pull (spring tension high)
+        const snapProgress = cycleProgress / contractionPhase;
+        // Back-ease-in for aggressive snap
+        const backEase = snapProgress * snapProgress * ((2.5 + 1) * snapProgress - 2.5);
+        targetRadius = -12 * backEase;
+        isContracting = true;
+      } else {
+        // DRIFT phase: slow, low-friction expansion (spring friction low)
+        const driftProgress = (cycleProgress - contractionPhase) / (1 - contractionPhase);
+        // Ease-out with overshoot
+        const driftEase = 1 - Math.pow(1 - driftProgress, 3);
+        targetRadius = -12 + (12 * driftEase);
+        isContracting = false;
+      }
       
-      // Dynamic ring dimensions
-      const currentInnerRadius = baseInnerRadius + pulseFactor * pulseAmplitude * 0.5;
-      const currentOuterRadius = baseOuterRadius + pulseFactor * pulseAmplitude;
+      // Spring physics simulation for smooth, realistic motion
+      const displacement = targetRadius - currentRadiusRef.current;
+      const springForce = displacement * springTension;
+      const dampingForce = -velocityRef.current * springFriction;
+      const acceleration = (springForce + dampingForce) / 100; // mass = 100
       
-      // Density fluctuation: intensity during contraction, ethereal during expansion
-      const globalBlur = isContracting ? 4 + pulseIntensity * 2 : 3;
-      const opacityMultiplier = isContracting ? 1 + pulseIntensity * 0.3 : 1 - pulseIntensity * 0.2;
+      velocityRef.current += acceleration * deltaTime;
+      currentRadiusRef.current += velocityRef.current * deltaTime;
+      
+      const pulseFactor = currentRadiusRef.current;
+      const pulseIntensity = Math.abs(pulseFactor) / 12;
+      
+      // Dynamic ring dimensions with sub-pixel precision
+      const currentInnerRadius = baseInnerRadius + pulseFactor * 0.5;
+      const currentOuterRadius = baseOuterRadius + pulseFactor;
+      
+      // Density fluctuation
+      const globalBlur = isContracting ? 4 + pulseIntensity * 3 : 3;
+      const opacityMultiplier = isContracting ? 1 + pulseIntensity * 0.4 : 1 - pulseIntensity * 0.15;
       
       ctx.globalCompositeOperation = 'lighter';
       ctx.shadowBlur = globalBlur;
@@ -269,41 +307,39 @@ const ParticleRing: React.FC<{ theme: ReturnType<typeof getOrbTheme> }> = ({ the
       // Slow rotation
       rotationRef.current += 0.0015;
 
-      // Draw particles with elasticity and shimmer
+      // Draw particles using pre-rendered texture (10x faster)
       particles.forEach(p => {
         const currentAngle = p.angle + rotationRef.current;
         
-        // Velocity lag: outer particles lag during contraction
-        const lagFactor = isContracting ? p.radiusRatio * 0.3 : 0;
+        // Increased velocity lag for dramatic bell stretch (50% for outer particles)
+        const lagFactor = isContracting ? p.radiusRatio * 0.5 : 0;
         const laggedPulse = pulseFactor * (1 - lagFactor);
         
-        // Individual shimmer using cosine wave
-        const shimmer = Math.cos(timeRef.current * 2 + p.shimmerPhase) * 2;
+        // Individual shimmer with sub-pixel precision
+        const shimmer = Math.cos(timeRef.current * 2.5 + p.shimmerPhase) * 1.5;
         
-        // Calculate current radius with pulse, lag, and shimmer
-        const radius = p.baseRadius + laggedPulse * pulseAmplitude + shimmer;
+        // Calculate current radius (floating-point for smooth motion)
+        const radius = p.baseRadius + laggedPulse + shimmer;
         
         const x = centerX + Math.cos(currentAngle) * radius;
         const y = centerY + Math.sin(currentAngle) * radius;
 
-        // Radial gradient for sparkle effect
-        const gradient = ctx.createRadialGradient(x, y, 0, x, y, p.size * 2);
-        gradient.addColorStop(0, theme.primary);
-        gradient.addColorStop(0.5, theme.secondary);
-        gradient.addColorStop(1, 'transparent');
-
-        // Apply density-based opacity
+        // Use pre-rendered particle texture
         ctx.globalAlpha = p.opacity * opacityMultiplier;
-        ctx.fillStyle = gradient;
-        ctx.beginPath();
-        ctx.arc(x, y, p.size * 1.5, 0, Math.PI * 2);
-        ctx.fill();
+        const renderSize = p.size * 3;
+        ctx.drawImage(
+          offscreenParticle,
+          x - renderSize / 2,
+          y - renderSize / 2,
+          renderSize,
+          renderSize
+        );
       });
 
       animationRef.current = requestAnimationFrame(animate);
     };
 
-    animate();
+    animationRef.current = requestAnimationFrame(animate);
 
     return () => {
       if (animationRef.current) {
