@@ -6,6 +6,7 @@ import { useFlowAI } from '../hooks/useFlowAI.ts';
 import { Deferred } from './Deferred.tsx';
 import { FlippableCard } from './FlippableCard.tsx';
 import { PremiumGate } from './PremiumGate.tsx';
+import { VitalityOrb } from './VitalityOrb.tsx';
 import { triggerHaptic, getLocalDate } from '../utils.ts';
 
 // Lazy load chart components
@@ -23,83 +24,6 @@ interface DashboardProps {
   onTriggerPaywall: () => void; 
   onLogToday: () => void;
 }
-
-const BioTargetCard = ({ value, target, unit, color, label }: { 
-  value: number, target: number, unit: string, color: string, label: string 
-}) => {
-  const startAngle = -110;
-  const endAngle = 110;
-  const radius = 38;
-  const cx = 50;
-  const cy = 50;
-  
-  const progress = Math.min(1, value / target);
-  const currentAngle = startAngle + (progress * (endAngle - startAngle));
-
-  const getCoords = (angle: number) => {
-    const a = (angle - 90) * (Math.PI / 180); 
-    return {
-      x: cx + radius * Math.cos(a),
-      y: cy + radius * Math.sin(a)
-    };
-  };
-
-  const start = getCoords(startAngle);
-  const end = getCoords(endAngle);
-  const current = getCoords(currentAngle);
-
-  const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
-  const bgPath = `M ${start.x} ${start.y} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${end.x} ${end.y}`;
-  
-  const progressLargeArc = currentAngle - startAngle <= 180 ? "0" : "1";
-  const progressPath = `M ${start.x} ${start.y} A ${radius} ${radius} 0 ${progressLargeArc} 1 ${current.x} ${current.y}`;
-
-  return (
-    <div className="relative h-full w-full flex flex-col items-center justify-between py-1">
-      <div className="relative w-32 h-32 flex items-center justify-center mt-1">
-         <svg className="w-full h-full overflow-visible" viewBox="0 0 100 100">
-           <defs>
-             <filter id="glow-arc" x="-50%" y="-50%" width="200%" height="200%">
-               <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-               <feMerge>
-                 <feMergeNode in="coloredBlur"/>
-                 <feMergeNode in="SourceGraphic"/>
-               </feMerge>
-             </filter>
-           </defs>
-           <path d={bgPath} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="10" strokeLinecap="round" />
-           <motion.path 
-             initial={{ pathLength: 0, opacity: 0 }}
-             animate={{ pathLength: 1, opacity: 1 }}
-             transition={{ duration: 1.5, ease: "easeOut", delay: 0.2 }}
-             d={progressPath} 
-             fill="none" 
-             stroke="currentColor" 
-             strokeWidth="10" 
-             strokeLinecap="round" 
-             className={color}
-             style={{ filter: 'url(#glow-arc)' }}
-           />
-         </svg>
-         
-         <div className="absolute inset-0 flex flex-col items-center justify-center pt-3">
-           <span className="text-4xl font-black font-outfit text-white tracking-tighter leading-none drop-shadow-2xl">
-             {value}
-           </span>
-           <span className="text-[10px] font-bold text-white/40 mt-1">{unit}</span>
-         </div>
-      </div>
-
-      <div className="flex flex-col items-center -mt-5 space-y-1.5 w-full">
-        <div className="text-[9px] font-black uppercase tracking-[0.25em] text-white/50">{label}</div>
-        <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/5 backdrop-blur-sm">
-           <Target size={10} className="text-indigo-300" />
-           <span className="text-[10px] font-bold text-teal-200/80">Goal <span className="text-white">{target}</span></span>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 const DailySnapshot = memo(({ entry, onLog }: { entry?: MetricEntry, onLog: () => void }) => {
   const isSystem = entry?.isSystemGenerated;
@@ -362,16 +286,10 @@ export const Dashboard = memo(({ history, config, onAddNotif, isMockData, user, 
          <DailySnapshot entry={todayEntry} onLog={onLogToday} />
       </motion.div>
 
-      {/* 3. BIOMETRIC ARRAY (Free) */}
-      <div className="grid grid-cols-2 gap-4">
-        {/* Slightly tinted glass for biometric cards to distinguish from background */}
-        <motion.div variants={fadeUp} className="glass rounded-[40px] p-4 border-white/5 relative overflow-hidden bg-teal-500/[0.02]">
-          <BioTargetCard value={latest?.rawValues?.sleep || 0} target={config.wearableBaselines.sleep} unit="h" color="text-teal-400" label="Sleep Depth" />
-        </motion.div>
-        <motion.div variants={fadeUp} className="glass rounded-[40px] p-4 border-white/5 relative overflow-hidden bg-cyan-500/[0.02]">
-          <BioTargetCard value={latest?.rawValues?.hrv || 0} target={config.wearableBaselines.hrv} unit="ms" color="text-cyan-400" label="Neural HRV" />
-        </motion.div>
-      </div>
+      {/* 3. VITALITY ORB (Free) */}
+      <motion.div variants={fadeUp} className="glass rounded-[40px] border-white/5 relative overflow-hidden bg-gradient-to-br from-teal-500/[0.02] to-cyan-500/[0.02]">
+        <VitalityOrb history={history} config={config} userAge={30} />
+      </motion.div>
 
       {/* 4. CORTEX UPLINK (PREMIUM GATE) */}
       <motion.div variants={fadeUp} className="relative group mt-4">
