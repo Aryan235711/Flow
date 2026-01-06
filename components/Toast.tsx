@@ -23,7 +23,7 @@ export const Toast = memo(({ notification, onDismiss }: ToastProps) => {
         <motion.div 
           initial={{ opacity: 0, y: -20, scale: 0.9 }} 
           animate={{ opacity: 1, y: 0, scale: 1 }} 
-          exit={{ opacity: 0, y: -20, scale: 0.9 }}
+          exit={{ opacity: 0, y: -100, scale: 0.9 }}
           transition={{ type: "spring", stiffness: 400, damping: 30 }}
           className="fixed top-24 left-0 right-0 z-[100] flex justify-center px-4 pointer-events-none"
         >

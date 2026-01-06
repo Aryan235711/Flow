@@ -907,8 +907,8 @@ const App = () => {
                 <motion.div 
                    key={idx} 
                    drag="x"
-                   dragConstraints={{ left: 0, right: 0 }}
-                   dragElastic={{ left: 0, right: 0.2 }}
+                   dragConstraints={{ left: -1000, right: 0 }}
+                   dragElastic={{ left: 0.2, right: 0 }}
                    onDragEnd={(e, info) => {
                      if (info.offset.x < -100) {
                        setNotifications(prev => prev.filter((_, i) => i !== idx));
