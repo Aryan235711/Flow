@@ -105,7 +105,7 @@ export const ConsistencyHeatmap = memo(({ history, config }: { history: MetricEn
   return (
     <div className="w-full h-full flex flex-col px-2 pt-2">
       {/* Grid - Centered or Top aligned */}
-      <div className="grid grid-cols-7 gap-2 content-start mb-4">
+      <div className="grid grid-cols-7 gap-2 md:gap-3 content-start mb-4 max-w-2xl mx-auto w-full">
         {heatData.map((day, i) => (
           <HeatmapTile 
              key={day.date} 
@@ -117,11 +117,11 @@ export const ConsistencyHeatmap = memo(({ history, config }: { history: MetricEn
         ))}
       </div>
 
-      {/* Flexible Spacer */}
-      <div className="flex-grow" />
+      {/* Spacer to breathe without forcing tall gaps */}
+      <div className="mt-2 md:mt-4" />
 
       {/* Info & Legend Container - Fixed at bottom */}
-      <div className="space-y-3 pb-1">
+      <div className="space-y-3 md:space-y-4 pb-2">
         
         {/* Selection Details */}
         <AnimatePresence mode="wait">
@@ -131,7 +131,7 @@ export const ConsistencyHeatmap = memo(({ history, config }: { history: MetricEn
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -5 }}
-              className="bg-white/5 p-4 rounded-2xl border border-white/5 flex items-center justify-between"
+              className="bg-white/5 p-3 md:p-4 rounded-2xl border border-white/5 flex items-center justify-between"
             >
                <div className="flex items-center gap-4">
                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${selectedDate.hasData ? 'bg-white/10' : 'bg-white/5'}`}>
@@ -192,7 +192,7 @@ export const ConsistencyHeatmap = memo(({ history, config }: { history: MetricEn
 
 const LegendItem = memo(({ color, label }: { color: string, label: string }) => (
   <div className="flex items-center gap-1.5">
-    <div className={`w-2 h-2 rounded-full ${color}`} />
-    <span className="text-[9px] uppercase font-bold text-white/30">{label}</span>
+    <div className={`w-2 h-2 md:w-3 md:h-3 rounded-full ${color}`} />
+    <span className="text-[9px] md:text-[11px] uppercase font-bold text-white/30">{label}</span>
   </div>
 ));

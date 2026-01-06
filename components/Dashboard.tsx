@@ -93,41 +93,41 @@ const DailySnapshot = memo(({ entry, onLog }: { entry?: MetricEntry, onLog: () =
              )}
           </div>
 
-          {/* Minimal Vitals Grid */}
-          <div className="grid grid-cols-4 gap-4 mb-8 relative z-10 border-t border-white/5 pt-8">
+           {/* Minimal Vitals Grid */}
+           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-8 relative z-10 border-t border-white/5 pt-8">
              <div className="flex flex-col gap-1">
-                <span className="text-[9px] font-bold uppercase tracking-wider text-white/20">Sleep</span>
-                <span className="text-2xl font-black font-outfit text-teal-200">{entry.rawValues.sleep.toFixed(1)}<span className="text-[10px] text-white/20 ml-0.5 align-top">h</span></span>
+               <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-white/20">Sleep</span>
+               <span className="text-2xl md:text-3xl font-black font-outfit text-teal-200">{entry.rawValues.sleep.toFixed(1)}<span className="text-[10px] text-white/20 ml-0.5 align-top">h</span></span>
              </div>
              <div className="flex flex-col gap-1">
-                <span className="text-[9px] font-bold uppercase tracking-wider text-white/20">HRV</span>
-                <span className="text-2xl font-black font-outfit text-emerald-200">{entry.rawValues.hrv}<span className="text-[10px] text-white/20 ml-0.5 align-top">ms</span></span>
+               <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-white/20">HRV</span>
+               <span className="text-2xl md:text-3xl font-black font-outfit text-emerald-200">{entry.rawValues.hrv}<span className="text-[10px] text-white/20 ml-0.5 align-top">ms</span></span>
              </div>
              <div className="flex flex-col gap-1">
-                <span className="text-[9px] font-bold uppercase tracking-wider text-white/20">RHR</span>
-                <span className="text-2xl font-black font-outfit text-rose-200">{entry.rawValues.rhr}<span className="text-[10px] text-white/20 ml-0.5 align-top">bp</span></span>
+               <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-white/20">RHR</span>
+               <span className="text-2xl md:text-3xl font-black font-outfit text-rose-200">{entry.rawValues.rhr}<span className="text-[10px] text-white/20 ml-0.5 align-top">bp</span></span>
              </div>
              <div className="flex flex-col gap-1">
-                <span className="text-[9px] font-bold uppercase tracking-wider text-white/20">Prot</span>
-                <span className="text-2xl font-black font-outfit text-amber-200">{entry.rawValues.protein}<span className="text-[10px] text-white/20 ml-0.5 align-top">g</span></span>
+               <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-white/20">Prot</span>
+               <span className="text-2xl md:text-3xl font-black font-outfit text-amber-200">{entry.rawValues.protein}<span className="text-[10px] text-white/20 ml-0.5 align-top">g</span></span>
              </div>
           </div>
 
           {/* Footer Context Pills */}
-          <div className="flex items-center gap-3 relative z-10">
-             <div className="px-4 py-2 rounded-full bg-white/5 border border-white/5 flex items-center gap-2.5">
-                <Sun size={12} className={entry.processedState.sun === 'GREEN' ? 'text-amber-400' : 'text-white/30'} />
-                <span className="text-[10px] font-bold text-white/70 tracking-wide">{entry.rawValues.sun}</span>
+           <div className="flex flex-wrap md:flex-nowrap items-center gap-3 md:gap-4 relative z-10">
+             <div className="px-4 py-2 md:px-5 md:py-3 rounded-full bg-white/5 border border-white/5 flex items-center gap-2.5">
+               <Sun size={14} className={entry.processedState.sun === 'GREEN' ? 'text-amber-400' : 'text-white/30'} />
+               <span className="text-[10px] md:text-xs font-bold text-white/70 tracking-wide">{entry.rawValues.sun}</span>
              </div>
-             <div className="px-4 py-2 rounded-full bg-white/5 border border-white/5 flex items-center gap-2.5">
-                <Dumbbell size={12} className={entry.processedState.exercise === 'GREEN' ? 'text-emerald-400' : 'text-white/30'} />
-                <span className="text-[10px] font-bold text-white/70 tracking-wide">{entry.rawValues.exercise}</span>
+             <div className="px-4 py-2 md:px-5 md:py-3 rounded-full bg-white/5 border border-white/5 flex items-center gap-2.5">
+               <Dumbbell size={14} className={entry.processedState.exercise === 'GREEN' ? 'text-emerald-400' : 'text-white/30'} />
+               <span className="text-[10px] md:text-xs font-bold text-white/70 tracking-wide">{entry.rawValues.exercise}</span>
              </div>
-             <div className="px-4 py-2 rounded-full bg-white/5 border border-white/5 flex items-center gap-2.5">
-                <Coffee size={12} className={entry.processedState.gut === 'GREEN' ? 'text-teal-400' : 'text-white/30'} />
-                <span className="text-[10px] font-bold text-white/70 tracking-wide">Gut {entry.rawValues.gut}</span>
+             <div className="px-4 py-2 md:px-5 md:py-3 rounded-full bg-white/5 border border-white/5 flex items-center gap-2.5">
+               <Coffee size={14} className={entry.processedState.gut === 'GREEN' ? 'text-teal-400' : 'text-white/30'} />
+               <span className="text-[10px] md:text-xs font-bold text-white/70 tracking-wide">Gut {entry.rawValues.gut}</span>
              </div>
-          </div>
+           </div>
        </div>
     </div>
   );
@@ -209,10 +209,10 @@ export const Dashboard = memo(({ history, config, onAddNotif, isMockData, user, 
       </motion.div>
 
       {/* CORE STATS GRID */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+      <div className="grid grid-cols-1 gap-8 items-start">
         
         {/* 1. HERO CARD (Streak) */}
-        <motion.div variants={fadeUp} className={`glass rounded-[48px] p-6 sm:p-8 md:p-10 relative overflow-hidden group border-t-2 ${dailyFocus.border || 'border-white/10'} h-full flex flex-col justify-center`}>
+        <motion.div variants={fadeUp} className={`glass rounded-[48px] p-6 sm:p-8 md:p-12 relative overflow-hidden group border-t-2 ${dailyFocus.border || 'border-white/10'} flex flex-col justify-center min-h-[220px] md:min-h-[280px]`}>
           {/* Subtle Gradient wash that breathes */}
           <div className={`absolute inset-0 bg-gradient-to-br ${dailyFocus.color === 'text-emerald-400' ? 'from-emerald-900/10' : dailyFocus.color === 'text-rose-400' ? 'from-rose-900/10' : 'from-teal-900/10'} to-transparent opacity-50`} />
           
@@ -220,19 +220,19 @@ export const Dashboard = memo(({ history, config, onAddNotif, isMockData, user, 
           <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent animate-[scan_6s_ease-in-out_infinite]" />
           
           <div className="relative z-10 flex flex-col gap-4 sm:gap-6">
-            <div className="flex justify-between items-start gap-4 sm:gap-6">
+            <div className="flex justify-between items-start gap-4 sm:gap-10">
               <div className="space-y-4 flex-1 min-w-0">
                        <div className="flex items-center gap-2">
                           <Fingerprint size={14} className={`animate-pulse ${dailyFocus.color}`} />
                           <span className={`text-[10px] font-black uppercase tracking-[0.3em] ${dailyFocus.color} opacity-80`}>Protocol Active</span>
                        </div>
-                 <h2 className="text-3xl sm:text-5xl font-black font-outfit tracking-tighter leading-none text-white drop-shadow-lg">{dailyFocus.title}</h2>
-                 <p className="text-xs sm:text-lg font-bold text-white/50 leading-relaxed max-w-xs">{dailyFocus.desc}</p>
+                 <h2 className="text-3xl sm:text-5xl md:text-7xl font-black font-outfit tracking-tighter leading-none text-white drop-shadow-lg">{dailyFocus.title}</h2>
+                 <p className="text-xs sm:text-lg md:text-xl font-bold text-white/50 leading-relaxed max-w-2xl">{dailyFocus.desc}</p>
                   </div>
               <div className="flex flex-col items-end shrink-0">
-                <div className="w-16 h-16 md:w-24 md:h-24 rounded-[28px] md:rounded-[40px] bg-white/5 border border-white/10 flex items-center justify-center shadow-2xl backdrop-blur-md relative mb-4 group-hover:scale-105 transition-transform">
-                  <span className="text-3xl md:text-5xl font-black font-outfit text-white">{streak}</span>
-                          <div className="absolute -top-1 -right-1 md:-top-2 md:-right-2 w-4 h-4 md:w-6 md:h-6 bg-amber-500 rounded-full animate-pulse shadow-[0_0_20px_#f59e0b]" />
+                <div className="w-16 h-16 md:w-32 md:h-32 rounded-[28px] md:rounded-[48px] bg-white/5 border border-white/10 flex items-center justify-center shadow-2xl backdrop-blur-md relative mb-4 group-hover:scale-105 transition-transform">
+                  <span className="text-3xl md:text-6xl font-black font-outfit text-white">{streak}</span>
+                          <div className="absolute -top-1 -right-1 md:-top-2 md:-right-2 w-4 h-4 md:w-8 md:h-8 bg-amber-500 rounded-full animate-pulse shadow-[0_0_20px_#f59e0b]" />
                       </div>
                       <div className="flex items-center gap-2 bg-black/20 px-4 py-2 rounded-full border border-white/5 backdrop-blur-sm">
                          <Snowflake size={12} className="text-cyan-400" />
@@ -244,16 +244,16 @@ export const Dashboard = memo(({ history, config, onAddNotif, isMockData, user, 
         </motion.div>
 
         {/* 2. TODAY'S SNAPSHOT */}
-        <motion.div variants={fadeUp} className="h-full">
+        <motion.div variants={fadeUp}>
            <DailySnapshot entry={todayEntry} onLog={onLogToday} />
         </motion.div>
       </div>
 
       {/* ADAPTIVE VISUALIZATION GRID */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
         
         {/* 3. VITALITY ORB (Left on iPad) */}
-        <motion.div variants={fadeUp} className="md:col-span-5 lg:col-span-4 glass rounded-[48px] border-white/5 relative overflow-hidden bg-gradient-to-br from-teal-500/[0.02] to-cyan-500/[0.02] min-h-[520px]">
+        <motion.div variants={fadeUp} className="md:col-span-5 lg:col-span-4 glass rounded-[48px] border-white/5 relative overflow-hidden bg-gradient-to-br from-teal-500/[0.02] to-cyan-500/[0.02] min-h-[520px] lg:sticky lg:top-32">
           <VitalityOrb history={history} config={config} userAge={30} />
         </motion.div>
 
@@ -328,7 +328,7 @@ export const Dashboard = memo(({ history, config, onAddNotif, isMockData, user, 
                <span className="text-[10px] font-black uppercase tracking-[0.4em] text-white">Advanced Telemetry Deck</span>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-4 items-start">
               <div className="h-[280px]">
                 <PremiumGate isPremium={user.isPremium} triggerPaywall={onTriggerPaywall} label="Velocity Tracking">
                   <FlippableCard title="Velocity" icon={Activity} color="text-emerald-400" backContent="Velocity tracks the correlation between metabolic protein intake and physical exertion.">
@@ -357,7 +357,7 @@ export const Dashboard = memo(({ history, config, onAddNotif, isMockData, user, 
                   </FlippableCard>
                 </PremiumGate>
               </div>
-              <div className="h-[400px] md:col-span-2">
+              <div className="min-h-[360px] md:min-h-[440px] lg:min-h-[500px] md:col-span-2">
                 <PremiumGate isPremium={user.isPremium} triggerPaywall={onTriggerPaywall} label="Flow Heatmap">
                   <FlippableCard title="Flow Persistence" icon={Calendar} color="text-cyan-400" backContent="The Heatmap displays your consistency density over the last 28 days.">
                     {history.length >= 3 ? (
