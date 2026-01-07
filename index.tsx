@@ -20,7 +20,7 @@ import {
   Fingerprint
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { App } from '@capacitor/app';
+import { App as CapacitorApp } from '@capacitor/app';
 
 import { AppStage, AppView, UserProfile, MetricEntry, UserConfig, Notification } from './types.ts';
 import { STORAGE_KEYS, DEFAULT_CONFIG, getSafeStorage, setSafeStorage, generateMockData, triggerHaptic, generateFreezeEntry, getLocalDate, clearAppStorage, getValidatedNotifications, trackNotificationShown, validateUserConfig } from './utils.ts';
@@ -359,10 +359,10 @@ const App = () => {
       }
     };
 
-    App.addListener('appUrlOpen', handleAppUrlOpen);
+    CapacitorApp.addListener('appUrlOpen', handleAppUrlOpen);
     
     return () => {
-      App.removeAllListeners();
+      CapacitorApp.removeAllListeners();
     };
   }, [addNotification]);
 
