@@ -6,6 +6,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="description" content="Flow: High-performance biological telemetry and neural tracing dashboard.">
     <meta name="theme-color" content="#020617">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    
+    <!-- iOS PWA Support -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Flow">
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    <!-- iOS Touch Icons -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-192.webp">
+    <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-192.webp">
+    <link rel="apple-touch-icon" sizes="120x120" href="/icons/icon-128.webp">
+    <link rel="apple-touch-icon" sizes="76x76" href="/icons/icon-96.webp">
+    
+    <!-- Favicon -->
     <link rel="icon" href="/icon.png">
     <title>Flow Wellness - Biological Telemetry</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -131,6 +148,19 @@
         // Safety Shim for process.env to prevent crashes in browser environments
         if (typeof process === "undefined") {
             window.process = { env: { API_KEY: '' } };
+        }
+        
+        // Register Service Worker for PWA functionality
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then((registration) => {
+                        console.log('SW registered: ', registration);
+                    })
+                    .catch((registrationError) => {
+                        console.log('SW registration failed: ', registrationError);
+                    });
+            });
         }
     </script>
 <script type="importmap">
