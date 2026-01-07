@@ -309,7 +309,7 @@ export const LogInput = memo(({ config, onSave, initialData }: LogInputProps) =>
          variants={sectionVariants}
          whileTap={{ scale: 0.95 }}
          onClick={handleSubmit} 
-         className="w-full py-8 md:py-10 bg-gradient-to-r from-indigo-500 to-fuchsia-600 text-white font-black rounded-[32px] md:rounded-[40px] text-xl md:text-2xl shadow-2xl transition-all font-outfit uppercase tracking-wider relative overflow-hidden touch-manipulation flex items-center justify-center gap-4"
+         className="w-full py-8 md:py-10 bg-gradient-to-r from-teal-500 to-cyan-500 text-white font-black rounded-[32px] md:rounded-[40px] text-xl md:text-2xl shadow-2xl transition-all font-outfit uppercase tracking-wider relative overflow-hidden touch-manipulation flex items-center justify-center gap-4 hover:shadow-teal-500/40"
       >
         <span className="relative z-10">{initialData ? 'UPDATE ENTRY' : 'COMMIT BIOMETRIC BASELINE'}</span>
         {initialData && <RefreshCw size={24} className="relative z-10" />}
