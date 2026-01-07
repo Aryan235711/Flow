@@ -1,12 +1,15 @@
 import React, { useState, useCallback, memo, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Target, Coffee, Sun, Dumbbell, Zap, CloudFog, BatteryWarning, BrainCircuit, RefreshCw, Info } from 'lucide-react';
+import { Target, Coffee, Sun, Dumbbell, RefreshCw, Info } from 'lucide-react';
 import { MetricEntry, UserConfig, Flag } from '../types.ts';
 import { validateNumericInput, validateTimeInput, validateTextInput, VALIDATION_RULES, getInitialValidationState, isFormValid, FormValidationState } from '../inputValidation.ts';
 import { calculateFlag, triggerHaptic, getLocalDate } from '../utils.ts';
 import { FormErrorBoundary } from './FormErrorBoundary.tsx';
 import { useDebounce } from '../hooks/useDebounce.ts';
 import { calculateSmartDefaults } from '../smartDefaults.ts';
+import { NumericInput } from './NumericInput.tsx';
+import { RatingScale } from './RatingScale.tsx';
+import { CognitiveStateSelector } from './CognitiveStateSelector.tsx';
 
 // Minimal tooltip component
 const Tooltip = ({ text }: { text: string }) => (
@@ -253,29 +256,17 @@ const LogInputForm = memo(({ config, onSave, initialData, history = [] }: LogInp
               <Tooltip text="How intense are your symptoms today?" />
             </div>
             
-            <div className="flex justify-between gap-2 p-1.5 bg-white/5 rounded-[24px]" role="radiogroup" aria-label="Neural load intensity from 1 to 5">
-              {[1,2,3,4,5].map(v => {
-                const colors = ['bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-lime-500', 'bg-green-500'];
-                return (
-                  <button 
-                    key={v} 
-                    onClick={() => {
-                      updateField('symptomScore', v);
-                      setValidationState(prev => ({
-                        ...prev,
-                        symptomScore: { isValid: true, touched: true }
-                      }));
-                    }} 
-                    className={`flex-1 h-14 rounded-[18px] font-black text-lg transition-all active:scale-95 touch-manipulation ${formData.symptomScore === v ? `${colors[v-1]} text-white shadow-lg scale-105` : 'text-teal-300/20'}`}
-                    role="radio"
-                    aria-checked={formData.symptomScore === v}
-                    aria-label={`Neural load level ${v} of 5`}
-                  >
-                    {v}
-                  </button>
-                );
-              })}
-            </div>
+            <RatingScale
+              value={formData.symptomScore}
+              onChange={(v) => {
+                updateField('symptomScore', v);
+                setValidationState(prev => ({
+                  ...prev,
+                  symptomScore: { isValid: true, touched: true }
+                }));
+              }}
+              ariaLabel="Neural load intensity from 1 to 5"
+            />
             
             <input 
               placeholder="Log Name (Optional)" 
@@ -365,118 +356,54 @@ const LogInputForm = memo(({ config, onSave, initialData, history = [] }: LogInp
                   </motion.div>
                 )}
             </div>
-            {[
-              { k: 'rhr', l: 'RHR', t: 'numeric', tip: 'Resting heart rate (BPM)' },
-              { k: 'hrv', l: 'HRV', t: 'numeric', tip: 'Heart rate variability' },
-              { k: 'protein', l: 'Protein (g)', t: 'numeric', tip: 'Protein intake today' }
-            ].map(i => (
-              <div key={i.k} className={`glass rounded-[28px] p-6 text-center shadow-lg relative group transition-all ${
-                validationState[i.k]?.touched && !validationState[i.k]?.isValid 
-                  ? 'border-red-500/50 bg-red-500/5 ring-2 ring-red-500/30' 
-                  : validationState[i.k]?.touched && validationState[i.k]?.isValid 
-                  ? 'border-green-500/50 bg-green-500/5 ring-2 ring-green-500/30' 
-                  : 'border-white/5 focus-within:ring-2 ring-indigo-500/30'
-              }`}>
-                <div className={`absolute inset-0 opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none ${
-                  validationState[i.k]?.touched && !validationState[i.k]?.isValid 
-                    ? 'bg-red-500/10' 
-                    : validationState[i.k]?.touched && validationState[i.k]?.isValid 
-                    ? 'bg-green-500/10' 
-                    : 'bg-indigo-500/5'
-                }`} />
-                <div className="flex items-center justify-center gap-2 mb-3">
-                  <label className={`text-[10px] font-black uppercase font-outfit tracking-widest ${
-                    validationState[i.k]?.touched && !validationState[i.k]?.isValid 
-                      ? 'text-red-400/70' 
-                      : validationState[i.k]?.touched && validationState[i.k]?.isValid 
-                      ? 'text-green-400/70' 
-                      : 'text-indigo-400/30'
-                  }`}>{i.l}</label>
-                  <Tooltip text={i.tip} />
-                  {validationState[i.k]?.touched && validationState[i.k]?.isValid && (
-                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                  )}
-                </div>
-                <input 
-                  type="text"
-                  inputMode="decimal"
-                  pattern="[0-9]*"
-                  value={(formData as any)[i.k]} 
-                  onChange={(e) => {
-                    handleNumericChange(i.k as 'rhr' | 'hrv' | 'protein', e.target.value);
-                    setValidationState(prev => ({
-                      ...prev,
-                      [i.k]: { ...prev[i.k], touched: true }
-                    }));
-                  }} 
-                  className={`w-full bg-transparent text-center text-3xl font-bold font-outfit outline-none placeholder:text-white/10 transition-colors ${
-                    validationState[i.k]?.touched && !validationState[i.k]?.isValid 
-                      ? 'text-red-400' 
-                      : validationState[i.k]?.touched && validationState[i.k]?.isValid 
-                      ? 'text-green-400' 
-                      : 'text-white'
-                  }`}
-                  aria-label={`${i.l} input`}
-                  aria-invalid={validationState[i.k]?.touched && !validationState[i.k]?.isValid}
-                  aria-describedby={validationState[i.k]?.error ? `${i.k}-error` : undefined}
-                />
-                {validationState[i.k]?.touched && validationState[i.k]?.error && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    id={`${i.k}-error`} 
-                    className="text-red-400 text-xs mt-2 font-medium bg-red-500/10 px-3 py-1 rounded-lg"
-                  >
-                    {validationState[i.k]?.error}
-                  </motion.div>
-                )}
-              </div>
-            ))}
+            <NumericInput
+              label="RHR"
+              value={formData.rhr}
+              onChange={(value) => handleNumericChange('rhr', value)}
+              onTouch={() => setValidationState(prev => ({ ...prev, rhr: { ...prev.rhr, touched: true } }))}
+              isValid={validationState.rhr?.isValid}
+              error={validationState.rhr?.error}
+              touched={validationState.rhr?.touched}
+              tooltip="Resting heart rate (BPM)"
+            />
+            <NumericInput
+              label="HRV"
+              value={formData.hrv}
+              onChange={(value) => handleNumericChange('hrv', value)}
+              onTouch={() => setValidationState(prev => ({ ...prev, hrv: { ...prev.hrv, touched: true } }))}
+              isValid={validationState.hrv?.isValid}
+              error={validationState.hrv?.error}
+              touched={validationState.hrv?.touched}
+              tooltip="Heart rate variability"
+            />
+            <NumericInput
+              label="Protein (g)"
+              value={formData.protein}
+              onChange={(value) => handleNumericChange('protein', value)}
+              onTouch={() => setValidationState(prev => ({ ...prev, protein: { ...prev.protein, touched: true } }))}
+              isValid={validationState.protein?.isValid}
+              error={validationState.protein?.error}
+              touched={validationState.protein?.touched}
+              tooltip="Protein intake today"
+            />
           </motion.section>
         </div>
 
         <div className="space-y-8">
           {/* BEHAVIORAL & COGNITIVE SECTION */}
           <motion.section variants={sectionVariants} className="glass rounded-[32px] p-8 space-y-8 border-white/5 shadow-xl h-full flex flex-col justify-between">
-            <div className="space-y-5">
-              <div className="flex items-center gap-2">
-                <label className="text-[10px] font-black text-purple-200/40 uppercase tracking-[0.2em] flex items-center gap-2"><BrainCircuit size={14} className="text-purple-400"/> Cognitive State</label>
-                <Tooltip text="Current mental clarity and focus level" />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                {cogOptions.map(opt => (
-                  <button 
-                    key={opt.id} 
-                    onClick={() => updateField('cognition', opt.id)}
-                    className={`
-                      relative p-5 rounded-[24px] flex flex-col items-center gap-3 transition-all overflow-hidden active:scale-95 touch-manipulation
-                      ${formData.cognition === opt.id ? `${opt.bg} ${opt.text} shadow-xl scale-[1.02]` : 'bg-white/5 text-white/30 hover:bg-white/10'}
-                    `}
-                  >
-                     <opt.icon size={24} />
-                     <span className="text-[11px] font-black uppercase tracking-widest">{opt.label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
+            <CognitiveStateSelector
+              value={formData.cognition}
+              onChange={(value) => updateField('cognition', value)}
+            />
 
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <label className="text-[10px] font-black text-green-200/40 uppercase tracking-widest flex items-center gap-2"><Coffee size={14} className="text-green-400"/> Gut Stability</label>
-                  <Tooltip text="How healthy is your digestion?" />
-                </div>
-                <span className="text-green-400 font-bold">{formData.gut}/5</span>
-              </div>
-              <div className="flex justify-between gap-2 p-1.5 bg-white/5 rounded-[24px]">
-                {[1,2,3,4,5].map(v => {
-                  const colors = ['bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-lime-500', 'bg-green-500'];
-                  return (
-                    <button key={v} onClick={() => updateField('gut', v)} className={`flex-1 h-12 rounded-[18px] font-black text-lg transition-all active:scale-95 touch-manipulation ${formData.gut === v ? `${colors[v-1]} text-white shadow-lg scale-105` : 'text-green-300/20'}`}>{v}</button>
-                  );
-                })}
-              </div>
-            </div>
+            <RatingScale
+              value={formData.gut}
+              onChange={(value) => updateField('gut', value)}
+              label="Gut Stability"
+              showValue={true}
+              ariaLabel="How healthy is your digestion?"
+            />
 
             <div className="space-y-4">
               <div className="flex items-center gap-2">
