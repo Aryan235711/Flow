@@ -6,6 +6,7 @@ import { validateNumericInput, validateTimeInput, validateTextInput, VALIDATION_
 import { calculateFlag, triggerHaptic, getLocalDate } from '../utils.ts';
 import { FormErrorBoundary } from './FormErrorBoundary.tsx';
 import { useDebounce } from '../hooks/useDebounce.ts';
+import { calculateSmartDefaults } from '../smartDefaults.ts';
 
 // Minimal tooltip component
 const Tooltip = ({ text }: { text: string }) => (
@@ -22,18 +23,22 @@ interface LogInputProps {
   config: UserConfig;
   onSave: (entry: MetricEntry) => void;
   initialData?: MetricEntry | null;
+  history?: MetricEntry[]; // Add history for smart defaults
 }
 
-export const LogInput = memo(({ config, onSave, initialData }: LogInputProps) => {
+export const LogInput = memo(({ config, onSave, initialData, history = [] }: LogInputProps) => {
   return (
     <FormErrorBoundary>
-      <LogInputForm config={config} onSave={onSave} initialData={initialData} />
+      <LogInputForm config={config} onSave={onSave} initialData={initialData} history={history} />
     </FormErrorBoundary>
   );
 });
 
-const LogInputForm = memo(({ config, onSave, initialData }: LogInputProps) => {
-  // Consistent default state function
+const LogInputForm = memo(({ config, onSave, initialData, history = [] }: LogInputProps) => {
+  // Smart defaults based on history
+  const smartDefaults = useMemo(() => calculateSmartDefaults(history), [history]);
+  
+  // Consistent default state function with smart defaults
   const getDefaultState = useCallback((isEditing: boolean) => {
     if (isEditing) {
       return {
@@ -42,12 +47,8 @@ const LogInputForm = memo(({ config, onSave, initialData }: LogInputProps) => {
         symptomScore: 0, symptomName: ''
       };
     }
-    return {
-      sleep: '07:30', rhr: '65', hrv: '50', protein: '80',
-      gut: 4, sun: 'Full', exercise: 'Medium', cognition: 'STEADY',
-      symptomScore: 1, symptomName: ''
-    };
-  }, []);
+    return smartDefaults;
+  }, [smartDefaults]);
 
   const [formData, setFormData] = useState(() => getDefaultState(!!initialData));
   const [validationState, setValidationState] = useState(() => getInitialValidationState());
@@ -79,7 +80,8 @@ const LogInputForm = memo(({ config, onSave, initialData }: LogInputProps) => {
         symptomName: initialData.symptomName
       });
     } else {
-      setFormData(getDefaultState(false));
+      const defaults = getDefaultState(false);
+      setFormData({ ...defaults, symptomScore: 1 });
     }
     setValidationState(getInitialValidationState());
   }, [initialData, getDefaultState]);
