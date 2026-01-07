@@ -468,6 +468,7 @@ const App = () => {
   const handleSignOut = useCallback(() => {
     setUser({ name: '', email: '', picture: '', avatarSeed: 'Felix', isAuthenticated: false, isPremium: false });
     setStage('AUTH');
+    setIsLoggingIn(false); // Reset login state so button shows "INITIALIZE LINK"
     setShowProfile(false);
     clearAppStorage();
     setHistory([]);
