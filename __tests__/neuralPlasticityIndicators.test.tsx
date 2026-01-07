@@ -70,10 +70,6 @@ describe('NeuralPlasticityIndicators E2E Tests', () => {
 
     render(<NeuralPlasticityIndicators history={mockHistory} config={mockConfig} />);
 
-    // Check that the component header is rendered
-    expect(screen.getByText('Neural Plasticity Trends')).toBeInTheDocument();
-    expect(screen.getByText(/8-Day Brain Health Score:/)).toBeInTheDocument();
-
     // Check that the responsive container is present (mocked)
     expect(screen.getByTestId('responsive-container')).toBeInTheDocument();
 
@@ -137,9 +133,6 @@ describe('NeuralPlasticityIndicators E2E Tests', () => {
 
     // Should not show the "no data" message
     expect(screen.queryByText('Need more data for trend analysis')).not.toBeInTheDocument();
-
-    // Should show the header
-    expect(screen.getByText('Neural Plasticity Trends')).toBeInTheDocument();
   });
 
   it('displays tooltip on hover with correct data', async () => {

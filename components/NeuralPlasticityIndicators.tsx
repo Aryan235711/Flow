@@ -1,6 +1,5 @@
 import React, { memo, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Brain } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { MetricEntry, UserConfig } from '../types.ts';
 
@@ -158,36 +157,13 @@ export const NeuralPlasticityIndicators: React.FC<NeuralPlasticityIndicatorsProp
     return sortedData;
   }, [history, config]);
 
-  const overallScore = useMemo(() => {
-    if (trendData.length === 0) return 50;
-    const latest = trendData[trendData.length - 1];
-    return Math.round((latest.memoryConsolidation + latest.synapticPlasticity + latest.cognitiveReserve + latest.neuroplasticityIndex) / 4);
-  }, [trendData]);
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
-      className="glass rounded-[24px] border border-white/5 h-full flex flex-col"
+      className="h-full flex flex-col"
     >
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 pb-2 border-b border-white/5 flex-shrink-0">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center">
-            <Brain size={16} className="text-indigo-400" />
-          </div>
-          <div>
-            <div className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-300 font-outfit">
-              Neural Plasticity Trends
-            </div>
-            <div className="text-xs font-bold text-white/60">
-              8-Day Brain Health Score: {overallScore}%
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Chart Container */}
       <div className="flex-1 p-4">
         {trendData.length > 0 ? (
@@ -291,7 +267,6 @@ export const NeuralPlasticityIndicators: React.FC<NeuralPlasticityIndicatorsProp
 
         ) : (
           <div className="h-full flex flex-col items-center justify-center text-center opacity-50">
-            <Brain size={32} className="text-indigo-400 mb-2" />
             <p className="text-xs text-white/50">Need more data for trend analysis</p>
           </div>
         )}
