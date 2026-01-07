@@ -257,7 +257,7 @@ export const Dashboard = memo(({ history, config, onAddNotif, isMockData, user, 
         <motion.div variants={fadeUp} className="md:col-span-5 lg:col-span-4 flex flex-col">
           {/* Vitality Orb */}
           <div className="min-h-[520px] lg:sticky lg:top-32">
-            <FlippableCard title="Vitality Orb" icon={Heart} color="text-rose-400" backContent="The Vitality Orb calculates your biological age based on comprehensive health metrics including sleep quality, heart rate variability, cognitive performance, physical activity, and nutritional consistency. A lower biological age than chronological age indicates excellent health optimization.">
+            <FlippableCard title="Vitality Orb" icon={Heart} color="text-red-400" backContent="The Vitality Orb calculates your biological age based on comprehensive health metrics including sleep quality, heart rate variability, cognitive performance, physical activity, and nutritional consistency. A lower biological age than chronological age indicates excellent health optimization.">
               <VitalityOrb history={history} config={config} userAge={30} />
             </FlippableCard>
           </div>
