@@ -434,11 +434,11 @@ export const VitalityOrb: React.FC<VitalityOrbProps> = ({ history, config, userA
   const theme = getOrbTheme(vitality.agingFactor);
 
   return (
-    <div className="w-full h-full flex flex-col">
+    <div className="w-full h-full flex flex-col items-center justify-center">
       {/* Orb Content */}
-      <div className="flex-1 flex flex-col items-center justify-start px-6 py-4">
+      <div className="flex flex-col items-center justify-center px-4 py-2">
         {/* Luminous Particle Ring */}
-        <div className="relative w-[280px] h-[280px] mb-4 mx-auto shrink-0">
+        <div className="relative w-[280px] h-[280px] mb-4 shrink-0">
           {/* Ambient Background Glow */}
           <div 
             className="absolute inset-0 rounded-full blur-3xl opacity-40"

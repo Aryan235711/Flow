@@ -258,9 +258,7 @@ export const Dashboard = memo(({ history, config, onAddNotif, isMockData, user, 
           {/* Vitality Orb */}
           <div className="min-h-[520px] lg:sticky lg:top-32">
             <FlippableCard title="Vitality Orb" icon={Heart} color="text-rose-400" backContent="The Vitality Orb calculates your biological age based on comprehensive health metrics including sleep quality, heart rate variability, cognitive performance, physical activity, and nutritional consistency. A lower biological age than chronological age indicates excellent health optimization.">
-              <div className="glass rounded-[48px] border-white/5 relative overflow-hidden bg-gradient-to-br from-teal-500/[0.02] to-cyan-500/[0.02] h-full flex">
-                <VitalityOrb history={history} config={config} userAge={30} />
-              </div>
+              <VitalityOrb history={history} config={config} userAge={30} />
             </FlippableCard>
           </div>
 
