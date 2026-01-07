@@ -30,12 +30,12 @@ export const VelocityChart = memo(({ data, proteinGoal }: { data: any[], protein
             border: '1px solid rgba(255,255,255,0.1)', 
             borderRadius: '16px', 
             color: '#fff', 
-            fontSize: '11px',
-            padding: '8px 12px',
+            fontSize: '10px',
+            padding: '4px 8px',
             boxShadow: '0 10px 30px -5px rgba(0,0,0,0.8)' 
           }} 
           itemStyle={{ color: 'rgba(255,255,255,0.7)', padding: 0 }}
-          labelStyle={{ color: '#fff', fontWeight: 800, marginBottom: '4px', fontFamily: 'Outfit' }}
+          labelFormatter={() => ''}
           animationDuration={200}
         />
         
