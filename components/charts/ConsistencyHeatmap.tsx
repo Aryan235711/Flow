@@ -103,9 +103,9 @@ export const ConsistencyHeatmap = memo(({ history, config }: { history: MetricEn
   }, []);
 
   return (
-    <div className="w-full h-full flex flex-col px-2 pt-2">
-      {/* Grid - Centered or Top aligned */}
-      <div className="grid grid-cols-7 gap-2 md:gap-3 content-start mb-4 max-w-2xl mx-auto w-full">
+    <div className="w-full h-full flex flex-col px-2 pt-2 min-h-0">
+      {/* Grid - Responsive sizing */}
+      <div className="grid grid-cols-7 gap-2 md:gap-3 content-start mb-3 max-w-2xl mx-auto w-full flex-shrink-0">
         {heatData.map((day, i) => (
           <HeatmapTile 
              key={day.date} 
@@ -117,13 +117,10 @@ export const ConsistencyHeatmap = memo(({ history, config }: { history: MetricEn
         ))}
       </div>
 
-      {/* Spacer to breathe without forcing tall gaps */}
-      <div className="mt-2 md:mt-3" />
-
-      {/* Info & Legend Container - Fixed at bottom */}
-      <div className="space-y-3 md:space-y-4 pb-2">
+      {/* Info & Legend Container - Flexible layout */}
+      <div className="flex-1 flex flex-col justify-between min-h-0 space-y-2">
         
-        {/* Selection Details */}
+        {/* Selection Details - Compact for landscape */}
         <AnimatePresence mode="wait">
           {selectedDate ? (
             <motion.div 
@@ -131,14 +128,14 @@ export const ConsistencyHeatmap = memo(({ history, config }: { history: MetricEn
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -5 }}
-              className="bg-white/5 p-3 md:p-4 rounded-2xl border border-white/5 flex items-center justify-between"
+              className="bg-white/5 p-2 md:p-3 rounded-xl border border-white/5 flex items-center justify-between flex-shrink-0"
             >
-               <div className="flex items-center gap-4">
-                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${selectedDate.hasData ? 'bg-white/10' : 'bg-white/5'}`}>
-                    <Calendar size={18} className="text-white/60" />
+               <div className="flex items-center gap-3">
+                 <div className={`w-8 h-8 md:w-10 md:h-10 rounded-lg flex items-center justify-center ${selectedDate.hasData ? 'bg-white/10' : 'bg-white/5'}`}>
+                    <Calendar size={16} className="text-white/60" />
                  </div>
                  <div>
-                   <div className="text-[10px] font-black uppercase tracking-widest text-white/30">History Log</div>
+                   <div className="text-[9px] font-black uppercase tracking-widest text-white/30">History Log</div>
                    <div className="text-sm font-bold text-white">{selectedDate.displayDate}</div>
                  </div>
                </div>
@@ -174,12 +171,12 @@ export const ConsistencyHeatmap = memo(({ history, config }: { history: MetricEn
                )}
             </motion.div>
           ) : (
-            <div className="h-[64px] flex items-center justify-center text-[10px] text-white/20 uppercase tracking-widest bg-white/5 rounded-2xl border border-white/5 border-dashed">Select a tile</div>
+            <div className="h-12 md:h-16 flex items-center justify-center text-[10px] text-white/20 uppercase tracking-widest bg-white/5 rounded-xl border border-white/5 border-dashed flex-shrink-0">Select a tile</div>
           )}
         </AnimatePresence>
 
-        {/* Legend */}
-        <div className="flex justify-between items-center px-2 pt-3 border-t border-white/5">
+        {/* Legend - Always visible at bottom */}
+        <div className="flex justify-center items-center gap-4 md:gap-6 py-2 flex-shrink-0">
           <LegendItem color="bg-emerald-400" label="High" />
           <LegendItem color="bg-teal-400" label="Mid" />
           <LegendItem color="bg-rose-400" label="Low" />
