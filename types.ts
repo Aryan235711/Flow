@@ -1,7 +1,7 @@
 
 export type Flag = 'GREEN' | 'YELLOW' | 'RED';
 export type AppStage = 'AUTH' | 'ONBOARDING' | 'DISCLAIMER' | 'MAIN';
-export type AppView = 'DASHBOARD' | 'LOG' | 'HISTORY';
+export type AppView = 'DASHBOARD' | 'LOG' | 'HISTORY' | 'NEURAL_NETWORK';
 
 export interface Notification {
   id: string;
@@ -23,6 +23,7 @@ export interface UserProfile {
 }
 
 export interface MetricEntry {
+  id: string;
   date: string;
   rawValues: {
     sleep: number;

@@ -1,7 +1,7 @@
 
-import React, { memo, useState, useCallback } from 'react';
+import React, { memo, useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Database, ChevronDown, Zap, CloudFog, BatteryWarning, BrainCircuit, Trash2, Moon, Wind, Activity, Utensils, Sun, Coffee, Dumbbell, Edit3, Snowflake, Calendar, Lock } from 'lucide-react';
+import { Database, ChevronDown, Zap, CloudFog, BatteryWarning, BrainCircuit, Trash2, Moon, Wind, Activity, Utensils, Sun, Coffee, Dumbbell, Edit3, Snowflake, Calendar, Lock, Network, Target } from 'lucide-react';
 import { MetricEntry } from '../types.ts';
 import { triggerHaptic } from '../utils.ts';
 
@@ -12,6 +12,7 @@ interface HistoryViewProps {
   onEdit: (entry: MetricEntry, index: number) => void;
   isPremium: boolean;
   onTriggerPaywall: () => void;
+  onToggleView?: () => void;
 }
 
 // Mini Gauge Component for History Cards
@@ -44,7 +45,7 @@ const MiniScoreGauge = memo(({ score }: { score: number }) => {
   );
 });
 
-const DetailItem = memo(({ label, value, icon: Icon, color }: { label: string, value: string | number, icon: any, color: string }) => (
+const DetailItem = memo(({ label, value, icon: Icon, color }: { label: string, value: string | number, icon: React.ComponentType<{ size?: number; className?: string }>, color: string }) => (
   <motion.div 
     variants={{ 
        hidden: { opacity: 0, y: 10 }, 
@@ -66,66 +67,73 @@ const HistoryCard: React.FC<{
   idx: number;
   onDelete: (id: string) => void;
   onEdit: (entry: MetricEntry, idx: number) => void;
+  isParentExpanded?: boolean;
+  onToggle?: (isOpen: boolean) => void;
 }> = ({
   entry,
   idx,
   onDelete,
-  onEdit
+  onEdit,
+  isParentExpanded = false,
+  onToggle
 }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const calculateScore = (entry: MetricEntry) => {
-    const flags = Object.values(entry.processedState);
+  // Use parent's expansion state (always controlled from parent now)
+  const isExpanded = isParentExpanded;
+
+  const cognitiveConfig = useMemo(() => ({
+    PEAK: { icon: Zap, color: 'bg-teal-500 shadow-teal-500/40' },
+    FOGGY: { icon: CloudFog, color: 'bg-slate-500 shadow-slate-500/40' },
+    DRAINED: { icon: BatteryWarning, color: 'bg-rose-500 shadow-rose-500/40' },
+    FROZEN: { icon: Snowflake, color: 'bg-cyan-500 shadow-cyan-500/40' },
+    STEADY: { icon: BrainCircuit, color: 'bg-emerald-500 shadow-emerald-500/40' }
+  }), []);
+
+  const getCognitiveIcon = (state: string) => {
+    return cognitiveConfig[state as keyof typeof cognitiveConfig]?.icon || cognitiveConfig.STEADY.icon;
+  };
+
+  const getCognitiveColor = (state: string) => {
+    return cognitiveConfig[state as keyof typeof cognitiveConfig]?.color || cognitiveConfig.STEADY.color;
+  };
+
+  const score = useMemo(() => {
+    const flags = Object.values(entry.processedState ?? {});
     const greens = flags.filter(f => f === 'GREEN').length;
     const yellows = flags.filter(f => f === 'YELLOW').length;
     const total = flags.length || 1;
     return Math.round(((greens * 100) + (yellows * 50)) / total);
-  };
-
-  const getCognitiveIcon = (state: string) => {
-    switch (state) {
-      case 'PEAK': return <Zap size={16} className="text-white" />;
-      case 'FOGGY': return <CloudFog size={16} className="text-white" />;
-      case 'DRAINED': return <BatteryWarning size={16} className="text-white" />;
-      case 'FROZEN': return <Snowflake size={16} className="text-white" />;
-      default: return <BrainCircuit size={16} className="text-white" />;
-    }
-  };
-
-  const getCognitiveColor = (state: string) => {
-    switch (state) {
-      case 'PEAK': return 'bg-teal-500 shadow-teal-500/40';
-      case 'FOGGY': return 'bg-slate-500 shadow-slate-500/40';
-      case 'DRAINED': return 'bg-rose-500 shadow-rose-500/40';
-      case 'FROZEN': return 'bg-cyan-500 shadow-cyan-500/40';
-      default: return 'bg-emerald-500 shadow-emerald-500/40';
-    }
-  };
-
-  const score = calculateScore(entry);
+  }, [entry]);
   const isFrozen = entry.rawValues.cognition === 'FROZEN';
 
   // Determine strip color
   const statusColor = score >= 80 ? 'bg-emerald-500' : score >= 50 ? 'bg-teal-500' : 'bg-rose-500';
 
+  const CognitiveIcon = getCognitiveIcon(entry.rawValues.cognition || 'STEADY');
+
   return (
     <motion.div 
+      layout
       initial={{ opacity: 0, y: 15 }} 
       animate={{ opacity: 1, y: 0 }} 
-      transition={{ delay: idx * 0.05, type: "spring", stiffness: 300, damping: 30 }}
-      className={`glass rounded-[32px] transition-all duration-300 relative isolate ${isExpanded ? 'bg-white/[0.06] shadow-xl ring-1 ring-white/10 rounded-b-none' : 'active:scale-[0.98]'}`}
+      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      style={{ zIndex: isExpanded ? 50 : 1 }}
+      className={`glass rounded-[32px] transition-all duration-300 relative ${isExpanded ? 'bg-white/[0.06] shadow-xl ring-1 ring-white/10 rounded-b-none' : 'active:scale-[0.98]'}`}
     >
       {/* Status Strip */}
-      <div className={`absolute left-0 top-0 bottom-0 w-1 ${statusColor} opacity-50`} />
+      <div className={`absolute left-1 top-4 bottom-4 w-1 ${statusColor} opacity-50 rounded-full`} />
 
       <div onClick={(e) => {
         e.stopPropagation();
         triggerHaptic();
-        setIsExpanded(prev => !prev);
+        const newExpanded = !isExpanded;
+        if (onToggle) {
+          onToggle(newExpanded);
+        }
       }} className="p-4 pl-6 cursor-pointer touch-manipulation relative z-[1]">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-4">
             <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg ${getCognitiveColor(entry.rawValues.cognition || 'STEADY')}`}>
-              {getCognitiveIcon(entry.rawValues.cognition || 'STEADY')}
+              <CognitiveIcon size={16} className="text-white" />
             </div>
             <div>
               <p className="text-[10px] font-black text-white/30 uppercase tracking-widest font-outfit mb-0.5">{entry.date}</p>
@@ -140,14 +148,14 @@ const HistoryCard: React.FC<{
         </div>
       </div>
 
-      {/* Expanded Content - Positioned Absolutely */}
+      {/* Expanded Content - Height-based expansion to push other cards down */}
       <AnimatePresence>
         {isExpanded && (
           <motion.div 
-            initial={{ opacity: 0, y: -10 }} 
-            animate={{ opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 30 } }} 
-            exit={{ opacity: 0, y: -10, transition: { duration: 0.2 } }}
-            className="absolute top-full left-0 right-0 z-[9999] bg-[#020617]/95 backdrop-blur-xl border-t border-white/10 rounded-b-[32px] shadow-2xl"
+            initial={{ height: 0, opacity: 0 }} 
+            animate={{ height: 'auto', opacity: 1, transition: { type: "spring", stiffness: 300, damping: 30 } }} 
+            exit={{ height: 0, opacity: 0, transition: { duration: 0.2 } }}
+            className="overflow-hidden border-t border-white/10 bg-[#020617]/98 backdrop-blur-xl rounded-b-[32px] shadow-2xl"
           >
             <motion.div 
                className="p-6 grid grid-cols-2 gap-3"
@@ -162,8 +170,9 @@ const HistoryCard: React.FC<{
               <DetailItem label="Sun" value={entry.rawValues.sun} icon={Sun} color="text-yellow-400" />
               <DetailItem label="Exertion" value={entry.rawValues.exercise} icon={Dumbbell} color="text-cyan-400" />
               <DetailItem label="Gut" value={`${entry.rawValues.gut}/5`} icon={Coffee} color="text-purple-400" />
+              <DetailItem label="Neural Load" value={`${entry.symptomScore}/5`} icon={Target} color="text-indigo-400" />
               
-              <motion.div variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }} className="col-span-2 flex gap-2 mt-2">
+              <motion.div variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }} className="col-span-2 flex gap-2 mt-2 relative z-20">
                 {(!entry.isSystemGenerated) && (
                   <button 
                     onClick={(e) => {
@@ -195,23 +204,29 @@ const HistoryCard: React.FC<{
   );
 };
 
-export const HistoryView = memo(({ history, isMockData, onDelete, onEdit, isPremium, onTriggerPaywall }: HistoryViewProps) => {
+export const HistoryView = memo(({ history, isMockData, onDelete, onEdit, isPremium, onTriggerPaywall, onToggleView }: HistoryViewProps) => {
   const [showFilter, setShowFilter] = useState(false);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  // Track which card is expanded for Tetris-like behavior
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const reversedHistory = history.slice().reverse();
   const filteredHistory = reversedHistory.filter(entry => {
     if (!startDate && !endDate) return true;
-    const entryDate = new Date(entry.date);
-    const start = startDate ? new Date(startDate) : null;
-    const end = endDate ? new Date(endDate) : null;
+    const entryDate = new Date(`${entry.date}T00:00:00`);
+    const start = startDate ? new Date(`${startDate}T00:00:00`) : null;
+    const end = endDate ? new Date(`${endDate}T23:59:59`) : null;
     if (start && entryDate < start) return false;
     if (end && entryDate > end) return false;
     return true;
   });
-  const visibleHistory = isPremium ? filteredHistory : filteredHistory.slice(0, 7);
-  const hiddenCount = reversedHistory.length - visibleHistory.length;
+
+  // Tetris Logic: Reduce visible cards when one is expanded to maintain density
+  const baseLimit = isPremium ? 10 : 7;
+  const currentLimit = expandedId ? baseLimit - 2 : baseLimit;
+  const visibleHistory = filteredHistory.slice(0, currentLimit);
+  const hiddenCount = filteredHistory.length - visibleHistory.length;
 
   const handleFilterClick = () => {
     triggerHaptic();
@@ -232,20 +247,40 @@ export const HistoryView = memo(({ history, isMockData, onDelete, onEdit, isPrem
                <span className="text-[9px] font-black uppercase tracking-widest text-teal-400">Simulation Mode</span>
              </div>
           )}
-          <h1 className="text-5xl md:text-7xl font-black font-outfit tracking-tighter text-white">Registry</h1>
+          <h1 className="text-4xl sm:text-5xl md:text-7xl font-black font-outfit tracking-tightest text-white">Registry</h1>
           <p className="text-teal-300/40 text-sm md:text-lg font-medium mt-2">Historical telemetry logs.</p>
         </div>
         
         {/* DATE FILTER BUTTON */}
-        <button 
-          onClick={handleFilterClick}
-          className={`
-            w-12 h-12 md:w-16 md:h-16 rounded-2xl md:rounded-[24px] flex items-center justify-center border transition-all active:scale-90
-            ${showFilter ? 'bg-teal-500 text-white border-teal-500 shadow-lg' : 'bg-white/5 border-white/5 text-white/50 hover:bg-white/10'}
-          `}
-        >
-          {isPremium ? <Calendar size={24} /> : <Lock size={24} className="text-amber-500" />}
-        </button>
+        <div className="flex gap-3">
+          {onToggleView && (
+            <button
+              onClick={() => {
+                triggerHaptic();
+                onToggleView();
+              }}
+              className="w-12 h-12 md:w-16 md:h-16 rounded-2xl md:rounded-[24px] flex items-center justify-center border border-white/5 bg-white/5 text-white/50 hover:bg-white/10 hover:text-white transition-all active:scale-90"
+            >
+              <Network size={24} />
+            </button>
+          )}
+          <div className="relative">
+            <button 
+              onClick={handleFilterClick}
+              className={`
+                w-12 h-12 md:w-16 md:h-16 rounded-2xl md:rounded-[24px] flex items-center justify-center border transition-all active:scale-90
+                ${showFilter ? 'bg-teal-500 text-white border-teal-500 shadow-lg' : 'bg-white/5 border-white/5 text-white/50 hover:bg-white/10'}
+              `}
+            >
+              {isPremium ? <Calendar size={24} /> : <Lock size={24} className="text-amber-500" />}
+            </button>
+            {!isPremium && hiddenCount > 0 && (
+              <div className="absolute -top-1 -right-1 w-5 h-5 bg-amber-500 rounded-full flex items-center justify-center">
+                <span className="text-[8px] font-black text-black">{hiddenCount}</span>
+              </div>
+            )}
+          </div>
+        </div>
       </header>
 
       {/* FILTER UI (Premium Only) */}
@@ -265,7 +300,7 @@ export const HistoryView = memo(({ history, isMockData, onDelete, onEdit, isPrem
                     type="date" 
                     value={startDate} 
                     onChange={(e) => setStartDate(e.target.value)} 
-                    className="w-11/12 glass p-4 rounded-xl border border-teal-500/20 bg-teal-500/5 text-white text-sm font-bold focus:border-teal-500/50 focus:bg-teal-500/10 transition-all" 
+                    className="w-full glass p-4 rounded-xl border border-teal-500/20 bg-teal-500/5 text-white text-sm font-bold focus:border-teal-500/50 focus:bg-teal-500/10 transition-all" 
                   />
                 </div>
                 <div className="flex flex-col">
@@ -274,7 +309,7 @@ export const HistoryView = memo(({ history, isMockData, onDelete, onEdit, isPrem
                     type="date" 
                     value={endDate} 
                     onChange={(e) => setEndDate(e.target.value)} 
-                    className="w-11/12 glass p-4 rounded-xl border border-teal-500/20 bg-teal-500/5 text-white text-sm font-bold focus:border-teal-500/50 focus:bg-teal-500/10 transition-all" 
+                    className="w-full glass p-4 rounded-xl border border-teal-500/20 bg-teal-500/5 text-white text-sm font-bold focus:border-teal-500/50 focus:bg-teal-500/10 transition-all" 
                   />
                 </div>
               </div>
@@ -289,43 +324,31 @@ export const HistoryView = memo(({ history, isMockData, onDelete, onEdit, isPrem
         )}
       </AnimatePresence>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+      <motion.div layout className="space-y-4">
         {history.length === 0 ? (
-          <div className="col-span-full text-center py-24 opacity-10">
+          <div className="text-center py-24 opacity-10">
             <Database size={48} className="mx-auto mb-4" />
             <p className="text-sm uppercase tracking-widest font-black">Registry Empty</p>
           </div>
-        ) : visibleHistory.map((entry, idx) => (
-           <HistoryCard
-             key={`${entry.date}-${entry.symptomName}-${idx}`}
-             entry={entry}
-             idx={idx}
-             onDelete={onDelete}
-             onEdit={onEdit}
-           />
-        ))}
-
-        {/* LOCKED VAULT CARD (Free User with > 7 logs) */}
-        {!isPremium && hiddenCount > 0 && (
-          <motion.div 
-             initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-             onClick={onTriggerPaywall}
-             className="md:col-span-2 glass rounded-[32px] p-6 border-amber-500/20 relative overflow-hidden group cursor-pointer active:scale-95 transition-all"
-          >
-            {/* Removed the amber gradient overlay */}
-            <div className="relative z-10 flex flex-col items-center justify-center text-center gap-2">
-              <div className="w-12 h-12 bg-amber-500/10 rounded-2xl flex items-center justify-center text-amber-500 mb-1">
-                <Lock size={20} />
-              </div>
-              <h3 className="text-xl font-black font-outfit text-white">Deep Archive Locked</h3>
-              <p className="text-white/40 text-sm font-medium">{hiddenCount} older logs stored securely.</p>
-              <span className="mt-2 text-[10px] font-black uppercase tracking-widest text-amber-400 bg-amber-500/10 px-4 py-2 rounded-full border border-amber-500/20 group-hover:bg-amber-500 group-hover:text-black transition-colors">
-                 Unlock Vault
-              </span>
-            </div>
-          </motion.div>
+        ) : (
+          <AnimatePresence mode="popLayout">
+            {visibleHistory.map((entry, idx) => (
+               <div key={entry.id} className="mb-4">
+                 <HistoryCard
+                   entry={entry}
+                   idx={idx}
+                   onDelete={onDelete}
+                   onEdit={onEdit}
+                   isParentExpanded={expandedId === entry.id}
+                   onToggle={(isOpen) => setExpandedId(isOpen ? entry.id : null)}
+                 />
+               </div>
+            ))}
+          </AnimatePresence>
         )}
-      </div>
+
+
+      </motion.div>
     </div>
   );
 });

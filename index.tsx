@@ -939,13 +939,13 @@ const App = () => {
         {view === 'HISTORY' && (
           <PageTransition key="history" className="relative z-10">
             <Suspense fallback={<div className="flex items-center justify-center h-screen"><motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-8 h-8 border-4 border-teal-500 border-t-transparent rounded-full" /></div>}>
-              <HistoryView 
-                history={displayHistory} 
-                isMockData={isMockData} 
-                onDelete={handleDeleteEntry} 
+              <HistoryView
+                history={displayHistory}
+                isMockData={isMockData}
+                onDelete={handleDeleteEntry}
                 onEdit={handleEditEntry}
-                isPremium={user.isPremium} 
-                onTriggerPaywall={suppressPaywall} 
+                isPremium={user.isPremium}
+                onTriggerPaywall={suppressPaywall}
               />
             </Suspense>
           </PageTransition>

@@ -113,6 +113,7 @@ export const LogInput = memo(({ config, onSave, initialData }: LogInputProps) =>
     };
     
     onSave({ 
+      id: initialData?.id || crypto.randomUUID(),
       // Keep original date if editing, else use today's LOCAL date
       date: initialData?.date || getLocalDate(), 
       rawValues: { 

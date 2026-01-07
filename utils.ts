@@ -304,6 +304,7 @@ export const generateMockData = (): MetricEntry[] => {
     else if (Math.random() > 0.7) cogIndex = 2; // Foggy
 
     data.push({
+      id: `mock-${i}`,
       date: dateStr,
       rawValues: {
         sleep: Number(sleep.toFixed(1)),
@@ -321,4 +322,15 @@ export const generateMockData = (): MetricEntry[] => {
     });
   }
   return data;
+};
+
+export const getCognitiveColor = (cognition: string) => {
+  switch (cognition) {
+    case 'PEAK': return 'bg-emerald-500/20 border-emerald-400';
+    case 'STEADY': return 'bg-teal-500/20 border-teal-400';
+    case 'FOGGY': return 'bg-amber-500/20 border-amber-400';
+    case 'DRAINED': return 'bg-orange-500/20 border-orange-400';
+    case 'FROZEN': return 'bg-cyan-500/20 border-cyan-400';
+    default: return 'bg-gray-500/20 border-gray-400';
+  }
 };

@@ -188,11 +188,11 @@ app.get('/api/history', verifyToken, async (req, res) => {
     if (!userRow.rows.length) return res.status(404).json({ error: 'user not found' });
     const userId = userRow.rows[0].id;
     const hist = await runQuery(
-      'select date, payload from history where user_id = $1 order by date desc limit $2',
+      'select id, date, payload from history where user_id = $1 order by date desc limit $2',
       [userId, limit]
     );
     console.log('[api/history] user', email, 'rows', hist.rows.length);
-    res.json({ history: hist.rows.map(r => ({ ...r.payload, date: r.date.toISOString().split('T')[0] })) });
+    res.json({ history: hist.rows.map(r => ({ id: r.id, ...r.payload, date: r.date.toISOString().split('T')[0] })) });
   } catch (e) {
     console.error('[api/history] error', e);
     res.status(500).json({ error: 'failed to load history' });
@@ -213,11 +213,11 @@ app.put('/api/history/:date', verifyToken, async (req, res) => {
        on conflict (user_id, date) do update set
          payload = excluded.payload,
          updated_at = now()
-       returning date, payload;`,
+       returning id, date, payload`,
       [userId, date, entry]
     );
     const row = upserted.rows[0];
-    res.json({ entry: { ...row.payload, date: row.date.toISOString().split('T')[0] } });
+    res.json({ entry: { id: row.id, ...row.payload, date: row.date.toISOString().split('T')[0] } });
   } catch (e) {
     console.error('[api/history put] error', e);
     res.status(500).json({ error: 'failed to save entry' });
