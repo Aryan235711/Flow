@@ -22,6 +22,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Browser } from '@capacitor/browser';
+import { Capacitor } from '@capacitor/core';
 
 import { AppStage, AppView, UserProfile, MetricEntry, UserConfig, Notification } from './types.ts';
 import { STORAGE_KEYS, DEFAULT_CONFIG, getSafeStorage, setSafeStorage, generateMockData, triggerHaptic, generateFreezeEntry, getLocalDate, clearAppStorage, getValidatedNotifications, trackNotificationShown, validateUserConfig } from './utils.ts';
@@ -316,7 +317,7 @@ const App = () => {
 
   // Handle OAuth callback from custom URL scheme in native app
   useEffect(() => {
-    if (!(window as any).Capacitor) return; // Only for native apps
+    if (!Capacitor.isNativePlatform()) return; // Only for native apps
 
     const handleAppUrlOpen = (event: any) => {
       const url = new URL(event.url);
@@ -439,14 +440,14 @@ const App = () => {
     setIsLoggingIn(true);
     
     // Use Render domain for both web and native app
-    const isNativeApp = !!(window as any).Capacitor;
+    const isNativeApp = Capacitor.isNativePlatform();
     const baseUrl = isNativeApp ? 'https://flow-si70.onrender.com' : '';
     const redirectUri = isNativeApp 
       ? 'flow://auth/callback'  // Custom scheme for native app
       : `${baseUrl || window.location.origin}/auth/callback`;  // Web redirect
     const url = `${baseUrl}/api/auth/google/start?redirect_uri=${encodeURIComponent(redirectUri)}`;
     
-    console.log('[login] redirecting to', url, 'isNative:', isNativeApp);
+    console.log('[login] redirecting to', url, 'isNative:', isNativeApp, 'platform:', Capacitor.getPlatform());
     
     if (isNativeApp) {
       // For native apps, open OAuth in system browser

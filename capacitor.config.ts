@@ -10,7 +10,7 @@ const config: CapacitorConfig = {
     scheme: 'flow'
   },
   server: {
-    url: 'https://flow-si70.onrender.com',
+    // url: 'https://flow-si70.onrender.com',
     cleartext: false
   },
   plugins: {
