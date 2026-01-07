@@ -116,7 +116,6 @@ const App = () => {
   const hasRunSystemCheck = useRef(false);
   const prevHistoryLength = useRef(history.length);
   const mockNoticeShown = useRef(false);
-  const mountedRef = useRef(true);
 
   const authFetch = useCallback(async (url: string, options: RequestInit = {}) => {
     if (!user.token) throw new Error('Missing auth token');

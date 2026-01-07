@@ -114,6 +114,19 @@ export const validateUserConfig = (config: any): UserConfig => {
   return validated;
 };
 
+export const validateNotification = (item: any): item is Notification => {
+  return (
+    item &&
+    typeof item === 'object' &&
+    typeof item.id === 'string' &&
+    typeof item.title === 'string' &&
+    typeof item.message === 'string' &&
+    typeof item.time === 'string' &&
+    typeof item.read === 'boolean' &&
+    ['AI', 'SYSTEM', 'STREAK', 'FREEZE'].includes(item.type)
+  );
+};
+
 export const validateNotificationArray = (data: any): Notification[] => {
   if (!Array.isArray(data)) return [];
 
