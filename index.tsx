@@ -64,9 +64,19 @@ const PageTransition = ({ children, className }: { children: React.ReactNode; cl
 );
 
 const App = () => {
-  // Enforce notification limit on load
-  const enforceNotificationLimit = useCallback((notifications: Notification[]) => {
-    return notifications.slice(0, 10);
+  // Race condition prevention - track component mount status
+  const mountedRef = useRef(true);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  // Enforce notification limits when loading from storage
+  const enforceNotificationLimit = useCallback((notifs: Notification[]): Notification[] => {
+    return notifs.slice(0, 10); // Keep only the 10 most recent
   }, []);
 
   // Safe initialization
@@ -74,10 +84,7 @@ const App = () => {
   const [view, setView] = useState<AppView>('DASHBOARD');
   const [user, setUser] = useState<UserProfile>(() => getSafeStorage(STORAGE_KEYS.USER, { isAuthenticated: false, isPremium: true, name: '', email: '', picture: '', avatarSeed: 'Felix' }));
   const [history, setHistory] = useState<MetricEntry[]>(() => getSafeStorage(STORAGE_KEYS.HISTORY, []));
-  const [notifications, setNotifications] = useState<Notification[]>(() => {
-    const stored = getSafeStorage(STORAGE_KEYS.NOTIFS, []);
-    return Array.isArray(stored) ? enforceNotificationLimit(stored) : [];
-  });
+  const [notifications, setNotifications] = useState<Notification[]>(() => enforceNotificationLimit(getSafeStorage(STORAGE_KEYS.NOTIFS, [])));
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   const isLocalDev = useMemo(() => {
@@ -122,44 +129,46 @@ const App = () => {
 
   const addNotification = useCallback((title: string, message: string, type: Notification['type'] = 'AI') => {
     try {
-      // Input sanitization and validation
-      if (!title || typeof title !== 'string' || title.length > 100) {
-        console.warn('[notification] Invalid title provided');
-        return;
-      }
-      if (!message || typeof message !== 'string' || message.length > 500) {
-        console.warn('[notification] Invalid message provided');
-        return;
-      }
-      
+      // Input validation and sanitization
+      const sanitizedTitle = title.trim().substring(0, 100); // Max 100 chars
+      const sanitizedMessage = message.trim().substring(0, 500); // Max 500 chars
+
       // Basic XSS prevention - remove potentially dangerous characters
-      const sanitizeText = (text: string) => text.replace(/[<>\"'&]/g, '');
-      const sanitizedTitle = sanitizeText(title);
-      const sanitizedMessage = sanitizeText(message);
-      
+      const sanitizeInput = (input: string) => input.replace(/[<>\"'&]/g, '');
+
+      const finalTitle = sanitizeInput(sanitizedTitle);
+      const finalMessage = sanitizeInput(sanitizedMessage);
+
+      // Ensure we have valid content
+      if (!finalTitle || !finalMessage) {
+        console.warn('Notification rejected: empty title or message after sanitization');
+        return;
+      }
+
       const now = new Date();
       const today = new Date().toDateString();
       const notifDate = now.toDateString();
       const timeStr = notifDate === today ? now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : `${now.toLocaleDateString([], { month: 'short', day: 'numeric' })} ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
-      const newNotif: Notification = { id: crypto.randomUUID(), title: sanitizedTitle, message: sanitizedMessage, time: timeStr, read: false, type };
-      setNotifications(prev => [newNotif, ...prev.slice(0, 9)]); // Keep only 9 previous + 1 new = max 10
-      setActiveToast(newNotif);
+      const newNotif: Notification = { id: crypto.randomUUID(), title: finalTitle, message: finalMessage, time: timeStr, read: false, type };
+      if (mountedRef.current) {
+        setNotifications(prev => [newNotif, ...prev.slice(0, 10)]);
+        setActiveToast(newNotif);
+      }
       triggerHaptic();
     } catch (error) {
-      console.error('[notification] Failed to add notification:', error);
-      // Fallback: show a generic error notification if possible
-      try {
-        const errorNotif: Notification = { 
-          id: crypto.randomUUID(), 
-          title: 'System Alert', 
-          message: 'Notification system encountered an error.', 
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), 
-          read: false, 
-          type: 'SYSTEM' 
-        };
+      console.error('Failed to add notification:', error);
+      // Fallback: show a system error notification
+      const errorNotif: Notification = {
+        id: crypto.randomUUID(),
+        title: 'System Error',
+        message: 'Failed to save notification. Please try again.',
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        read: false,
+        type: 'SYSTEM'
+      };
+      if (mountedRef.current) {
+        setNotifications(prev => [errorNotif, ...prev.slice(0, 10)]);
         setActiveToast(errorNotif);
-      } catch (fallbackError) {
-        console.error('[notification] Fallback notification also failed:', fallbackError);
       }
     }
   }, []);
