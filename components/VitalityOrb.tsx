@@ -1,6 +1,6 @@
-import React, { useMemo, useState, useEffect, useRef } from 'react';
+import React, { useMemo, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Activity, AlertTriangle, Info, RotateCcw } from 'lucide-react';
+import { Heart } from 'lucide-react';
 import { MetricEntry, UserConfig } from '../types.ts';
 
 // TypedArray for zero-GC particle storage
@@ -432,241 +432,59 @@ const getOrbTheme = (agingFactor: number) => {
 export const VitalityOrb: React.FC<VitalityOrbProps> = ({ history, config, userAge = 30 }) => {
   const vitality = useMemo(() => calculateVitality(history, config, userAge), [history, config, userAge]);
   const theme = getOrbTheme(vitality.agingFactor);
-  const [isFlipped, setIsFlipped] = useState(false);
-  const cardRef = useRef<HTMLDivElement>(null);
-  const frontFaceRef = useRef<HTMLDivElement>(null);
-  const backFaceRef = useRef<HTMLDivElement>(null);
-
-  const inspectDOM = () => {
-    if (!cardRef.current) return;
-    
-    const card = cardRef.current;
-    const allFaces = card.querySelectorAll('.absolute.inset-0.backface-hidden');
-    
-    console.log('[VitalityOrb] === DOM INSPECTION ===');
-    console.log('[VitalityOrb] Found', allFaces.length, 'faces');
-    console.log('[VitalityOrb] Card transform:', window.getComputedStyle(card).transform);
-    console.log('[VitalityOrb] Card transformStyle:', window.getComputedStyle(card).transformStyle);
-    console.log('[VitalityOrb] Card perspective:', window.getComputedStyle(card.parentElement!).perspective);
-    
-    allFaces.forEach((face, index) => {
-      const faceEl = face as HTMLElement;
-      const style = window.getComputedStyle(faceEl);
-      const isBack = faceEl.classList.contains('z-30');
-      const label = isBack ? 'BACK' : 'FRONT';
-      
-      console.log(`[VitalityOrb] ${label} #${index} - visibility:`, style.visibility);
-      console.log(`[VitalityOrb] ${label} #${index} - opacity:`, style.opacity);
-      console.log(`[VitalityOrb] ${label} #${index} - display:`, style.display);
-      console.log(`[VitalityOrb] ${label} #${index} - backfaceVisibility:`, style.backfaceVisibility);
-      console.log(`[VitalityOrb] ${label} #${index} - transform:`, style.transform);
-      console.log(`[VitalityOrb] ${label} #${index} - zIndex:`, style.zIndex);
-      console.log(`[VitalityOrb] ${label} #${index} - background:`, style.background);
-      console.log(`[VitalityOrb] ${label} #${index} - color:`, style.color);
-      console.log(`[VitalityOrb] ${label} #${index} - innerText (trimmed):`, faceEl.textContent?.trim().slice(0, 120));
-    });
-    
-    console.log('[VitalityOrb] === END INSPECTION ===');
-  };
-
-  const handleFlipToBack = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    console.log('[VitalityOrb] Flip to BACK clicked');
-    console.log('[VitalityOrb] Current state:', { isFlipped });
-    setIsFlipped(true);
-    console.log('[VitalityOrb] State updated to: true');
-  };
-
-  const handleFlipToFront = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    console.log('[VitalityOrb] Flip to FRONT clicked');
-    console.log('[VitalityOrb] Current state:', { isFlipped });
-    setIsFlipped(false);
-    console.log('[VitalityOrb] State updated to: false');
-  };
-
-  React.useEffect(() => {
-    console.log('[VitalityOrb] isFlipped state changed:', isFlipped);
-    console.log('[VitalityOrb] rotateY should be:', isFlipped ? 180 : 0);
-    console.log('[VitalityOrb] front face node present:', !!frontFaceRef.current);
-    console.log('[VitalityOrb] back face node present:', !!backFaceRef.current);
-    // Delay inspection to allow CSS transition to complete
-    setTimeout(inspectDOM, 700);
-  }, [isFlipped]);
-
-  React.useEffect(() => {
-    if (!backFaceRef.current) return;
-    console.log('[VitalityOrb] back face content snapshot:', backFaceRef.current.textContent?.trim().slice(0, 200));
-  }, [isFlipped]);
 
   return (
-    <div className="perspective-1000 w-full h-full min-h-[520px] relative">
-      <div
-        ref={cardRef}
-        className="w-full h-full relative preserve-3d"
-      >
-        {/* FRONT FACE */}
-        <div 
-          ref={frontFaceRef}
-          className="absolute inset-0 backface-hidden glass rounded-[40px] border border-white/5"
-          style={{
-            transform: `rotateY(${isFlipped ? 180 : 0}deg)`,
-            transition: 'transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1)'
-          }}
-        >
-          <div className="w-full h-full flex flex-col">
-            {/* Header with flip button */}
-            <div className="flex justify-between items-center px-5 pt-4 pb-2">
-              <div className="flex items-center gap-2">
-                <div className="p-1.5 rounded-lg bg-white/5 text-teal-400 backdrop-blur-md">
-                  <Activity size={14} />
-                </div>
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/60 font-outfit">Vitality</span>
-              </div>
-              <button 
-                onClick={handleFlipToBack}
-                className="w-8 h-8 rounded-full flex items-center justify-center text-white/20 hover:text-white hover:bg-white/10 transition-all active:scale-90"
-              >
-                <Info size={14} />
-              </button>
-            </div>
+    <div className="w-full h-full flex flex-col">
+      {/* Orb Content */}
+      <div className="flex-1 flex flex-col items-center justify-start px-6 py-4">
+        {/* Luminous Particle Ring */}
+        <div className="relative w-[280px] h-[280px] mb-4 mx-auto shrink-0">
+          {/* Ambient Background Glow */}
+          <div 
+            className="absolute inset-0 rounded-full blur-3xl opacity-40"
+            style={{ background: `radial-gradient(circle at 50% 50%, ${theme.primary}, transparent 70%)` }}
+          />
 
-            {/* Orb Content */}
-            <div className="flex-1 flex flex-col items-center justify-start px-6 py-4">
-              {/* Luminous Particle Ring */}
-              <div className="relative w-[280px] h-[280px] mb-4 mx-auto shrink-0">
-                {/* Ambient Background Glow */}
-                <div 
-                  className="absolute inset-0 rounded-full blur-3xl opacity-40"
-                  style={{ background: `radial-gradient(circle at 50% 50%, ${theme.primary}, transparent 70%)` }}
-                />
+          {/* Canvas Particle Ring */}
+          <ParticleRing theme={theme} />
 
-                {/* Canvas Particle Ring */}
-                <ParticleRing theme={theme} />
-
-                {/* Center Stats Overlay */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10">
-                  <motion.div 
-                    className={`text-5xl font-black font-outfit tracking-tighter ${theme.color}`}
-                    style={{ 
-                      textShadow: `0 0 20px ${theme.glow}, 0 0 40px ${theme.glow}`,
-                      filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.8))'
-                    }}
-                    animate={{ scale: [1, 1.02, 1] }}
-                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                  >
-                    {vitality.biologicalAge}
-                  </motion.div>
-                  <div className="text-[11px] font-bold text-white/60 uppercase tracking-widest mt-2">Bio Age</div>
-                </div>
-              </div>
-
-              {/* Aging Factor Badge */}
-              <div className="flex items-center gap-3 px-5 py-3 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm mb-3">
-                <Activity size={16} className={theme.color} />
-                <div className="flex flex-col items-start">
-                  <div className="text-[9px] font-bold text-white/40 uppercase tracking-wider">Aging Rate</div>
-                  <div className={`text-xl font-black font-outfit ${theme.color}`}>{vitality.agingFactor}x</div>
-                </div>
-              </div>
-
-              {/* Status Label */}
-              <div className={`text-[10px] font-black uppercase tracking-[0.25em] ${theme.color} mb-2`}>
-                {theme.label}
-              </div>
-
-              {/* Health Score */}
-              <div className="text-xs text-white/30">
-                Vitality Score: <span className="text-white/50 font-bold">{vitality.healthScore}/100</span>
-              </div>
-            </div>
+          {/* Center Stats Overlay */}
+          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10">
+            <motion.div 
+              className={`text-5xl font-black font-outfit tracking-tighter ${theme.color}`}
+              style={{ 
+                textShadow: `0 0 20px ${theme.glow}, 0 0 40px ${theme.glow}`,
+                filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.8))'
+              }}
+              animate={{ scale: [1, 1.02, 1] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+            >
+              {vitality.biologicalAge}
+            </motion.div>
+            <div className="text-[11px] font-bold text-white/60 uppercase tracking-widest mt-2">Bio Age</div>
           </div>
         </div>
 
-        {/* BACK FACE */}
-        <div 
-          ref={backFaceRef}
-          className="absolute inset-0 backface-hidden glass rounded-[40px] border border-white/5 z-30"
-          style={{
-            transform: `rotateY(${isFlipped ? 0 : -180}deg)`,
-            transition: 'transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1)',
-            background: 'rgba(10, 17, 40, 0.95)'
-          }}
-        >
-          <div className="w-full h-full flex flex-col overflow-hidden">
-            {/* Back Header */}
-            <div className="flex justify-between items-center p-5 pb-3 border-b border-white/5">
-              <span className="text-xs font-black uppercase tracking-[0.2em] text-teal-300 font-outfit">Algorithm Details</span>
-              <button 
-                onClick={handleFlipToFront}
-                className="w-8 h-8 rounded-full flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-all active:scale-90"
-              >
-                <RotateCcw size={14} />
-              </button>
-            </div>
-
-            {/* Back Content */}
-            <div className="flex-1 overflow-y-auto scrollbar-hide p-5 space-y-3">
-              {/* Warning Banner */}
-              <div className="flex items-start gap-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
-                <AlertTriangle size={16} className="text-amber-500 mt-0.5 shrink-0" />
-                <div className="text-[10px] leading-relaxed text-amber-200/80">
-                  <span className="font-bold block mb-1">Medical Disclaimer</span>
-                  This is a <span className="font-bold">theoretical estimation</span> based solely on self-reported metrics. 
-                  Not a medical diagnosis. Consult healthcare professionals for health decisions.
-                </div>
-              </div>
-
-              {/* How It Works */}
-              <div className="space-y-2">
-                <h3 className="text-xs font-black uppercase tracking-wider text-teal-300">Vitality Algorithm</h3>
-                <div className="text-[10px] leading-relaxed text-white/50">
-                  Biological age and aging rate are calculated using a weighted formula across 7 health dimensions:
-                </div>
-
-                <div className="space-y-1.5 pl-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-[9px] text-white/40">Sleep Quality (20%)</span>
-                    <span className="text-[9px] font-bold text-teal-400">{vitality.breakdown.sleep}%</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-[9px] text-white/40">HRV Recovery (15%)</span>
-                    <span className="text-[9px] font-bold text-cyan-400">{vitality.breakdown.hrv}%</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-[9px] text-white/40">Cognitive State (20%)</span>
-                    <span className="text-[9px] font-bold text-teal-400">{vitality.breakdown.cognitive}%</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-[9px] text-white/40">Symptom Control (15%)</span>
-                    <span className="text-[9px] font-bold text-emerald-400">{vitality.breakdown.symptoms}%</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-[9px] text-white/40">Logging Consistency (10%)</span>
-                    <span className="text-[9px] font-bold text-cyan-400">{vitality.breakdown.consistency}%</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-[9px] text-white/40">Physical Activity (10%)</span>
-                    <span className="text-[9px] font-bold text-teal-400">{vitality.breakdown.activity}%</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-[9px] text-white/40">Nutrition Quality (10%)</span>
-                    <span className="text-[9px] font-bold text-emerald-400">{vitality.breakdown.nutrition}%</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Interpretation */}
-              <div className="space-y-1 pt-2 border-t border-white/5">
-                <div className="text-[10px] leading-relaxed text-white/50">
-                  <span className="font-bold text-white/70">Aging Factor:</span> {vitality.agingFactor < 1 ? 'You are aging slower than average' : vitality.agingFactor > 1 ? 'You are aging faster than average' : 'You are aging at a normal rate'}.
-                  A factor of <span className="font-bold text-teal-400">{vitality.agingFactor}x</span> suggests your biological systems are {vitality.agingFactor < 0.9 ? 'highly optimized' : vitality.agingFactor > 1.1 ? 'under significant stress' : 'functioning normally'}.
-                </div>
-              </div>
-            </div>
+        {/* Aging Factor Badge */}
+        <div className="flex items-center gap-3 px-5 py-3 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm mb-3">
+          <Heart size={16} className={theme.color} />
+          <div className="flex flex-col items-start">
+            <div className="text-[9px] font-bold text-white/40 uppercase tracking-wider">Aging Rate</div>
+            <div className={`text-xl font-black font-outfit ${theme.color}`}>{vitality.agingFactor}x</div>
           </div>
+        </div>
+
+        {/* Status Label */}
+        <div className={`text-[10px] font-black uppercase tracking-[0.25em] ${theme.color} mb-2`}>
+          {theme.label}
+        </div>
+
+        {/* Health Score */}
+        <div className="text-xs text-white/30">
+          Vitality Score: <span className="text-white/50 font-bold">{vitality.healthScore}/100</span>
         </div>
       </div>
     </div>
   );
+
 };

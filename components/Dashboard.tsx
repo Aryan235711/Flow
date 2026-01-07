@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useCallback, memo, lazy, Suspense } from 'react';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
-import { Moon, Activity, Sun, Sparkles, Database, Target, Zap, Flame, Disc, Snowflake, ScanLine, Fingerprint, RefreshCw, Calendar, Edit3, Plus, BrainCircuit, Brain, CloudFog, BatteryWarning, Coffee, Dumbbell } from 'lucide-react';
+import { Moon, Activity, Sun, Sparkles, Database, Target, Zap, Flame, Disc, Snowflake, ScanLine, Fingerprint, RefreshCw, Calendar, Edit3, Plus, BrainCircuit, Brain, CloudFog, BatteryWarning, Coffee, Dumbbell, Heart } from 'lucide-react';
 import { MetricEntry, UserConfig, Notification, UserProfile } from '../types.ts';
 import { useFlowAI } from '../hooks/useFlowAI.ts';
 import { Deferred } from './Deferred.tsx';
@@ -28,6 +28,21 @@ interface DashboardProps {
 }
 
 const DailySnapshot = memo(({ entry, onLog }: { entry?: MetricEntry, onLog: () => void }) => {
+  const isSystem = entry?.isSystemGenerated;
+  const cognition = entry?.rawValues?.cognition;
+
+  const theme = useMemo(() => {
+    if (isSystem) {
+      return { color: 'text-cyan-400', gradient: 'from-cyan-500/20 to-blue-600/20', icon: Snowflake };
+    }
+    switch (cognition) {
+      case 'PEAK': return { color: 'text-teal-400', gradient: 'from-teal-500/20 to-cyan-500/20', icon: Zap };
+      case 'FOGGY': return { color: 'text-slate-400', gradient: 'from-slate-500/20 to-gray-500/20', icon: CloudFog };
+      case 'DRAINED': return { color: 'text-rose-400', gradient: 'from-rose-500/20 to-orange-600/20', icon: BatteryWarning };
+      default: return { color: 'text-emerald-400', gradient: 'from-emerald-500/20 to-teal-500/20', icon: BrainCircuit };
+    }
+  }, [isSystem, cognition]);
+
   if (!entry) {
     return (
       <motion.button
@@ -49,21 +64,6 @@ const DailySnapshot = memo(({ entry, onLog }: { entry?: MetricEntry, onLog: () =
       </motion.button>
     );
   }
-
-  const isSystem = entry.isSystemGenerated;
-  const cognition = entry.rawValues?.cognition;
-
-  const theme = useMemo(() => {
-    if (isSystem) {
-      return { color: 'text-cyan-400', gradient: 'from-cyan-500/20 to-blue-600/20', icon: Snowflake };
-    }
-    switch (cognition) {
-      case 'PEAK': return { color: 'text-teal-400', gradient: 'from-teal-500/20 to-cyan-500/20', icon: Zap };
-      case 'FOGGY': return { color: 'text-slate-400', gradient: 'from-slate-500/20 to-gray-500/20', icon: CloudFog };
-      case 'DRAINED': return { color: 'text-rose-400', gradient: 'from-rose-500/20 to-orange-600/20', icon: BatteryWarning };
-      default: return { color: 'text-emerald-400', gradient: 'from-emerald-500/20 to-teal-500/20', icon: BrainCircuit };
-    }
-  }, [isSystem, cognition]);
 
     const StatusIcon = theme.icon;
 
@@ -256,8 +256,12 @@ export const Dashboard = memo(({ history, config, onAddNotif, isMockData, user, 
         {/* 3. VITALITY ORB COLUMN (Left on iPad) */}
         <motion.div variants={fadeUp} className="md:col-span-5 lg:col-span-4 flex flex-col">
           {/* Vitality Orb */}
-          <div className="glass rounded-[48px] border-white/5 relative overflow-hidden bg-gradient-to-br from-teal-500/[0.02] to-cyan-500/[0.02] min-h-[520px] lg:sticky lg:top-32 flex">
-            <VitalityOrb history={history} config={config} userAge={30} />
+          <div className="min-h-[520px] lg:sticky lg:top-32">
+            <FlippableCard title="Vitality Orb" icon={Heart} color="text-rose-400" backContent="The Vitality Orb calculates your biological age based on comprehensive health metrics including sleep quality, heart rate variability, cognitive performance, physical activity, and nutritional consistency. A lower biological age than chronological age indicates excellent health optimization.">
+              <div className="glass rounded-[48px] border-white/5 relative overflow-hidden bg-gradient-to-br from-teal-500/[0.02] to-cyan-500/[0.02] h-full flex">
+                <VitalityOrb history={history} config={config} userAge={30} />
+              </div>
+            </FlippableCard>
           </div>
 
           {/* Neural Plasticity Indicators (Gap Filler) */}
