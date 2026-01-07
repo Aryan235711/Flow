@@ -42,7 +42,7 @@ export const Toast = memo(({ notification, onDismiss }: ToastProps) => {
           animate={{ opacity: 1, y: 0, scale: 1 }} 
           exit={{ opacity: 0, y: -100, scale: 0.9 }}
           transition={{ type: "spring", stiffness: 400, damping: 30 }}
-          className="fixed top-24 left-0 right-0 z-[100] flex justify-center px-4 pointer-events-none"
+          className="fixed top-24 left-0 right-0 z-[100] flex justify-center px-4 md:px-8 lg:px-12 pointer-events-none"
         >
           <motion.div 
             drag="y"
@@ -67,26 +67,26 @@ export const Toast = memo(({ notification, onDismiss }: ToastProps) => {
                 onDismiss();
               }
             }}
-            className="bg-[#0a1128]/90 backdrop-blur-md border border-teal-500/30 text-white px-5 py-3 rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] flex items-center gap-4 max-w-sm w-full pointer-events-auto cursor-grab active:cursor-grabbing"
+            className="bg-[#0a1128]/90 backdrop-blur-md border border-teal-500/30 text-white px-6 py-4 md:px-8 md:py-5 rounded-2xl md:rounded-3xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] flex items-center gap-4 md:gap-6 w-full max-w-md md:max-w-2xl lg:max-w-4xl pointer-events-auto cursor-grab active:cursor-grabbing"
             role="alert"
             aria-live="assertive"
             aria-label={`${notification.type} notification: ${notification.title}`}
           >
             <div className={`
-              w-10 h-10 rounded-xl flex items-center justify-center shrink-0
+              w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center shrink-0
               ${notification.type === 'AI' ? 'bg-indigo-500/20 text-indigo-400' : 
                 notification.type === 'STREAK' ? 'bg-amber-500/20 text-amber-500' : 
                 notification.type === 'FREEZE' ? 'bg-cyan-500/20 text-cyan-400' :
                 'bg-emerald-500/20 text-emerald-400'}
             `}>
-              {notification.type === 'AI' ? <Sparkles size={20} /> : 
-               notification.type === 'STREAK' ? <AlertCircle size={20} /> : 
-               notification.type === 'FREEZE' ? <Snowflake size={20} /> :
-               <CheckCircle size={20} />}
+              {notification.type === 'AI' ? <Sparkles size={20} className="md:w-6 md:h-6" /> : 
+               notification.type === 'STREAK' ? <AlertCircle size={20} className="md:w-6 md:h-6" /> : 
+               notification.type === 'FREEZE' ? <Snowflake size={20} className="md:w-6 md:h-6" /> :
+               <CheckCircle size={20} className="md:w-6 md:h-6" />}
             </div>
             <div className="flex-1 min-w-0">
-              <h4 className="font-bold text-sm font-outfit truncate">{notification.title}</h4>
-              <p className="text-xs text-white/50 truncate">{notification.message}</p>
+              <h4 className="font-bold text-sm md:text-base lg:text-lg font-outfit">{notification.title}</h4>
+              <p className="text-xs md:text-sm text-white/50 mt-1">{notification.message}</p>
             </div>
           </motion.div>
         </motion.div>
