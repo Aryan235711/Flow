@@ -70,6 +70,30 @@ const PageTransition = ({ children, className }: { children: React.ReactNode; cl
   </motion.div>
 );
 
+// Helper function to calculate current streak
+const calculateCurrentStreak = (history: MetricEntry[]): number => {
+  if (history.length === 0) return 0;
+  
+  const sortedHistory = [...history].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const today = getLocalDate();
+  let streak = 0;
+  let currentDate = new Date(today);
+  
+  for (const entry of sortedHistory) {
+    const entryDate = getLocalDate(new Date(entry.date));
+    const expectedDate = getLocalDate(currentDate);
+    
+    if (entryDate === expectedDate) {
+      streak++;
+      currentDate.setDate(currentDate.getDate() - 1);
+    } else {
+      break;
+    }
+  }
+  
+  return streak;
+};
+
 const App = () => {
   // Race condition prevention - track component mount status
   const mountedRef = useRef(true);
@@ -260,7 +284,7 @@ const App = () => {
     return notifications.filter(n => !n.read).length;
   }, [notifications]);
 
-  // SYSTEM MAINTENANCE PIPELINE
+  // SYSTEM MAINTENANCE PIPELINE - OPTIMIZED
   useEffect(() => {
     if (stage !== 'MAIN' || hasRunSystemCheck.current) return;
     hasRunSystemCheck.current = true;
@@ -281,15 +305,16 @@ const App = () => {
           lastFreezeReset: today.toISOString()
         }
       }));
-      addNotification("System Update", "Monthly Streak Freezes replenished (2/2).", "SYSTEM");
+      addNotification("Freeze Refill", `Monthly streak freezes replenished (2/2). Freezes: ${config.streakLogic.freezesAvailable}/2`, "SYSTEM");
     }
 
     // CHECK LOGS & CONSUME FREEZE
     const hasLogToday = history.some(h => h.date === todayStr);
     const hasLogYesterday = history.some(h => h.date === yesterdayStr);
+    const currentStreak = calculateCurrentStreak(history);
 
-    if (!hasLogYesterday) {
-      if (config.streakLogic.freezesAvailable > 0 && history.length > 0) {
+    if (!hasLogYesterday && history.length > 0) {
+      if (config.streakLogic.freezesAvailable > 0) {
         const freezeEntry = generateFreezeEntry(yesterdayStr, config.wearableBaselines);
         setHistory(prev => {
            const newH = [...prev, freezeEntry];
@@ -304,18 +329,26 @@ const App = () => {
         }));
         setTimeout(() => {
           if (mountedRef.current) {
-            addNotification("Cryostasis Activated", `Missed sync detected. Streak frozen.`, "FREEZE");
+            addNotification("Streak Frozen", `Day ${currentStreak} preserved. Freezes remaining: ${config.streakLogic.freezesAvailable - 1}/2`, "FREEZE");
+          }
+        }, 1500);
+      } else {
+        // Streak broken
+        setTimeout(() => {
+          if (mountedRef.current) {
+            addNotification("Streak Broken", `${currentStreak}-day streak ended. No freezes available.`, "STREAK");
           }
         }, 1500);
       }
-    } else if (!hasLogToday) {
+    } else if (!hasLogToday && history.length > 0) {
        setTimeout(() => {
         if (mountedRef.current) {
-          addNotification("Protocol Pending", "Log metrics to maintain streak.", "SYSTEM");
+          addNotification("Log Reminder", `Day ${currentStreak + 1} pending. Log today to maintain streak.`, "SYSTEM");
         }
       }, 2000);
-    } 
+    }
 
+    // Premium upsell (once per day max)
     if (!user.isPremium) {
       const lastUpsell = getSafeStorage('last_upsell', 0);
       const now = Date.now();
@@ -323,7 +356,7 @@ const App = () => {
       if (now - lastUpsell > oneDay) {
         setTimeout(() => {
           if (mountedRef.current) {
-            addNotification("Features Locked", "Deep history archive & AI analysis locked.", "SYSTEM");
+            addNotification("Premium Features", "Unlock deep analytics & AI insights with Flow+", "SYSTEM");
             setSafeStorage('last_upsell', now);
           }
         }, 5000);
@@ -331,16 +364,22 @@ const App = () => {
     }
   }, [stage, history, config, addNotification, user.isPremium]);
 
+  // AI notification system - limit to 1-2 per session
+  const aiNotificationCount = useRef(0);
+  const maxAiNotifications = 2;
+  
   useEffect(() => {
-    if (stage !== 'MAIN' || hasRunSystemCheck.current) return;
+    if (stage !== 'MAIN') return;
     if (history.length > prevHistoryLength.current) {
-        if (history.length >= 3 && history.length % 3 === 0) {
-             setTimeout(() => {
-               if (mountedRef.current) {
-                 addNotification("Neural Tunnel Ready", "Sufficient data for new AI insights.", "AI");
-               }
-             }, 1000);
-        }
+      // Only show AI notifications if under limit and sufficient data
+      if (aiNotificationCount.current < maxAiNotifications && history.length >= 7 && history.length % 7 === 0) {
+        setTimeout(() => {
+          if (mountedRef.current) {
+            aiNotificationCount.current++;
+            addNotification("AI Analysis Ready", `${history.length} entries analyzed. New insights available.`, "AI");
+          }
+        }, 1000);
+      }
     }
     prevHistoryLength.current = history.length;
   }, [history, stage, addNotification]);
