@@ -105,7 +105,7 @@ export interface NotificationAnalytics {
   totalShown: number;
   totalDismissed: number;
   totalRead: number;
-  typeBreakdown: Record<Notification['type'], { shown: number; dismissed: number; read: number }>;
+  typeBreakdown: Record<'AI' | 'SYSTEM' | 'STREAK' | 'FREEZE', { shown: number; dismissed: number; read: number }>;
   avgTimeToDismiss: number;
   lastUpdated: string;
 }
@@ -126,7 +126,7 @@ export const getNotificationAnalytics = (): NotificationAnalytics => {
   });
 };
 
-export const trackNotificationShown = (type: Notification['type']) => {
+export const trackNotificationShown = (type: 'AI' | 'SYSTEM' | 'STREAK' | 'FREEZE') => {
   try {
     const analytics = getNotificationAnalytics();
     analytics.totalShown++;
@@ -138,7 +138,7 @@ export const trackNotificationShown = (type: Notification['type']) => {
   }
 };
 
-export const trackNotificationDismissed = (type: Notification['type']) => {
+export const trackNotificationDismissed = (type: 'AI' | 'SYSTEM' | 'STREAK' | 'FREEZE') => {
   try {
     const analytics = getNotificationAnalytics();
     analytics.totalDismissed++;
@@ -150,7 +150,7 @@ export const trackNotificationDismissed = (type: Notification['type']) => {
   }
 };
 
-export const trackNotificationRead = (type: Notification['type']) => {
+export const trackNotificationRead = (type: 'AI' | 'SYSTEM' | 'STREAK' | 'FREEZE') => {
   try {
     const analytics = getNotificationAnalytics();
     analytics.totalRead++;
