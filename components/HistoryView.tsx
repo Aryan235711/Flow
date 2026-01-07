@@ -61,16 +61,16 @@ const DetailItem = memo(({ label, value, icon: Icon, color }: { label: string, v
 ));
 
 // Extracted Card to prevent list re-renders on expand
-const HistoryCard = ({ 
-  entry, 
-  idx,
-  onDelete, 
-  onEdit 
-}: { 
-  entry: MetricEntry; 
+const HistoryCard: React.FC<{
+  entry: MetricEntry;
   idx: number;
-  onDelete: (id: string) => void; 
-  onEdit: (entry: MetricEntry, idx: number) => void; 
+  onDelete: (id: string) => void;
+  onEdit: (entry: MetricEntry, idx: number) => void;
+}> = ({
+  entry,
+  idx,
+  onDelete,
+  onEdit
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const calculateScore = (entry: MetricEntry) => {
