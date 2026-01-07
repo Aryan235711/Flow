@@ -212,12 +212,20 @@ const LogInputForm = memo(({ config, onSave, initialData, history = [] }: LogInp
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const handleSubmit = useCallback(() => {
-    if (isSubmitting) return; // Prevent multiple clicks
+    console.log('🔥 BUTTON CLICKED - handleSubmit called');
+    console.log('🔍 isSubmitting:', isSubmitting);
+    console.log('🔍 isFormValidMemo:', isFormValidMemo);
+    
+    if (isSubmitting) {
+      console.log('❌ BLOCKED: Already submitting');
+      return; // Prevent multiple clicks
+    }
     
     triggerHaptic();
 
     // Validate all fields before submission
     if (!isFormValidMemo) {
+      console.log('❌ BLOCKED: Form invalid');
       // Mark all fields as touched to show errors
       setValidationState(prev => {
         const updated = { ...prev };
@@ -229,6 +237,7 @@ const LogInputForm = memo(({ config, onSave, initialData, history = [] }: LogInp
       return;
     }
 
+    console.log('✅ PROCESSING: Setting isSubmitting to true');
     setIsSubmitting(true);
 
     // Auto-generate name if empty
@@ -266,11 +275,15 @@ const LogInputForm = memo(({ config, onSave, initialData, history = [] }: LogInp
       symptomName: finalName
     };
     
+    console.log('🚀 CALLING onSave with entry:', entry);
     // Call onSave immediately for instant UI feedback
     onSave(entry);
     
     // Reset submitting state after a short delay
-    setTimeout(() => setIsSubmitting(false), 500);
+    setTimeout(() => {
+      console.log('🔄 RESET: Setting isSubmitting to false');
+      setIsSubmitting(false);
+    }, 500);
   }, [formData, config, onSave, initialData, isFormValidMemo, isSubmitting]);
 
   const cogOptions = [
@@ -507,6 +520,9 @@ const LogInputForm = memo(({ config, onSave, initialData, history = [] }: LogInp
          aria-describedby="submit-help"
       >
         <span className="relative z-10">{isSubmitting ? 'PROCESSING...' : initialData ? 'UPDATE ENTRY' : 'COMMIT BIOMETRIC BASELINE'}</span>
+        <div className="absolute top-2 right-2 text-xs opacity-50">
+          {isSubmitting ? '🔄' : isFormValidMemo ? '✅' : '❌'}
+        </div>
         {initialData && <RefreshCw size={24} className="relative z-10" />}
         <div className="absolute inset-0 bg-white/10 opacity-0 hover:opacity-100 transition-opacity" />
       </motion.button>
