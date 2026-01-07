@@ -234,7 +234,7 @@ export const LogInput = memo(({ config, onSave, initialData }: LogInputProps) =>
           <motion.section variants={sectionVariants} className="glass rounded-[32px] p-8 space-y-8 border-white/5 shadow-xl h-full flex flex-col justify-between">
             <div className="space-y-5">
               <div className="flex items-center gap-2">
-                <label className="text-[10px] font-black text-indigo-200/40 uppercase tracking-[0.2em] flex items-center gap-2"><BrainCircuit size={14}/> Cognitive State</label>
+                <label className="text-[10px] font-black text-purple-200/40 uppercase tracking-[0.2em] flex items-center gap-2"><BrainCircuit size={14} className="text-purple-400"/> Cognitive State</label>
                 <Tooltip text="Current mental clarity and focus level" />
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -257,16 +257,16 @@ export const LogInput = memo(({ config, onSave, initialData }: LogInputProps) =>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <label className="text-[10px] font-black text-indigo-200/40 uppercase tracking-widest flex items-center gap-2"><Coffee size={14}/> Gut Stability</label>
+                  <label className="text-[10px] font-black text-green-200/40 uppercase tracking-widest flex items-center gap-2"><Coffee size={14} className="text-green-400"/> Gut Stability</label>
                   <Tooltip text="How healthy is your digestion?" />
                 </div>
-                <span className="text-indigo-400 font-bold">{formData.gut}/5</span>
+                <span className="text-green-400 font-bold">{formData.gut}/5</span>
               </div>
               <div className="flex justify-between gap-2 p-1.5 bg-white/5 rounded-[24px]">
                 {[1,2,3,4,5].map(v => {
                   const colors = ['bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-lime-500', 'bg-green-500'];
                   return (
-                    <button key={v} onClick={() => updateField('gut', v)} className={`flex-1 h-12 rounded-[18px] font-black text-lg transition-all active:scale-95 touch-manipulation ${formData.gut === v ? `${colors[v-1]} text-white shadow-lg scale-105` : 'text-indigo-300/20'}`}>{v}</button>
+                    <button key={v} onClick={() => updateField('gut', v)} className={`flex-1 h-12 rounded-[18px] font-black text-lg transition-all active:scale-95 touch-manipulation ${formData.gut === v ? `${colors[v-1]} text-white shadow-lg scale-105` : 'text-green-300/20'}`}>{v}</button>
                   );
                 })}
               </div>
@@ -274,7 +274,7 @@ export const LogInput = memo(({ config, onSave, initialData }: LogInputProps) =>
 
             <div className="space-y-4">
               <div className="flex items-center gap-2">
-                <label className="text-[10px] font-black text-indigo-200/40 uppercase tracking-widest flex items-center gap-2"><Sun size={14}/> Solar Capture</label>
+                <label className="text-[10px] font-black text-yellow-200/40 uppercase tracking-widest flex items-center gap-2"><Sun size={14} className="text-yellow-400"/> Solar Capture</label>
                 <Tooltip text="Sunlight exposure duration today" />
               </div>
               <div className="flex gap-3">
@@ -289,7 +289,7 @@ export const LogInput = memo(({ config, onSave, initialData }: LogInputProps) =>
 
             <div className="space-y-4">
               <div className="flex items-center gap-2">
-                <label className="text-[10px] font-black text-indigo-200/40 uppercase tracking-widest flex items-center gap-2"><Dumbbell size={14}/> Exertion</label>
+                <label className="text-[10px] font-black text-red-200/40 uppercase tracking-widest flex items-center gap-2"><Dumbbell size={14} className="text-red-400"/> Exertion</label>
                 <Tooltip text="Physical activity intensity today" />
               </div>
               <div className="flex gap-3">
