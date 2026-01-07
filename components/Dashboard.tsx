@@ -1,12 +1,13 @@
 import React, { useMemo, useState, useCallback, memo, lazy, Suspense } from 'react';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
-import { Moon, Activity, Sun, Sparkles, Database, Target, Zap, Flame, Disc, Snowflake, ScanLine, Fingerprint, RefreshCw, Calendar, Edit3, Plus, BrainCircuit, CloudFog, BatteryWarning, Coffee, Dumbbell } from 'lucide-react';
+import { Moon, Activity, Sun, Sparkles, Database, Target, Zap, Flame, Disc, Snowflake, ScanLine, Fingerprint, RefreshCw, Calendar, Edit3, Plus, BrainCircuit, Brain, CloudFog, BatteryWarning, Coffee, Dumbbell } from 'lucide-react';
 import { MetricEntry, UserConfig, Notification, UserProfile } from '../types.ts';
 import { useFlowAI } from '../hooks/useFlowAI.ts';
 import { Deferred } from './Deferred.tsx';
 import { FlippableCard } from './FlippableCard.tsx';
 import { PremiumGate } from './PremiumGate.tsx';
 import { VitalityOrb } from './VitalityOrb.tsx';
+import { NeuralPlasticityIndicators } from './NeuralPlasticityIndicators.tsx';
 import { triggerHaptic } from '../utils.ts';
 import { useHistorySummary } from '../hooks/useHistorySummary.ts';
 
@@ -250,11 +251,21 @@ export const Dashboard = memo(({ history, config, onAddNotif, isMockData, user, 
       </div>
 
       {/* ADAPTIVE VISUALIZATION GRID */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-stretch">
         
-        {/* 3. VITALITY ORB (Left on iPad) */}
-        <motion.div variants={fadeUp} className="md:col-span-5 lg:col-span-4 glass rounded-[48px] border-white/5 relative overflow-hidden bg-gradient-to-br from-teal-500/[0.02] to-cyan-500/[0.02] min-h-[520px] lg:sticky lg:top-32 flex">
-          <VitalityOrb history={history} config={config} userAge={30} />
+        {/* 3. VITALITY ORB COLUMN (Left on iPad) */}
+        <motion.div variants={fadeUp} className="md:col-span-5 lg:col-span-4 flex flex-col">
+          {/* Vitality Orb */}
+          <div className="glass rounded-[48px] border-white/5 relative overflow-hidden bg-gradient-to-br from-teal-500/[0.02] to-cyan-500/[0.02] min-h-[520px] lg:sticky lg:top-32 flex">
+            <VitalityOrb history={history} config={config} userAge={30} />
+          </div>
+
+          {/* Neural Plasticity Indicators (Gap Filler) */}
+          <div className="flex-1 mt-6">
+            <FlippableCard title="Neural Plasticity" icon={Brain} color="text-indigo-400" backContent="Neural plasticity measures your brain's ability to adapt and reorganize. This chart tracks four key indicators: Memory Consolidation (sleep quality), Synaptic Plasticity (cognitive flexibility), Cognitive Reserve (mental resilience), and Neuroplasticity Index (overall brain adaptability). Higher scores indicate better neural health and learning capacity.">
+              <NeuralPlasticityIndicators history={history} config={config} />
+            </FlippableCard>
+          </div>
         </motion.div>
 
         {/* 4. CORTEX + TELEMETRY (Right on iPad) */}
