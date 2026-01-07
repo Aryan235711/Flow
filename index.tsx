@@ -320,9 +320,12 @@ const App = () => {
     if (!Capacitor.isNativePlatform()) return; // Only for native apps
 
     const handleAppUrlOpen = (event: any) => {
+      console.log('[native auth callback] handleAppUrlOpen called with:', event);
       const url = new URL(event.url);
+      console.log('[native auth callback] parsed URL:', url.href, 'protocol:', url.protocol, 'pathname:', url.pathname);
       
-      if (url.protocol === 'flow:' && url.pathname.startsWith('/auth/callback')) {
+      if (url.protocol === 'flow:' && url.pathname === '/callback') {
+        console.log('[native auth callback] condition matched, processing auth payload');
         console.log('[native auth callback] received URL:', event.url);
         
         const error = url.searchParams.get('error');
@@ -349,6 +352,9 @@ const App = () => {
             });
             setStage('ONBOARDING');
             addNotification('Login Successful', `Welcome back, ${decoded.name}!`, 'SYSTEM');
+            
+            // Close the browser window after successful authentication
+            Browser.close();
           } catch (decodeError) {
             console.error('[native auth callback] decode error:', decodeError);
             addNotification('Login Failed', 'Could not process login. Please try again.', 'SYSTEM');
@@ -362,6 +368,7 @@ const App = () => {
     };
 
     CapacitorApp.addListener('appUrlOpen', handleAppUrlOpen);
+    console.log('[native auth callback] Capacitor App listener added');
     
     // Listen for browser close events (user might cancel OAuth)
     const handleBrowserFinished = () => {
@@ -370,6 +377,7 @@ const App = () => {
     };
     
     Browser.addListener('browserFinished', handleBrowserFinished);
+    console.log('[native auth callback] Browser finished listener added');
     
     return () => {
       CapacitorApp.removeAllListeners();

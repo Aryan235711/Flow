@@ -1,0 +1,191 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="description" content="Flow: High-performance biological telemetry and neural tracing dashboard.">
+    <meta name="theme-color" content="#020617">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    
+    <!-- iOS PWA Support -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Flow">
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    <!-- iOS Touch Icons -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-192.webp">
+    <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-192.webp">
+    <link rel="apple-touch-icon" sizes="120x120" href="/icons/icon-128.webp">
+    <link rel="apple-touch-icon" sizes="76x76" href="/icons/icon-96.webp">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="/icon.png">
+    <title>Flow Wellness - Biological Telemetry</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            spacing: {
+              'content-xs': '1rem',
+              'content-sm': '1.25rem',
+              'content-md': '1.5rem',
+              'content-lg': '2rem',
+            },
+            borderRadius: {
+              'card': '2rem',
+              'card-lg': '2.5rem',
+              'card-xl': '3rem',
+            },
+            animation: {
+              'spin-slow': 'spin 3s linear infinite',
+            },
+          }
+        }
+      }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #020617;
+            --accent-glow: rgba(99, 102, 241, 0.15);
+        }
+        html {
+            background: var(--bg-deep);
+            min-height: 100%;
+            overscroll-behavior-y: none;
+        }
+        * {
+            -webkit-tap-highlight-color: transparent;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background: var(--bg-deep);
+            color: white;
+            overflow-x: hidden;
+            overflow-y: auto;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-font-smoothing: antialiased;
+            letter-spacing: -0.01em;
+            font-display: swap;
+            overscroll-behavior-y: none; /* Prevents rubber-banding on iOS */
+            /* iOS safe-area-insets for notch support */
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+            padding-left: env(safe-area-inset-left);
+            padding-right: env(safe-area-inset-right);
+            /* Extend background to cover overscroll area */
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
+        }
+        .font-outfit { font-family: 'Outfit', sans-serif; }
+        
+        /* LIQUID GLASS EFFECT - ENHANCED CONTRAST */
+        .glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(50px) saturate(190%);
+            -webkit-backdrop-filter: blur(50px) saturate(190%);
+            
+            /* Sharper, brighter border for "cut glass" look */
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            
+            /* Deep uplift shadow */
+            box-shadow: 
+                0 25px 50px -12px rgba(0, 0, 0, 0.6); 
+            
+            transform: translateZ(0); /* Hardware Acceleration */
+        }
+
+        .glass-panel {
+            background: rgba(10, 10, 20, 0.6);
+            backdrop-filter: blur(40px);
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        
+        ::-webkit-scrollbar { display: none; }
+        .pt-safe { padding-top: env(safe-area-inset-top); }
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+        /* Ensure Safari and legacy browsers honor the manipulation touch-action utility */
+        .touch-manipulation {
+          touch-action: manipulation;
+          -ms-touch-action: manipulation;
+          -webkit-touch-action: manipulation;
+        }
+        
+        .perspective-1000 { perspective: 1000px; -webkit-perspective: 1000px; }
+        .preserve-3d { transform-style: preserve-3d; -webkit-transform-style: preserve-3d; }
+        .backface-hidden {
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+        .rotate-y-180 { transform: rotateY(180deg); }
+        
+        /* Recharts performance */
+        .recharts-wrapper { font-family: 'Outfit', sans-serif !important; }
+        .recharts-polar-grid-concentric-path { stroke: rgba(255,255,255,0.1) !important; }
+        .recharts-text { fill: rgba(255,255,255,0.4) !important; }
+
+        @keyframes subtle-float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .floating { animation: subtle-float 6s ease-in-out infinite; }
+        
+        /* Neon Glow Utilities */
+        .glow-text { text-shadow: 0 0 20px currentColor; }
+    </style>
+    <script>
+        // Safety Shim for process.env to prevent crashes in browser environments
+        if (typeof process === "undefined") {
+            window.process = { env: { API_KEY: '' } };
+        }
+        
+        // Register Service Worker for PWA functionality
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then((registration) => {
+                        console.log('SW registered: ', registration);
+                    })
+                    .catch((registrationError) => {
+                        console.log('SW registration failed: ', registrationError);
+                    });
+            });
+        }
+    </script>
+
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@18.2.0",
+    "react/": "https://esm.sh/react@18.2.0/",
+    "react-dom": "https://esm.sh/react-dom@18.2.0",
+    "react-dom/": "https://esm.sh/react-dom@18.2.0/",
+    "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+    "lucide-react": "https://esm.sh/lucide-react@0.303.0?deps=react@18.2.0",
+    "recharts": "https://esm.sh/recharts@2.12.0?deps=react@18.2.0,react-dom@18.2.0",
+    "@google/genai": "https://esm.sh/@google/genai@latest",
+    "framer-motion": "https://esm.sh/framer-motion@11.0.8?deps=react@18.2.0,react-dom@18.2.0"
+  }
+}
+</script>
+  <script type="module" crossorigin src="/assets/index-D41CZrVg.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/react-vendor-DoSVpXge.js">
+  <link rel="modulepreload" crossorigin href="/assets/motion-d9bwDdYN.js">
+  <link rel="modulepreload" crossorigin href="/assets/icons-DTWWE7WE.js">
+  <link rel="stylesheet" crossorigin href="/assets/index-CbeOiJDl.css">
+</head>
+<body class="min-h-screen">
+    <div id="root"></div>
+</body>
+</html>
