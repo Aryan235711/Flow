@@ -121,7 +121,7 @@ const HistoryCard: React.FC<{
         e.stopPropagation();
         triggerHaptic();
         setIsExpanded(prev => !prev);
-      }} className="p-4 pl-6 cursor-pointer touch-manipulation relative z-10">
+      }} className="p-4 pl-6 cursor-pointer touch-manipulation relative z-[1]">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-4">
             <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg ${getCognitiveColor(entry.rawValues.cognition || 'STEADY')}`}>
@@ -147,7 +147,7 @@ const HistoryCard: React.FC<{
             initial={{ opacity: 0, y: -10 }} 
             animate={{ opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 30 } }} 
             exit={{ opacity: 0, y: -10, transition: { duration: 0.2 } }}
-            className="absolute top-full left-0 right-0 z-20 bg-[#020617]/95 backdrop-blur-xl border-t border-white/10 rounded-b-[32px] shadow-2xl"
+            className="absolute top-full left-0 right-0 z-[9999] bg-[#020617]/95 backdrop-blur-xl border-t border-white/10 rounded-b-[32px] shadow-2xl"
           >
             <motion.div 
                className="p-6 grid grid-cols-2 gap-3"
