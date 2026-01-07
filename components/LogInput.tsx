@@ -151,15 +151,18 @@ export const LogInput = memo(({ config, onSave, initialData }: LogInputProps) =>
             <div className="flex items-center gap-3"><Target size={20} className="text-teal-400" /><h3 className="text-[11px] font-black text-teal-300/40 uppercase tracking-[0.3em] font-outfit">Neural Load</h3></div>
             
             <div className="flex justify-between gap-2 p-1.5 bg-white/5 rounded-[24px]" role="radiogroup" aria-label="Load intensity">
-              {[1,2,3,4,5].map(v => (
-                <button 
-                  key={v} 
-                  onClick={() => updateField('symptomScore', v)} 
-                  className={`flex-1 h-14 rounded-[18px] font-black text-lg transition-all active:scale-95 touch-manipulation ${formData.symptomScore === v ? 'bg-teal-500 text-white shadow-lg scale-105' : 'text-teal-300/20'}`}
-                >
-                  {v}
-                </button>
-              ))}
+              {[1,2,3,4,5].map(v => {
+                const colors = ['bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-lime-500', 'bg-green-500'];
+                return (
+                  <button 
+                    key={v} 
+                    onClick={() => updateField('symptomScore', v)} 
+                    className={`flex-1 h-14 rounded-[18px] font-black text-lg transition-all active:scale-95 touch-manipulation ${formData.symptomScore === v ? `${colors[v-1]} text-white shadow-lg scale-105` : 'text-teal-300/20'}`}
+                  >
+                    {v}
+                  </button>
+                );
+              })}
             </div>
             
             <input 
@@ -229,28 +232,37 @@ export const LogInput = memo(({ config, onSave, initialData }: LogInputProps) =>
 
             <div className="space-y-4">
               <div className="flex justify-between items-center"><label className="text-[10px] font-black text-indigo-200/40 uppercase tracking-widest flex items-center gap-2"><Coffee size={14}/> Gut Stability</label><span className="text-indigo-400 font-bold">{formData.gut}/5</span></div>
-              <div className="flex gap-2.5 h-12">
-                {[1,2,3,4,5].map(v => (
-                  <button key={v} onClick={() => updateField('gut', v)} className={`flex-1 rounded-xl transition-all active:scale-95 touch-manipulation ${formData.gut >= v ? 'bg-indigo-500 shadow-md' : 'bg-white/5'}`}></button>
-                ))}
+              <div className="flex justify-between gap-2 p-1.5 bg-white/5 rounded-[24px]">
+                {[1,2,3,4,5].map(v => {
+                  const colors = ['bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-lime-500', 'bg-green-500'];
+                  return (
+                    <button key={v} onClick={() => updateField('gut', v)} className={`flex-1 h-12 rounded-[18px] font-black text-lg transition-all active:scale-95 touch-manipulation ${formData.gut === v ? `${colors[v-1]} text-white shadow-lg scale-105` : 'text-indigo-300/20'}`}>{v}</button>
+                  );
+                })}
               </div>
             </div>
 
             <div className="space-y-4">
               <label className="text-[10px] font-black text-indigo-200/40 uppercase tracking-widest flex items-center gap-2"><Sun size={14}/> Solar Capture</label>
               <div className="flex gap-3">
-                {['None', 'Partial', 'Full'].map(s => (
-                  <button key={s} onClick={() => updateField('sun', s)} className={`flex-1 py-4 rounded-2xl text-[11px] font-black transition-all active:scale-95 touch-manipulation ${formData.sun === s ? 'bg-amber-500 text-black shadow-lg' : 'bg-white/5 text-white/30'}`}>{s.toUpperCase()}</button>
-                ))}
+                {['None', 'Partial', 'Full'].map((s, idx) => {
+                  const colors = ['bg-red-500', 'bg-yellow-500', 'bg-green-500'];
+                  return (
+                    <button key={s} onClick={() => updateField('sun', s)} className={`flex-1 py-4 rounded-2xl text-[11px] font-black transition-all active:scale-95 touch-manipulation ${formData.sun === s ? `${colors[idx]} text-white shadow-lg` : 'bg-white/5 text-white/30'}`}>{s.toUpperCase()}</button>
+                  );
+                })}
               </div>
             </div>
 
             <div className="space-y-4">
               <label className="text-[10px] font-black text-indigo-200/40 uppercase tracking-widest flex items-center gap-2"><Dumbbell size={14}/> Exertion</label>
               <div className="flex gap-3">
-                {['None', 'Low', 'Medium', 'Hard'].map(e => (
-                  <button key={e} onClick={() => updateField('exercise', e)} className={`flex-1 py-4 rounded-2xl text-[11px] font-black transition-all active:scale-95 touch-manipulation ${formData.exercise === e ? 'bg-emerald-500 text-black shadow-lg' : 'bg-white/5 text-white/30'}`}>{e.toUpperCase()}</button>
-                ))}
+                {['None', 'Low', 'Medium', 'Hard'].map((e, idx) => {
+                  const colors = ['bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-green-500'];
+                  return (
+                    <button key={e} onClick={() => updateField('exercise', e)} className={`flex-1 py-4 rounded-2xl text-[11px] font-black transition-all active:scale-95 touch-manipulation ${formData.exercise === e ? `${colors[idx]} text-white shadow-lg` : 'bg-white/5 text-white/30'}`}>{e.toUpperCase()}</button>
+                  );
+                })}
               </div>
             </div>
           </motion.section>
