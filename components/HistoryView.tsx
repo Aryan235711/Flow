@@ -112,7 +112,7 @@ const HistoryCard: React.FC<{
       initial={{ opacity: 0, y: 15 }} 
       animate={{ opacity: 1, y: 0 }} 
       transition={{ delay: idx * 0.05, type: "spring", stiffness: 300, damping: 30 }}
-      className={`glass rounded-[32px] overflow-hidden transition-all duration-300 relative isolate ${isExpanded ? 'bg-white/[0.06] shadow-xl ring-1 ring-white/10' : 'active:scale-[0.98]'}`}
+      className={`glass rounded-[32px] transition-all duration-300 relative isolate ${isExpanded ? 'bg-white/[0.06] shadow-xl ring-1 ring-white/10 rounded-b-none' : 'active:scale-[0.98]'}`}
     >
       {/* Status Strip */}
       <div className={`absolute left-0 top-0 bottom-0 w-1 ${statusColor} opacity-50`} />
@@ -121,7 +121,7 @@ const HistoryCard: React.FC<{
         e.stopPropagation();
         triggerHaptic();
         setIsExpanded(prev => !prev);
-      }} className="p-4 pl-6 cursor-pointer touch-manipulation">
+      }} className="p-4 pl-6 cursor-pointer touch-manipulation relative z-10">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-4">
             <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg ${getCognitiveColor(entry.rawValues.cognition || 'STEADY')}`}>
@@ -140,16 +140,17 @@ const HistoryCard: React.FC<{
         </div>
       </div>
 
+      {/* Expanded Content - Positioned Absolutely */}
       <AnimatePresence>
         {isExpanded && (
           <motion.div 
-            initial={{ height: 0, opacity: 0 }} 
-            animate={{ height: 'auto', opacity: 1, transition: { type: "spring", stiffness: 300, damping: 30 } }} 
-            exit={{ height: 0, opacity: 0, transition: { duration: 0.2 } }}
-            className="overflow-hidden bg-[#020617]/30 border-t border-white/5"
+            initial={{ opacity: 0, y: -10 }} 
+            animate={{ opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 30 } }} 
+            exit={{ opacity: 0, y: -10, transition: { duration: 0.2 } }}
+            className="absolute top-full left-0 right-0 z-20 bg-[#020617]/95 backdrop-blur-xl border-t border-white/10 rounded-b-[32px] shadow-2xl"
           >
             <motion.div 
-               className="p-6 pl-8 grid grid-cols-2 gap-3"
+               className="p-6 grid grid-cols-2 gap-3"
                initial="hidden"
                animate="show"
                variants={{ show: { transition: { staggerChildren: 0.05 } } }}
@@ -288,21 +289,20 @@ export const HistoryView = memo(({ history, isMockData, onDelete, onEdit, isPrem
         )}
       </AnimatePresence>
 
-      <div className="flex flex-wrap gap-4 justify-center md:justify-start">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
         {history.length === 0 ? (
-          <div className="w-full text-center py-24 opacity-10">
+          <div className="col-span-full text-center py-24 opacity-10">
             <Database size={48} className="mx-auto mb-4" />
             <p className="text-sm uppercase tracking-widest font-black">Registry Empty</p>
           </div>
         ) : visibleHistory.map((entry, idx) => (
-           <div key={`${entry.date}-${entry.symptomName}-${idx}`} className="relative flex-1 min-w-0 max-w-full md:max-w-[calc(50%-0.5rem)]">
-             <HistoryCard 
-               entry={entry}
-               idx={idx}
-               onDelete={onDelete}
-               onEdit={onEdit}
-             />
-           </div>
+           <HistoryCard
+             key={`${entry.date}-${entry.symptomName}-${idx}`}
+             entry={entry}
+             idx={idx}
+             onDelete={onDelete}
+             onEdit={onEdit}
+           />
         ))}
 
         {/* LOCKED VAULT CARD (Free User with > 7 logs) */}
