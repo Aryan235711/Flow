@@ -1,10 +1,11 @@
-import React, { useState, useCallback, memo, useEffect } from 'react';
+import React, { useState, useCallback, memo, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Target, Coffee, Sun, Dumbbell, Zap, CloudFog, BatteryWarning, BrainCircuit, RefreshCw, Info } from 'lucide-react';
 import { MetricEntry, UserConfig, Flag } from '../types.ts';
 import { validateNumericInput, validateTimeInput, validateTextInput, VALIDATION_RULES, getInitialValidationState, isFormValid, FormValidationState } from '../inputValidation.ts';
 import { calculateFlag, triggerHaptic, getLocalDate } from '../utils.ts';
 import { FormErrorBoundary } from './FormErrorBoundary.tsx';
+import { useDebounce } from '../hooks/useDebounce.ts';
 
 // Minimal tooltip component
 const Tooltip = ({ text }: { text: string }) => (
@@ -50,6 +51,12 @@ const LogInputForm = memo(({ config, onSave, initialData }: LogInputProps) => {
 
   const [formData, setFormData] = useState(() => getDefaultState(!!initialData));
   const [validationState, setValidationState] = useState(() => getInitialValidationState());
+  
+  // Debounce form data for validation to improve performance
+  const debouncedFormData = useDebounce(formData, 300);
+  
+  // Memoize expensive calculations
+  const isFormValidMemo = useMemo(() => isFormValid(validationState), [validationState]);
 
   // Hydrate form if editing
   useEffect(() => {
@@ -77,8 +84,8 @@ const LogInputForm = memo(({ config, onSave, initialData }: LogInputProps) => {
     setValidationState(getInitialValidationState());
   }, [initialData, getDefaultState]);
 
-  // Enhanced sleep input with validation
-  const handleSleepChange = (val: string) => {
+  // Enhanced sleep input with debounced validation
+  const handleSleepChange = useCallback((val: string) => {
     const nums = val.replace(/\D/g, '');
     let formatted = nums;
     if (nums.length > 4) return;
@@ -87,52 +94,82 @@ const LogInputForm = memo(({ config, onSave, initialData }: LogInputProps) => {
     }
     
     setFormData(p => ({ ...p, sleep: formatted }));
-    
-    // Validate on change
-    const validation = validateTimeInput(formatted);
+  }, []);
+  
+  // Debounced validation effect for sleep
+  useEffect(() => {
+    const validation = validateTimeInput(debouncedFormData.sleep);
     setValidationState(prev => ({
       ...prev,
       sleep: {
         isValid: validation.isValid,
         error: validation.error,
-        touched: true
+        touched: prev.sleep.touched
       }
     }));
-  };
+  }, [debouncedFormData.sleep]);
 
-  const updateField = (field: keyof typeof formData, val: any) => {
+  const updateField = useCallback((field: keyof typeof formData, val: any) => {
     triggerHaptic();
     setFormData(p => ({ ...p, [field]: val }));
     
-    // Mark field as touched
+    // Mark field as touched immediately for better UX
     setValidationState(prev => ({
       ...prev,
       [field]: { ...prev[field], touched: true }
     }));
-  };
+  }, []);
 
-  // Validate numeric input with real-time feedback
-  const handleNumericChange = (field: 'rhr' | 'hrv' | 'protein', value: string) => {
+  // Optimized numeric input handler with debounced validation
+  const handleNumericChange = useCallback((field: 'rhr' | 'hrv' | 'protein', value: string) => {
     setFormData(p => ({ ...p, [field]: value }));
-    
-    const rules = VALIDATION_RULES[field];
-    const validation = validateNumericInput(value, rules);
-    
+  }, []);
+  
+  // Debounced validation effects for numeric fields
+  useEffect(() => {
+    const rules = VALIDATION_RULES.rhr;
+    const validation = validateNumericInput(debouncedFormData.rhr, rules);
     setValidationState(prev => ({
       ...prev,
-      [field]: {
+      rhr: {
         isValid: validation.isValid,
         error: validation.error,
-        touched: true
+        touched: prev.rhr.touched
       }
     }));
-  };
+  }, [debouncedFormData.rhr]);
+  
+  useEffect(() => {
+    const rules = VALIDATION_RULES.hrv;
+    const validation = validateNumericInput(debouncedFormData.hrv, rules);
+    setValidationState(prev => ({
+      ...prev,
+      hrv: {
+        isValid: validation.isValid,
+        error: validation.error,
+        touched: prev.hrv.touched
+      }
+    }));
+  }, [debouncedFormData.hrv]);
+  
+  useEffect(() => {
+    const rules = VALIDATION_RULES.protein;
+    const validation = validateNumericInput(debouncedFormData.protein, rules);
+    setValidationState(prev => ({
+      ...prev,
+      protein: {
+        isValid: validation.isValid,
+        error: validation.error,
+        touched: prev.protein.touched
+      }
+    }));
+  }, [debouncedFormData.protein]);
 
   const handleSubmit = useCallback(() => {
     triggerHaptic();
 
     // Validate all fields before submission
-    if (!isFormValid(validationState)) {
+    if (!isFormValidMemo) {
       // Mark all fields as touched to show errors
       setValidationState(prev => {
         const updated = { ...prev };
@@ -175,7 +212,7 @@ const LogInputForm = memo(({ config, onSave, initialData }: LogInputProps) => {
       symptomScore: formData.symptomScore, 
       symptomName: finalName
     });
-  }, [formData, config, onSave, initialData, validationState]);
+  }, [formData, config, onSave, initialData, isFormValidMemo]);
 
   const cogOptions = [
     { id: 'PEAK', label: 'Peak', icon: Zap, bg: 'bg-teal-500', text: 'text-white' },
@@ -265,20 +302,49 @@ const LogInputForm = memo(({ config, onSave, initialData }: LogInputProps) => {
 
           {/* NUMERICAL METRICS GRID */}
           <motion.section variants={sectionVariants} className="grid grid-cols-2 md:grid-cols-2 gap-4">
-            <div className="glass rounded-[28px] p-6 text-center border-white/5 shadow-lg relative group focus-within:ring-2 ring-indigo-500/30 transition-all">
-                <div className="absolute inset-0 bg-indigo-500/5 opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none" />
+            <div className={`glass rounded-[28px] p-6 text-center shadow-lg relative group transition-all ${
+              validationState.sleep.touched && !validationState.sleep.isValid 
+                ? 'border-red-500/50 bg-red-500/5 ring-2 ring-red-500/30' 
+                : validationState.sleep.touched && validationState.sleep.isValid 
+                ? 'border-green-500/50 bg-green-500/5 ring-2 ring-green-500/30' 
+                : 'border-white/5 focus-within:ring-2 ring-indigo-500/30'
+            }`}>
+                <div className={`absolute inset-0 opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none ${
+                  validationState.sleep.touched && !validationState.sleep.isValid 
+                    ? 'bg-red-500/10' 
+                    : validationState.sleep.touched && validationState.sleep.isValid 
+                    ? 'bg-green-500/10' 
+                    : 'bg-indigo-500/5'
+                }`} />
                 <div className="flex items-center justify-center gap-2 mb-3">
-                  <label className="text-[10px] font-black text-indigo-400/30 uppercase font-outfit tracking-widest">Sleep (HH:MM)</label>
+                  <label className={`text-[10px] font-black uppercase font-outfit tracking-widest ${
+                    validationState.sleep.touched && !validationState.sleep.isValid 
+                      ? 'text-red-400/70' 
+                      : validationState.sleep.touched && validationState.sleep.isValid 
+                      ? 'text-green-400/70' 
+                      : 'text-indigo-400/30'
+                  }`}>Sleep (HH:MM)</label>
                   <Tooltip text="Total hours and minutes of sleep last night" />
+                  {validationState.sleep.touched && validationState.sleep.isValid && (
+                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                  )}
                 </div>
                 <input 
                   type="text" 
                   inputMode="decimal"
                   value={formData.sleep} 
-                  onChange={(e) => handleSleepChange(e.target.value)} 
-                  className={`w-full bg-transparent text-center text-3xl font-bold font-outfit outline-none placeholder:text-white/10 ${
+                  onChange={(e) => {
+                    handleSleepChange(e.target.value);
+                    setValidationState(prev => ({
+                      ...prev,
+                      sleep: { ...prev.sleep, touched: true }
+                    }));
+                  }} 
+                  className={`w-full bg-transparent text-center text-3xl font-bold font-outfit outline-none placeholder:text-white/10 transition-colors ${
                     validationState.sleep.touched && !validationState.sleep.isValid 
-                      ? 'text-red-400 ring-2 ring-red-500/50' 
+                      ? 'text-red-400' 
+                      : validationState.sleep.touched && validationState.sleep.isValid 
+                      ? 'text-green-400' 
                       : 'text-white'
                   }`}
                   placeholder="00:00"
@@ -287,9 +353,14 @@ const LogInputForm = memo(({ config, onSave, initialData }: LogInputProps) => {
                   aria-describedby={validationState.sleep.error ? 'sleep-error' : undefined}
                 />
                 {validationState.sleep.touched && validationState.sleep.error && (
-                  <div id="sleep-error" className="text-red-400 text-xs mt-2 font-medium">
+                  <motion.div 
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    id="sleep-error" 
+                    className="text-red-400 text-xs mt-2 font-medium bg-red-500/10 px-3 py-1 rounded-lg"
+                  >
                     {validationState.sleep.error}
-                  </div>
+                  </motion.div>
                 )}
             </div>
             {[
@@ -297,21 +368,50 @@ const LogInputForm = memo(({ config, onSave, initialData }: LogInputProps) => {
               { k: 'hrv', l: 'HRV', t: 'numeric', tip: 'Heart rate variability' },
               { k: 'protein', l: 'Protein (g)', t: 'numeric', tip: 'Protein intake today' }
             ].map(i => (
-              <div key={i.k} className="glass rounded-[28px] p-6 text-center border-white/5 shadow-lg relative group focus-within:ring-2 ring-indigo-500/30 transition-all">
-                <div className="absolute inset-0 bg-indigo-500/5 opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none" />
+              <div key={i.k} className={`glass rounded-[28px] p-6 text-center shadow-lg relative group transition-all ${
+                validationState[i.k]?.touched && !validationState[i.k]?.isValid 
+                  ? 'border-red-500/50 bg-red-500/5 ring-2 ring-red-500/30' 
+                  : validationState[i.k]?.touched && validationState[i.k]?.isValid 
+                  ? 'border-green-500/50 bg-green-500/5 ring-2 ring-green-500/30' 
+                  : 'border-white/5 focus-within:ring-2 ring-indigo-500/30'
+              }`}>
+                <div className={`absolute inset-0 opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none ${
+                  validationState[i.k]?.touched && !validationState[i.k]?.isValid 
+                    ? 'bg-red-500/10' 
+                    : validationState[i.k]?.touched && validationState[i.k]?.isValid 
+                    ? 'bg-green-500/10' 
+                    : 'bg-indigo-500/5'
+                }`} />
                 <div className="flex items-center justify-center gap-2 mb-3">
-                  <label className="text-[10px] font-black text-indigo-400/30 uppercase font-outfit tracking-widest">{i.l}</label>
+                  <label className={`text-[10px] font-black uppercase font-outfit tracking-widest ${
+                    validationState[i.k]?.touched && !validationState[i.k]?.isValid 
+                      ? 'text-red-400/70' 
+                      : validationState[i.k]?.touched && validationState[i.k]?.isValid 
+                      ? 'text-green-400/70' 
+                      : 'text-indigo-400/30'
+                  }`}>{i.l}</label>
                   <Tooltip text={i.tip} />
+                  {validationState[i.k]?.touched && validationState[i.k]?.isValid && (
+                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                  )}
                 </div>
                 <input 
                   type="text"
                   inputMode="decimal"
                   pattern="[0-9]*"
                   value={(formData as any)[i.k]} 
-                  onChange={(e) => handleNumericChange(i.k as 'rhr' | 'hrv' | 'protein', e.target.value)} 
-                  className={`w-full bg-transparent text-center text-3xl font-bold font-outfit outline-none placeholder:text-white/10 ${
+                  onChange={(e) => {
+                    handleNumericChange(i.k as 'rhr' | 'hrv' | 'protein', e.target.value);
+                    setValidationState(prev => ({
+                      ...prev,
+                      [i.k]: { ...prev[i.k], touched: true }
+                    }));
+                  }} 
+                  className={`w-full bg-transparent text-center text-3xl font-bold font-outfit outline-none placeholder:text-white/10 transition-colors ${
                     validationState[i.k]?.touched && !validationState[i.k]?.isValid 
-                      ? 'text-red-400 ring-2 ring-red-500/50' 
+                      ? 'text-red-400' 
+                      : validationState[i.k]?.touched && validationState[i.k]?.isValid 
+                      ? 'text-green-400' 
                       : 'text-white'
                   }`}
                   aria-label={`${i.l} input`}
@@ -319,9 +419,14 @@ const LogInputForm = memo(({ config, onSave, initialData }: LogInputProps) => {
                   aria-describedby={validationState[i.k]?.error ? `${i.k}-error` : undefined}
                 />
                 {validationState[i.k]?.touched && validationState[i.k]?.error && (
-                  <div id={`${i.k}-error`} className="text-red-400 text-xs mt-2 font-medium">
+                  <motion.div 
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    id={`${i.k}-error`} 
+                    className="text-red-400 text-xs mt-2 font-medium bg-red-500/10 px-3 py-1 rounded-lg"
+                  >
                     {validationState[i.k]?.error}
-                  </div>
+                  </motion.div>
                 )}
               </div>
             ))}
@@ -408,9 +513,9 @@ const LogInputForm = memo(({ config, onSave, initialData }: LogInputProps) => {
          variants={sectionVariants}
          whileTap={{ scale: 0.95 }}
          onClick={handleSubmit} 
-         disabled={!isFormValid(validationState)}
+         disabled={!isFormValidMemo}
          className={`w-full py-8 md:py-10 font-black rounded-[32px] md:rounded-[40px] text-xl md:text-2xl shadow-2xl transition-all font-outfit uppercase tracking-wider relative overflow-hidden touch-manipulation flex items-center justify-center gap-4 ${
-           isFormValid(validationState) 
+           isFormValidMemo 
              ? 'bg-gradient-to-r from-teal-500 to-cyan-500 text-white hover:shadow-teal-500/40' 
              : 'bg-gray-600/50 text-gray-400 cursor-not-allowed'
          }`}
@@ -423,7 +528,7 @@ const LogInputForm = memo(({ config, onSave, initialData }: LogInputProps) => {
       </motion.button>
       
       <div id="submit-help" className="sr-only">
-        {isFormValid(validationState) 
+        {isFormValidMemo 
           ? 'All fields are valid. Click to save your biometric data.' 
           : 'Please fix the errors above before submitting.'}
       </div>
