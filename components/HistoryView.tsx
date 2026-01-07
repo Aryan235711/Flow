@@ -109,16 +109,16 @@ const HistoryCard: React.FC<{
 
   return (
     <motion.div 
-      layout
       initial={{ opacity: 0, y: 15 }} 
       animate={{ opacity: 1, y: 0 }} 
       transition={{ delay: idx * 0.05, type: "spring", stiffness: 300, damping: 30 }}
-      className={`glass rounded-[32px] overflow-hidden transition-all duration-300 relative ${isExpanded ? 'bg-white/[0.06] shadow-xl ring-1 ring-white/10' : 'active:scale-[0.98]'}`}
+      className={`glass rounded-[32px] overflow-hidden transition-all duration-300 relative isolate ${isExpanded ? 'bg-white/[0.06] shadow-xl ring-1 ring-white/10' : 'active:scale-[0.98]'}`}
     >
       {/* Status Strip */}
       <div className={`absolute left-0 top-0 bottom-0 w-1 ${statusColor} opacity-50`} />
 
-      <div onClick={() => {
+      <div onClick={(e) => {
+        e.stopPropagation();
         triggerHaptic();
         setIsExpanded(prev => !prev);
       }} className="p-4 pl-6 cursor-pointer touch-manipulation">
@@ -295,13 +295,14 @@ export const HistoryView = memo(({ history, isMockData, onDelete, onEdit, isPrem
             <p className="text-sm uppercase tracking-widest font-black">Registry Empty</p>
           </div>
         ) : visibleHistory.map((entry, idx) => (
-           <HistoryCard 
-             key={`${entry.date}-${entry.symptomName}-${idx}`}
-             entry={entry}
-             idx={idx}
-             onDelete={onDelete}
-             onEdit={onEdit}
-           />
+           <div key={`${entry.date}-${entry.symptomName}-${idx}`} className="relative">
+             <HistoryCard 
+               entry={entry}
+               idx={idx}
+               onDelete={onDelete}
+               onEdit={onEdit}
+             />
+           </div>
         ))}
 
         {/* LOCKED VAULT CARD (Free User with > 7 logs) */}
