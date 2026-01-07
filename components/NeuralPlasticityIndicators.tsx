@@ -111,26 +111,6 @@ const calculateDailyPlasticity = (dayData: MetricEntry[], config: UserConfig): D
   };
 };
 
-const CustomTooltip = ({ active, payload, label }: any) => {
-  if (active && payload && payload.length) {
-    return (
-      <div className="bg-[#0a1128] border border-white/10 p-3 rounded-xl shadow-xl backdrop-blur-md">
-        <p className="text-white font-medium mb-2 text-[10px]">{label}</p>
-        {payload.map((entry: any, index: number) => (
-          <p key={index} className="text-sm" style={{ color: entry.color }}>
-            {entry.dataKey === 'memoryConsolidation' && 'Memory Consolidation'}
-            {entry.dataKey === 'synapticPlasticity' && 'Synaptic Plasticity'}
-            {entry.dataKey === 'cognitiveReserve' && 'Cognitive Reserve'}
-            {entry.dataKey === 'neuroplasticityIndex' && 'Neuroplasticity Index'}
-            : {entry.value}%
-          </p>
-        ))}
-      </div>
-    );
-  }
-  return null;
-};
-
 const getPlasticityColor = (score: number): string => {
   if (score >= 80) return 'text-emerald-400';
   if (score >= 60) return 'text-teal-400';
@@ -218,24 +198,24 @@ export const NeuralPlasticityIndicators: React.FC<NeuralPlasticityIndicatorsProp
               margin={{ top: 10, right: 20, left: 20, bottom: 10 }}
             >
                 <defs>
-                  {/* Memory Consolidation Gradients */}
+                  {/* Memory Consolidation Gradients - Changed to blue */}
                   <linearGradient id="memoryG" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#10b981" stopOpacity={1}/>
-                    <stop offset="100%" stopColor="#10b981" stopOpacity={0.2}/>
+                    <stop offset="0%" stopColor="#3b82f6" stopOpacity={1}/>
+                    <stop offset="100%" stopColor="#3b82f6" stopOpacity={0.2}/>
                   </linearGradient>
                   <linearGradient id="memoryActive" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#34d399" stopOpacity={1}/>
-                    <stop offset="100%" stopColor="#34d399" stopOpacity={0.8}/>
+                    <stop offset="0%" stopColor="#60a5fa" stopOpacity={1}/>
+                    <stop offset="100%" stopColor="#60a5fa" stopOpacity={0.8}/>
                   </linearGradient>
 
-                  {/* Synaptic Plasticity Gradients */}
+                  {/* Synaptic Plasticity Gradients - Keep teal but make it more distinct */}
                   <linearGradient id="synapticG" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#14b8a6" stopOpacity={1}/>
-                    <stop offset="100%" stopColor="#14b8a6" stopOpacity={0.2}/>
+                    <stop offset="0%" stopColor="#06b6d4" stopOpacity={1}/>
+                    <stop offset="100%" stopColor="#06b6d4" stopOpacity={0.2}/>
                   </linearGradient>
                   <linearGradient id="synapticActive" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#2dd4bf" stopOpacity={1}/>
-                    <stop offset="100%" stopColor="#2dd4bf" stopOpacity={0.8}/>
+                    <stop offset="0%" stopColor="#22d3ee" stopOpacity={1}/>
+                    <stop offset="100%" stopColor="#22d3ee" stopOpacity={0.8}/>
                   </linearGradient>
 
                   {/* Cognitive Reserve Gradients */}
@@ -265,6 +245,7 @@ export const NeuralPlasticityIndicators: React.FC<NeuralPlasticityIndicatorsProp
                   tick={{ fontSize: 9, fill: 'rgba(255,255,255,0.6)' }}
                   axisLine={{ stroke: 'rgba(255,255,255,0.2)' }}
                   tickLine={{ stroke: 'rgba(255,255,255,0.2)' }}
+                  label={{ value: 'Score', position: 'insideBottom', offset: -5, style: { textAnchor: 'middle', fill: 'rgba(255,255,255,0.6)', fontSize: 9 } }}
                 />
                 <YAxis
                   type="category"
@@ -276,18 +257,20 @@ export const NeuralPlasticityIndicators: React.FC<NeuralPlasticityIndicatorsProp
                 />
                 <Tooltip
                   cursor={{ fill: 'transparent', stroke: 'rgba(255,255,255,0.05)', strokeWidth: 1 }}
-                  contentStyle={{
-                    background: 'rgba(2, 6, 23, 0.9)',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: '16px',
-                    color: '#fff',
-                    fontSize: '10px',
-                    padding: '4px 8px',
-                    boxShadow: '0 10px 30px -5px rgba(0,0,0,0.8)'
+                  content={({ active, payload }) => {
+                    if (active && payload && payload.length) {
+                      const total = payload.reduce((sum: number, entry: any) => sum + entry.value, 0);
+                      const status = total >= 320 ? 'EXCELLENT' : total >= 280 ? 'GOOD' : total >= 200 ? 'MODERATE' : 'NEEDS WORK';
+                      const color = total >= 320 ? 'text-emerald-400' : total >= 280 ? 'text-blue-400' : total >= 200 ? 'text-amber-400' : 'text-rose-400';
+                      return (
+                         <div className="bg-[#0a1128] border border-white/10 p-2 rounded-xl shadow-xl backdrop-blur-md">
+                           <p className={`text-[9px] font-black ${color} font-outfit uppercase tracking-widest`}>{status}: {total}</p>
+                         </div>
+                      );
+                    }
+                    return null;
                   }}
-                  itemStyle={{ color: 'rgba(255,255,255,0.7)', padding: 0 }}
-                  animationDuration={200}
-                  content={<CustomTooltip />}
+                  animationDuration={150}
                 />
 
                 {/* Stack from lowest (top) to highest (bottom) - memoryConsolidation tends lowest, neuroplasticityIndex tends highest */}
@@ -317,11 +300,11 @@ export const NeuralPlasticityIndicators: React.FC<NeuralPlasticityIndicatorsProp
       {/* Legend */}
       <div className="px-4 pb-3 flex justify-center gap-4 flex-shrink-0">
         <div className="flex items-center gap-1">
-          <div className="w-2 h-2 rounded-full bg-emerald-400"></div>
+          <div className="w-2 h-2 rounded-full bg-blue-400"></div>
           <span className="text-[9px] text-white/60">Memory</span>
         </div>
         <div className="flex items-center gap-1">
-          <div className="w-2 h-2 rounded-full bg-teal-400"></div>
+          <div className="w-2 h-2 rounded-full bg-cyan-400"></div>
           <span className="text-[9px] text-white/60">Synaptic</span>
         </div>
         <div className="flex items-center gap-1">

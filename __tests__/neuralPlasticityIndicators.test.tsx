@@ -98,14 +98,14 @@ describe('NeuralPlasticityIndicators E2E Tests', () => {
     const legendDots = document.querySelectorAll('div.w-2.h-2.rounded-full');
     expect(legendDots.length).toBe(4); // Should have 4 legend dots
 
-    // Check specific colors (emerald, teal, amber, rose)
-    const emeraldDot = document.querySelector('div.bg-emerald-400');
-    const tealDot = document.querySelector('div.bg-teal-400');
+    // Check specific colors (blue, cyan, amber, rose)
+    const blueDot = document.querySelector('div.bg-blue-400');
+    const cyanDot = document.querySelector('div.bg-cyan-400');
     const amberDot = document.querySelector('div.bg-amber-400');
     const roseDot = document.querySelector('div.bg-rose-400');
 
-    expect(emeraldDot).toBeInTheDocument();
-    expect(tealDot).toBeInTheDocument();
+    expect(blueDot).toBeInTheDocument();
+    expect(cyanDot).toBeInTheDocument();
     expect(amberDot).toBeInTheDocument();
     expect(roseDot).toBeInTheDocument();
   });
