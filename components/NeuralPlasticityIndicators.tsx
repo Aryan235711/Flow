@@ -167,45 +167,82 @@ export const NeuralPlasticityIndicators: React.FC<NeuralPlasticityIndicatorsProp
               margin={{ top: 10, right: 20, left: 20, bottom: 10 }}
             >
                 <defs>
-                  {/* Memory Consolidation Gradients - Changed to blue */}
+                  {/* Memory Consolidation Gradients with glass effect */}
                   <linearGradient id="memoryG" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#3b82f6" stopOpacity={1}/>
+                    <stop offset="30%" stopColor="#60a5fa" stopOpacity={0.8}/>
                     <stop offset="100%" stopColor="#3b82f6" stopOpacity={0.2}/>
                   </linearGradient>
                   <linearGradient id="memoryActive" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#60a5fa" stopOpacity={1}/>
-                    <stop offset="100%" stopColor="#60a5fa" stopOpacity={0.8}/>
+                    <stop offset="0%" stopColor="#93c5fd" stopOpacity={1}/>
+                    <stop offset="30%" stopColor="#60a5fa" stopOpacity={0.9}/>
+                    <stop offset="100%" stopColor="#60a5fa" stopOpacity={0.3}/>
+                  </linearGradient>
+                  <linearGradient id="memoryShine" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stopColor="rgba(255,255,255,0.4)" stopOpacity={1}/>
+                    <stop offset="50%" stopColor="rgba(255,255,255,0.1)" stopOpacity={1}/>
+                    <stop offset="100%" stopColor="rgba(255,255,255,0)" stopOpacity={0}/>
                   </linearGradient>
 
-                  {/* Synaptic Plasticity Gradients - Keep teal but make it more distinct */}
+                  {/* Synaptic Plasticity Gradients with glass effect */}
                   <linearGradient id="synapticG" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#06b6d4" stopOpacity={1}/>
+                    <stop offset="30%" stopColor="#22d3ee" stopOpacity={0.8}/>
                     <stop offset="100%" stopColor="#06b6d4" stopOpacity={0.2}/>
                   </linearGradient>
                   <linearGradient id="synapticActive" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#22d3ee" stopOpacity={1}/>
-                    <stop offset="100%" stopColor="#22d3ee" stopOpacity={0.8}/>
+                    <stop offset="0%" stopColor="#67e8f9" stopOpacity={1}/>
+                    <stop offset="30%" stopColor="#22d3ee" stopOpacity={0.9}/>
+                    <stop offset="100%" stopColor="#22d3ee" stopOpacity={0.3}/>
+                  </linearGradient>
+                  <linearGradient id="synapticShine" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stopColor="rgba(255,255,255,0.4)" stopOpacity={1}/>
+                    <stop offset="50%" stopColor="rgba(255,255,255,0.1)" stopOpacity={1}/>
+                    <stop offset="100%" stopColor="rgba(255,255,255,0)" stopOpacity={0}/>
                   </linearGradient>
 
-                  {/* Cognitive Reserve Gradients */}
+                  {/* Cognitive Reserve Gradients with glass effect */}
                   <linearGradient id="cognitiveG" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#f59e0b" stopOpacity={1}/>
+                    <stop offset="30%" stopColor="#fbbf24" stopOpacity={0.8}/>
                     <stop offset="100%" stopColor="#f59e0b" stopOpacity={0.2}/>
                   </linearGradient>
                   <linearGradient id="cognitiveActive" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#fbbf24" stopOpacity={1}/>
-                    <stop offset="100%" stopColor="#fbbf24" stopOpacity={0.8}/>
+                    <stop offset="0%" stopColor="#fcd34d" stopOpacity={1}/>
+                    <stop offset="30%" stopColor="#fbbf24" stopOpacity={0.9}/>
+                    <stop offset="100%" stopColor="#fbbf24" stopOpacity={0.3}/>
+                  </linearGradient>
+                  <linearGradient id="cognitiveShine" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stopColor="rgba(255,255,255,0.4)" stopOpacity={1}/>
+                    <stop offset="50%" stopColor="rgba(255,255,255,0.1)" stopOpacity={1}/>
+                    <stop offset="100%" stopColor="rgba(255,255,255,0)" stopOpacity={0}/>
                   </linearGradient>
 
-                  {/* Neuroplasticity Index Gradients */}
+                  {/* Neuroplasticity Index Gradients with glass effect */}
                   <linearGradient id="neuroG" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#f43f5e" stopOpacity={1}/>
+                    <stop offset="30%" stopColor="#fb7185" stopOpacity={0.8}/>
                     <stop offset="100%" stopColor="#f43f5e" stopOpacity={0.2}/>
                   </linearGradient>
                   <linearGradient id="neuroActive" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#fb7185" stopOpacity={1}/>
-                    <stop offset="100%" stopColor="#fb7185" stopOpacity={0.8}/>
+                    <stop offset="0%" stopColor="#fda4af" stopOpacity={1}/>
+                    <stop offset="30%" stopColor="#fb7185" stopOpacity={0.9}/>
+                    <stop offset="100%" stopColor="#fb7185" stopOpacity={0.3}/>
                   </linearGradient>
+                  <linearGradient id="neuroShine" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stopColor="rgba(255,255,255,0.4)" stopOpacity={1}/>
+                    <stop offset="50%" stopColor="rgba(255,255,255,0.1)" stopOpacity={1}/>
+                    <stop offset="100%" stopColor="rgba(255,255,255,0)" stopOpacity={0}/>
+                  </linearGradient>
+
+                  {/* Glass glow filter */}
+                  <filter id="glassGlow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                    <feMerge>
+                      <feMergeNode in="coloredBlur"/>
+                      <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                  </filter>
                 </defs>
 
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
@@ -242,19 +279,23 @@ export const NeuralPlasticityIndicators: React.FC<NeuralPlasticityIndicatorsProp
                   animationDuration={150}
                 />
 
-                {/* Stack from lowest (top) to highest (bottom) - memoryConsolidation tends lowest, neuroplasticityIndex tends highest */}
+                {/* Stacked bars with glass glow and tile shine */}
                 <Bar dataKey="memoryConsolidation" stackId="neural" fill="url(#memoryG)" name="Memory Consolidation" barSize={32}
                      radius={[8, 8, 8, 8]} isAnimationActive={true} animationDuration={1500} animationBegin={200} animationEasing="ease-out"
-                     activeBar={{ fill: "url(#memoryActive)", stroke: "#fff", strokeWidth: 1.5, radius: 8 }} />
+                     filter="url(#glassGlow)"
+                     activeBar={{ fill: "url(#memoryActive)", stroke: "rgba(255,255,255,0.6)", strokeWidth: 1, radius: 8, filter: "url(#glassGlow)" }} />
                 <Bar dataKey="synapticPlasticity" stackId="neural" fill="url(#synapticG)" name="Synaptic Plasticity" barSize={32}
                      radius={[8, 8, 8, 8]} isAnimationActive={true} animationDuration={1500} animationBegin={400} animationEasing="ease-out"
-                     activeBar={{ fill: "url(#synapticActive)", stroke: "#fff", strokeWidth: 1.5, radius: 8 }} />
+                     filter="url(#glassGlow)"
+                     activeBar={{ fill: "url(#synapticActive)", stroke: "rgba(255,255,255,0.6)", strokeWidth: 1, radius: 8, filter: "url(#glassGlow)" }} />
                 <Bar dataKey="cognitiveReserve" stackId="neural" fill="url(#cognitiveG)" name="Cognitive Reserve" barSize={32}
                      radius={[8, 8, 8, 8]} isAnimationActive={true} animationDuration={1500} animationBegin={600} animationEasing="ease-out"
-                     activeBar={{ fill: "url(#cognitiveActive)", stroke: "#fff", strokeWidth: 1.5, radius: 8 }} />
-                <Bar dataKey="neuroplasticityIndex" stackId="neural" fill="url(#neuroActive)" name="Neuroplasticity Index" barSize={32}
+                     filter="url(#glassGlow)"
+                     activeBar={{ fill: "url(#cognitiveActive)", stroke: "rgba(255,255,255,0.6)", strokeWidth: 1, radius: 8, filter: "url(#glassGlow)" }} />
+                <Bar dataKey="neuroplasticityIndex" stackId="neural" fill="url(#neuroG)" name="Neuroplasticity Index" barSize={32}
                      radius={[8, 8, 8, 8]} isAnimationActive={true} animationDuration={1500} animationBegin={800} animationEasing="ease-out"
-                     activeBar={{ fill: "url(#neuroActive)", stroke: "#fff", strokeWidth: 1.5, radius: 8 }} />
+                     filter="url(#glassGlow)"
+                     activeBar={{ fill: "url(#neuroActive)", stroke: "rgba(255,255,255,0.6)", strokeWidth: 1, radius: 8, filter: "url(#glassGlow)" }} />
               </BarChart>
             </ResponsiveContainer>
 
