@@ -20,6 +20,7 @@ import {
   Fingerprint
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { App } from '@capacitor/app';
 
 import { AppStage, AppView, UserProfile, MetricEntry, UserConfig, Notification } from './types.ts';
 import { STORAGE_KEYS, DEFAULT_CONFIG, getSafeStorage, setSafeStorage, generateMockData, triggerHaptic, generateFreezeEntry, getLocalDate, clearAppStorage, getValidatedNotifications, trackNotificationShown, validateUserConfig } from './utils.ts';
@@ -312,6 +313,58 @@ const App = () => {
     prevHistoryLength.current = history.length;
   }, [history, stage, addNotification]);
 
+  // Handle OAuth callback from custom URL scheme in native app
+  useEffect(() => {
+    if (!(window as any).Capacitor) return; // Only for native apps
+
+    const handleAppUrlOpen = (event: any) => {
+      const url = new URL(event.url);
+      
+      if (url.protocol === 'flow:' && url.pathname.startsWith('/auth/callback')) {
+        console.log('[native auth callback] received URL:', event.url);
+        
+        const error = url.searchParams.get('error');
+        const authPayload = url.searchParams.get('auth_payload');
+        
+        if (error) {
+          console.error('[native auth callback] OAuth error:', error);
+          addNotification('Login Failed', 'Authentication error. Please try again.', 'SYSTEM');
+          setStage('AUTH');
+          return;
+        }
+        
+        if (authPayload) {
+          try {
+            const decoded = JSON.parse(atob(authPayload.replace(/-/g, '+').replace(/_/g, '/')));
+            setUser({
+              name: decoded.name || '',
+              email: decoded.email || '',
+              avatarSeed: decoded.avatarSeed || 'Felix',
+              picture: decoded.picture || '',
+              isAuthenticated: true,
+              isPremium: !!decoded.isPremium,
+              token: decoded.token
+            });
+            setStage('ONBOARDING');
+            addNotification('Login Successful', `Welcome back, ${decoded.name}!`, 'SYSTEM');
+          } catch (decodeError) {
+            console.error('[native auth callback] decode error:', decodeError);
+            addNotification('Login Failed', 'Could not process login. Please try again.', 'SYSTEM');
+            setStage('AUTH');
+          }
+        } else {
+          addNotification('Login Failed', 'No authentication data received.', 'SYSTEM');
+          setStage('AUTH');
+        }
+      }
+    };
+
+    App.addListener('appUrlOpen', handleAppUrlOpen);
+    
+    return () => {
+      App.removeAllListeners();
+    };
+  }, [addNotification]);
 
   const handleOpenNotifs = useCallback(() => {
     setShowNotifs(true);
@@ -378,10 +431,12 @@ const App = () => {
     // Use Render domain for both web and native app
     const isNativeApp = !!(window as any).Capacitor;
     const baseUrl = isNativeApp ? 'https://flow-si70.onrender.com' : '';
-    const redirectUri = `${baseUrl || window.location.origin}/auth/callback`;
+    const redirectUri = isNativeApp 
+      ? 'flow://auth/callback'  // Custom scheme for native app
+      : `${baseUrl || window.location.origin}/auth/callback`;  // Web redirect
     const url = `${baseUrl}/api/auth/google/start?redirect_uri=${encodeURIComponent(redirectUri)}`;
     
-    console.log('[login] redirecting to', url);
+    console.log('[login] redirecting to', url, 'isNative:', isNativeApp);
     window.location.href = url;
   }, []);
 
