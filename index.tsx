@@ -22,7 +22,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { AppStage, AppView, UserProfile, MetricEntry, UserConfig, Notification } from './types.ts';
-import { STORAGE_KEYS, DEFAULT_CONFIG, getSafeStorage, setSafeStorage, generateMockData, triggerHaptic, generateFreezeEntry, getLocalDate, clearAppStorage, getValidatedNotifications, trackNotificationShown } from './utils.ts';
+import { STORAGE_KEYS, DEFAULT_CONFIG, getSafeStorage, setSafeStorage, generateMockData, triggerHaptic, generateFreezeEntry, getLocalDate, clearAppStorage, getValidatedNotifications, trackNotificationShown, validateUserConfig } from './utils.ts';
 import { BackgroundOrbs } from './components/BackgroundOrbs.tsx';
 import { Header } from './components/Header.tsx';
 import { Toast } from './components/Toast.tsx';
@@ -99,10 +99,7 @@ const App = () => {
   
   const [config, setConfig] = useState<UserConfig>(() => {
     const stored = getSafeStorage(STORAGE_KEYS.CONFIG, DEFAULT_CONFIG);
-    if (!stored.streakLogic) {
-      return { ...stored, streakLogic: DEFAULT_CONFIG.streakLogic };
-    }
-    return stored;
+    return validateUserConfig(stored);
   });
   
   const [showProfile, setShowProfile] = useState(false);
@@ -475,22 +472,47 @@ const App = () => {
       return;
     }
     if (history.length === 0) return;
+
+    // Limit export to last 365 days to prevent excessive data export
+    const oneYearAgo = new Date();
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+    const recentHistory = history.filter(h => new Date(h.date) >= oneYearAgo);
+
+    if (recentHistory.length === 0) {
+      addNotification('Export Failed', 'No data available for export in the last year.', 'SYSTEM');
+      return;
+    }
+
     const headers = ['Date', 'Sleep(h)', 'RHR', 'HRV', 'Protein(g)', 'Gut', 'Sun', 'Exertion', 'Cognition', 'Load', 'Status', 'Type'];
-    const rows = history.map(h => [
-      h.date, h.rawValues.sleep, h.rawValues.rhr, h.rawValues.hrv, h.rawValues.protein,
-      h.rawValues.gut, h.rawValues.sun, h.rawValues.exercise, h.rawValues.cognition || 'STEADY', h.symptomScore,
-      `"${String(h.symptomName).replace(/"/g, '""')}"`,
+    const rows = recentHistory.map(h => [
+      h.date,
+      h.rawValues.sleep,
+      h.rawValues.rhr,
+      h.rawValues.hrv,
+      h.rawValues.protein,
+      h.rawValues.gut,
+      h.rawValues.sun,
+      h.rawValues.exercise,
+      // Sanitize cognition field to prevent CSV injection
+      String(h.rawValues.cognition || 'STEADY').replace(/[\r\n,"]/g, ''),
+      h.symptomScore,
+      // Enhanced CSV sanitization for symptomName
+      `"${String(h.symptomName || 'Unknown').replace(/"/g, '""').replace(/[\r\n]/g, ' ')}"`,
       h.isSystemGenerated ? 'AUTO_FREEZE' : 'MANUAL'
     ]);
+
     const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.setAttribute('download', `flow_telemetry_${getLocalDate()}.csv`);
+
+    // Add timestamp to prevent filename collisions
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+    link.setAttribute('download', `flow_telemetry_${timestamp}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    addNotification('Export Complete', 'Telemetry downloaded as CSV.', 'SYSTEM');
+    addNotification('Export Complete', `${recentHistory.length} records exported as CSV.`, 'SYSTEM');
   }, [history, addNotification, user.isPremium]);
 
   const handleGoalClick = useCallback(() => {

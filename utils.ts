@@ -64,21 +64,54 @@ export const clearAppStorage = () => {
   }
 };
 
-// Notification data validation and schema checking
-export const validateNotification = (notif: any): notif is Notification => {
-  return (
-    typeof notif === 'object' &&
-    notif !== null &&
-    typeof notif.id === 'string' &&
-    notif.id.length > 0 &&
-    typeof notif.title === 'string' &&
-    notif.title.length > 0 &&
-    typeof notif.message === 'string' &&
-    notif.message.length > 0 &&
-    typeof notif.time === 'string' &&
-    typeof notif.read === 'boolean' &&
-    ['AI', 'SYSTEM', 'STREAK', 'FREEZE'].includes(notif.type)
-  );
+// Config validation and sanitization
+export const validateUserConfig = (config: any): UserConfig => {
+  if (!config || typeof config !== 'object') {
+    return { ...DEFAULT_CONFIG };
+  }
+
+  const validated: UserConfig = { ...DEFAULT_CONFIG };
+
+  // Validate wearable baselines
+  if (config.wearableBaselines && typeof config.wearableBaselines === 'object') {
+    const baselines = config.wearableBaselines;
+    validated.wearableBaselines = {
+      sleep: typeof baselines.sleep === 'number' && baselines.sleep >= 0 && baselines.sleep <= 24
+        ? baselines.sleep : DEFAULT_CONFIG.wearableBaselines.sleep,
+      rhr: typeof baselines.rhr === 'number' && baselines.rhr >= 30 && baselines.rhr <= 200
+        ? baselines.rhr : DEFAULT_CONFIG.wearableBaselines.rhr,
+      hrv: typeof baselines.hrv === 'number' && baselines.hrv >= 10 && baselines.hrv <= 200
+        ? baselines.hrv : DEFAULT_CONFIG.wearableBaselines.hrv,
+    };
+  }
+
+  // Validate manual targets
+  if (config.manualTargets && typeof config.manualTargets === 'object') {
+    const targets = config.manualTargets;
+    validated.manualTargets = {
+      protein: typeof targets.protein === 'number' && targets.protein >= 0 && targets.protein <= 500
+        ? targets.protein : DEFAULT_CONFIG.manualTargets.protein,
+      gut: typeof targets.gut === 'number' && targets.gut >= 1 && targets.gut <= 5
+        ? targets.gut : DEFAULT_CONFIG.manualTargets.gut,
+      sun: ['Full', 'Partial', 'None'].includes(targets.sun)
+        ? targets.sun : DEFAULT_CONFIG.manualTargets.sun,
+      exercise: ['Hard', 'Medium', 'Light', 'None'].includes(targets.exercise)
+        ? targets.exercise : DEFAULT_CONFIG.manualTargets.exercise,
+    };
+  }
+
+  // Validate streak logic
+  if (config.streakLogic && typeof config.streakLogic === 'object') {
+    const streak = config.streakLogic;
+    validated.streakLogic = {
+      freezesAvailable: typeof streak.freezesAvailable === 'number' && streak.freezesAvailable >= 0 && streak.freezesAvailable <= 5
+        ? streak.freezesAvailable : DEFAULT_CONFIG.streakLogic.freezesAvailable,
+      lastFreezeReset: typeof streak.lastFreezeReset === 'string' && !isNaN(new Date(streak.lastFreezeReset).getTime())
+        ? streak.lastFreezeReset : DEFAULT_CONFIG.streakLogic.lastFreezeReset,
+    };
+  }
+
+  return validated;
 };
 
 export const validateNotificationArray = (data: any): Notification[] => {
@@ -163,7 +196,18 @@ export const trackNotificationRead = (type: 'AI' | 'SYSTEM' | 'STREAK' | 'FREEZE
 };
 
 export const calculateFlag = (value: number, baseline: number, inverse = false): Flag => {
+  // Prevent division by zero and ensure valid numbers
+  if (!isFinite(value) || !isFinite(baseline) || baseline === 0) {
+    return 'RED'; // Default to red flag for invalid data
+  }
+
   const ratio = inverse ? baseline / value : value / baseline;
+
+  // Handle edge cases where ratio might be NaN or infinite
+  if (!isFinite(ratio)) {
+    return 'RED';
+  }
+
   if (ratio >= 0.95) return 'GREEN';
   if (ratio >= 0.8) return 'YELLOW';
   return 'RED';

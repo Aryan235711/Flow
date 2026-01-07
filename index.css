@@ -1,110 +1,128 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 /* Custom styles that complement the Tailwind CDN setup */
-@layer base {
-  /* Ensure smooth scrolling on iOS */
-  * {
-    -webkit-overflow-scrolling: touch;
-  }
 
-  /* Custom focus styles for accessibility */
-  .focus-visible:focus-visible {
-    outline: 2px solid rgb(20, 184, 166);
-    outline-offset: 2px;
+/* Ensure smooth scrolling on iOS */
+* {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Custom focus styles for accessibility */
+.focus-visible:focus-visible {
+  outline: 2px solid rgb(20, 184, 166);
+  outline-offset: 2px;
+}
+
+/* Custom component styles */
+.notification-card {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(50px) saturate(190%);
+  -webkit-backdrop-filter: blur(50px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+  transform: translateZ(0);
+  border-radius: 2rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.notification-card:hover {
+  transform: scale(1.05);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+}
+
+.chart-container {
+  background: rgba(10, 10, 20, 0.6);
+  backdrop-filter: blur(40px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 2.5rem;
+  padding: 2rem;
+}
+
+.input-field {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(50px) saturate(190%);
+  -webkit-backdrop-filter: blur(50px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 2rem;
+  padding: 0.75rem 1rem;
+  color: white;
+  transition: border-color 0.2s ease;
+}
+
+.input-field:focus {
+  border-color: rgba(20, 184, 166, 0.5);
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.1);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, rgba(20, 184, 166, 0.8), rgba(6, 182, 212, 0.8));
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 2rem;
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, rgba(20, 184, 166, 1), rgba(6, 182, 212, 1));
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(20, 184, 166, 0.4);
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(50px) saturate(190%);
+  -webkit-backdrop-filter: blur(50px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 2rem;
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  color: rgb(156 163 175);
+  transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+  color: white;
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+/* Custom utility classes */
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.4s ease-out;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-@layer components {
-  /* Custom component styles */
-  .notification-card {
-    @apply glass rounded-card p-content-md mb-4;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(20, 184, 166, 0.3);
   }
-
-  .notification-card:hover {
-    @apply scale-105;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
-  }
-
-  .chart-container {
-    @apply glass-panel rounded-card-lg p-content-lg;
-  }
-
-  .input-field {
-    @apply glass rounded-card px-4 py-3 text-white placeholder-gray-400;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    transition: border-color 0.2s ease;
-  }
-
-  .input-field:focus {
-    border-color: rgba(20, 184, 166, 0.5);
-    box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.1);
-  }
-
-  .btn-primary {
-    @apply glass px-6 py-3 rounded-card font-semibold text-white;
-    background: linear-gradient(135deg, rgba(20, 184, 166, 0.8), rgba(6, 182, 212, 0.8));
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    transition: all 0.3s ease;
-  }
-
-  .btn-primary:hover {
-    background: linear-gradient(135deg, rgba(20, 184, 166, 1), rgba(6, 182, 212, 1));
-    transform: translateY(-2px);
-    box-shadow: 0 10px 25px -5px rgba(20, 184, 166, 0.4);
-  }
-
-  .btn-secondary {
-    @apply glass px-6 py-3 rounded-card font-semibold text-gray-300;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    transition: all 0.3s ease;
-  }
-
-  .btn-secondary:hover {
-    @apply text-white;
-    border-color: rgba(255, 255, 255, 0.3);
-    transform: translateY(-1px);
-  }
-}
-
-@layer utilities {
-  /* Custom utility classes */
-  .animate-fade-in {
-    animation: fadeIn 0.5s ease-out;
-  }
-
-  .animate-slide-up {
-    animation: slideUp 0.4s ease-out;
-  }
-
-  .animate-pulse-glow {
-    animation: pulseGlow 2s ease-in-out infinite;
-  }
-
-  @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-
-  @keyframes slideUp {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  @keyframes pulseGlow {
-    0%, 100% {
-      box-shadow: 0 0 20px rgba(20, 184, 166, 0.3);
-    }
-    50% {
-      box-shadow: 0 0 30px rgba(20, 184, 166, 0.6);
-    }
+  50% {
+    box-shadow: 0 0 30px rgba(20, 184, 166, 0.6);
   }
 }

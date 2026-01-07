@@ -15,13 +15,25 @@ export const GoalSettings = memo(({ config, onSave, onClose }: GoalSettingsProps
 
   const handleChange = (section: keyof UserConfig, key: string, value: string) => {
     let numValue = parseFloat(value);
-    if (isNaN(numValue)) return;
-    
-    // Safety Clamps to prevent chart breakage
-    if (key === 'sleep') numValue = Math.min(24, Math.max(0, numValue));
-    if (key === 'rhr') numValue = Math.min(200, Math.max(30, numValue));
-    if (key === 'hrv') numValue = Math.min(200, Math.max(10, numValue));
-    if (key === 'protein') numValue = Math.min(500, Math.max(0, numValue));
+
+    // Enhanced validation with better error handling
+    if (isNaN(numValue) || !isFinite(numValue)) {
+      // Don't update if invalid input
+      return;
+    }
+
+    // Stricter safety clamps with better bounds
+    const clamps = {
+      sleep: { min: 4, max: 12 },
+      rhr: { min: 40, max: 120 },
+      hrv: { min: 20, max: 150 },
+      protein: { min: 20, max: 300 }
+    };
+
+    const clamp = clamps[key as keyof typeof clamps];
+    if (clamp) {
+      numValue = Math.min(clamp.max, Math.max(clamp.min, numValue));
+    }
 
     setLocalConfig(prev => ({
       ...prev,
