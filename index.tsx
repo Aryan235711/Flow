@@ -977,7 +977,8 @@ const App = () => {
               <LogInput 
                 config={config} 
                 initialData={entryToEdit}
-                onSave={handleSaveEntry} 
+                onSave={handleSaveEntry}
+                history={history}
               />
             </Suspense>
           </PageTransition>
