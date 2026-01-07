@@ -1,4 +1,4 @@
-import { MetricEntry } from '../types.ts';
+import { MetricEntry } from './types.ts';
 
 /**
  * Calculate smart defaults based on user's historical data
