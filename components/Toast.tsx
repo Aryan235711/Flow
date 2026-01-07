@@ -3,6 +3,7 @@ import React, { useEffect, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, CheckCircle, AlertCircle, Snowflake } from 'lucide-react';
 import { Notification } from '../types.ts';
+import { triggerHaptic } from '../utils.ts';
 
 interface ToastProps {
   notification: Notification | null;
@@ -10,6 +11,18 @@ interface ToastProps {
 }
 
 export const Toast = memo(({ notification, onDismiss }: ToastProps) => {
+  // Keyboard navigation support
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && notification) {
+        onDismiss();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [notification, onDismiss]);
+
   useEffect(() => {
     if (notification) {
       const timer = setTimeout(onDismiss, 3500);
@@ -32,7 +45,9 @@ export const Toast = memo(({ notification, onDismiss }: ToastProps) => {
             dragConstraints={{ top: 0, bottom: 0 }}
             dragElastic={{ top: 0.1, bottom: 0.1 }}
             onDragEnd={(e, info) => {
-              if (Math.abs(info.offset.y) > 50) {
+              // Improved swipe threshold - more forgiving for mobile users
+              if (Math.abs(info.offset.y) > 80) { // Increased from 50 to 80
+                triggerHaptic(); // Add haptic feedback for swipe dismissal
                 onDismiss();
               }
             }}

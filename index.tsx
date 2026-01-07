@@ -773,6 +773,11 @@ const App = () => {
 
   return (
       <div className="max-w-md md:max-w-4xl lg:max-w-6xl mx-auto min-h-screen bg-[#020617] text-white font-quicksand overflow-x-hidden selection:bg-teal-500/30">
+      
+      {/* ARIA Live Region for Screen Reader Announcements */}
+      <div aria-live="polite" aria-atomic="true" className="sr-only" role="status">
+        {activeToast && `${activeToast.title}: ${activeToast.message}`}
+      </div>
 
       <Header 
         user={user} 
