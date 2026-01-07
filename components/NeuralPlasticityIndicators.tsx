@@ -114,8 +114,8 @@ const calculateDailyPlasticity = (dayData: MetricEntry[], config: UserConfig): D
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="glass rounded-lg p-3 border border-white/10 shadow-xl">
-        <p className="text-white font-medium mb-2">{label}</p>
+      <div className="bg-[#0a1128] border border-white/10 p-3 rounded-xl shadow-xl backdrop-blur-md">
+        <p className="text-white font-medium mb-2 text-[10px]">{label}</p>
         {payload.map((entry: any, index: number) => (
           <p key={index} className="text-sm" style={{ color: entry.color }}>
             {entry.dataKey === 'memoryConsolidation' && 'Memory Consolidation'}
@@ -217,6 +217,48 @@ export const NeuralPlasticityIndicators: React.FC<NeuralPlasticityIndicatorsProp
               layout="vertical"
               margin={{ top: 10, right: 20, left: 20, bottom: 10 }}
             >
+                <defs>
+                  {/* Memory Consolidation Gradients */}
+                  <linearGradient id="memoryG" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#10b981" stopOpacity={1}/>
+                    <stop offset="100%" stopColor="#10b981" stopOpacity={0.2}/>
+                  </linearGradient>
+                  <linearGradient id="memoryActive" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#34d399" stopOpacity={1}/>
+                    <stop offset="100%" stopColor="#34d399" stopOpacity={0.8}/>
+                  </linearGradient>
+
+                  {/* Synaptic Plasticity Gradients */}
+                  <linearGradient id="synapticG" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#14b8a6" stopOpacity={1}/>
+                    <stop offset="100%" stopColor="#14b8a6" stopOpacity={0.2}/>
+                  </linearGradient>
+                  <linearGradient id="synapticActive" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#2dd4bf" stopOpacity={1}/>
+                    <stop offset="100%" stopColor="#2dd4bf" stopOpacity={0.8}/>
+                  </linearGradient>
+
+                  {/* Cognitive Reserve Gradients */}
+                  <linearGradient id="cognitiveG" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#f59e0b" stopOpacity={1}/>
+                    <stop offset="100%" stopColor="#f59e0b" stopOpacity={0.2}/>
+                  </linearGradient>
+                  <linearGradient id="cognitiveActive" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#fbbf24" stopOpacity={1}/>
+                    <stop offset="100%" stopColor="#fbbf24" stopOpacity={0.8}/>
+                  </linearGradient>
+
+                  {/* Neuroplasticity Index Gradients */}
+                  <linearGradient id="neuroG" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#f43f5e" stopOpacity={1}/>
+                    <stop offset="100%" stopColor="#f43f5e" stopOpacity={0.2}/>
+                  </linearGradient>
+                  <linearGradient id="neuroActive" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#fb7185" stopOpacity={1}/>
+                    <stop offset="100%" stopColor="#fb7185" stopOpacity={0.8}/>
+                  </linearGradient>
+                </defs>
+
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
                 <XAxis
                   type="number"
@@ -232,13 +274,35 @@ export const NeuralPlasticityIndicators: React.FC<NeuralPlasticityIndicatorsProp
                   tickLine={{ stroke: 'rgba(255,255,255,0.2)' }}
                   width={25}
                 />
-                <Tooltip content={<CustomTooltip />} />
+                <Tooltip
+                  cursor={{ fill: 'transparent', stroke: 'rgba(255,255,255,0.05)', strokeWidth: 1 }}
+                  contentStyle={{
+                    background: 'rgba(2, 6, 23, 0.9)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '16px',
+                    color: '#fff',
+                    fontSize: '10px',
+                    padding: '4px 8px',
+                    boxShadow: '0 10px 30px -5px rgba(0,0,0,0.8)'
+                  }}
+                  itemStyle={{ color: 'rgba(255,255,255,0.7)', padding: 0 }}
+                  animationDuration={200}
+                  content={<CustomTooltip />}
+                />
 
                 {/* Stack from lowest (top) to highest (bottom) - memoryConsolidation tends lowest, neuroplasticityIndex tends highest */}
-                <Bar dataKey="memoryConsolidation" stackId="neural" fill="#10b981" name="Memory Consolidation" barSize={25} />
-                <Bar dataKey="synapticPlasticity" stackId="neural" fill="#14b8a6" name="Synaptic Plasticity" barSize={25} />
-                <Bar dataKey="cognitiveReserve" stackId="neural" fill="#f59e0b" name="Cognitive Reserve" barSize={25} />
-                <Bar dataKey="neuroplasticityIndex" stackId="neural" fill="#f43f5e" name="Neuroplasticity Index" barSize={25} />
+                <Bar dataKey="memoryConsolidation" stackId="neural" fill="url(#memoryG)" name="Memory Consolidation" barSize={32}
+                     radius={[8, 8, 8, 8]} isAnimationActive={true} animationDuration={1500} animationBegin={200} animationEasing="ease-out"
+                     activeBar={{ fill: "url(#memoryActive)", stroke: "#fff", strokeWidth: 1.5, radius: 8 }} />
+                <Bar dataKey="synapticPlasticity" stackId="neural" fill="url(#synapticG)" name="Synaptic Plasticity" barSize={32}
+                     radius={[8, 8, 8, 8]} isAnimationActive={true} animationDuration={1500} animationBegin={400} animationEasing="ease-out"
+                     activeBar={{ fill: "url(#synapticActive)", stroke: "#fff", strokeWidth: 1.5, radius: 8 }} />
+                <Bar dataKey="cognitiveReserve" stackId="neural" fill="url(#cognitiveG)" name="Cognitive Reserve" barSize={32}
+                     radius={[8, 8, 8, 8]} isAnimationActive={true} animationDuration={1500} animationBegin={600} animationEasing="ease-out"
+                     activeBar={{ fill: "url(#cognitiveActive)", stroke: "#fff", strokeWidth: 1.5, radius: 8 }} />
+                <Bar dataKey="neuroplasticityIndex" stackId="neural" fill="url(#neuroActive)" name="Neuroplasticity Index" barSize={32}
+                     radius={[8, 8, 8, 8]} isAnimationActive={true} animationDuration={1500} animationBegin={800} animationEasing="ease-out"
+                     activeBar={{ fill: "url(#neuroActive)", stroke: "#fff", strokeWidth: 1.5, radius: 8 }} />
               </BarChart>
             </ResponsiveContainer>
 
