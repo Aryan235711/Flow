@@ -21,11 +21,16 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ onClose 
   }, [analytics]);
 
   const typeData = useMemo(() => {
-    return Object.entries(analytics.typeBreakdown).map(([type, data]) => ({
-      type,
-      ...data,
-      engagement: data.shown > 0 ? Math.round((data.read / data.shown) * 100) : 0
-    }));
+    return Object.entries(analytics.typeBreakdown).map(([type, data]) => {
+      const typedData = data as { shown: number; dismissed: number; read: number };
+      return {
+        type,
+        shown: typedData.shown,
+        dismissed: typedData.dismissed,
+        read: typedData.read,
+        engagement: typedData.shown > 0 ? Math.round((typedData.read / typedData.shown) * 100) : 0
+      };
+    });
   }, [analytics.typeBreakdown]);
 
   return (

@@ -35,6 +35,7 @@ describe('NeuralPlasticityIndicators E2E Tests', () => {
   };
 
   const createMockEntry = (date: string, sleep: number, hrv: number, cognition: string): MetricEntry => ({
+    id: `test-${date}`,
     date,
     rawValues: {
       sleep,

@@ -65,6 +65,42 @@ export const clearAppStorage = () => {
 };
 
 // Config validation and sanitization
+// Validate metric entry data
+export const validateMetricEntry = (entry: any): boolean => {
+  if (!entry || typeof entry !== 'object') return false;
+  
+  // Validate date format
+  if (!entry.date || typeof entry.date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(entry.date)) {
+    return false;
+  }
+  
+  // Validate rawValues exist and are valid
+  if (!entry.rawValues || typeof entry.rawValues !== 'object') return false;
+  
+  const rv = entry.rawValues;
+  
+  // Validate numeric ranges
+  if (typeof rv.sleep !== 'number' || rv.sleep < 0 || rv.sleep > 24) return false;
+  if (typeof rv.rhr !== 'number' || rv.rhr < 30 || rv.rhr > 200) return false;
+  if (typeof rv.hrv !== 'number' || rv.hrv < 0 || rv.hrv > 300) return false;
+  if (typeof rv.protein !== 'number' || rv.protein < 0 || rv.protein > 500) return false;
+  if (typeof rv.gut !== 'number' || rv.gut < 1 || rv.gut > 5) return false;
+  
+  // Validate enums
+  if (!['Full', 'Partial', 'None', 'ADEQUATE', 'PARTIAL', 'MINIMAL', 'NONE'].includes(rv.sun)) return false;
+  if (!['Hard', 'Medium', 'Light', 'None', 'INTENSE', 'MODERATE', 'LIGHT', 'NONE'].includes(rv.exercise)) return false;
+  if (!['PEAK', 'STEADY', 'FOGGY', 'DRAINED', 'FROZEN'].includes(rv.cognition)) return false;
+  
+  // Validate processed state
+  if (!entry.processedState || typeof entry.processedState !== 'object') return false;
+  
+  // Validate symptom data
+  if (typeof entry.symptomScore !== 'number' || entry.symptomScore < 0) return false;
+  if (typeof entry.symptomName !== 'string' || entry.symptomName.length > 100) return false;
+  
+  return true;
+};
+
 export const validateUserConfig = (config: any): UserConfig => {
   if (!config || typeof config !== 'object') {
     return { ...DEFAULT_CONFIG };
@@ -115,6 +151,15 @@ export const validateUserConfig = (config: any): UserConfig => {
 };
 
 // Enhanced notification validation with migration support
+export interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  time: string;
+  read: boolean;
+  type: 'AI' | 'SYSTEM' | 'STREAK' | 'FREEZE';
+}
+
 export interface NotificationMigration {
   version: number;
   migrate: (data: any) => Notification[];
@@ -126,7 +171,7 @@ const NOTIFICATION_MIGRATIONS: NotificationMigration[] = [
     migrate: (data: any): Notification[] => {
       if (!Array.isArray(data)) return [];
       return data
-        .filter(item => item && typeof item === 'object')
+        .filter(item => item && typeof item === 'object' && item.title) // Filter out null and items without title
         .map(item => ({
           id: item.id || crypto.randomUUID(),
           title: String(item.title || 'Unknown').substring(0, 100),
@@ -155,9 +200,11 @@ export const migrateNotifications = (data: any): Notification[] => {
 };
 
 export const validateNotification = (item: any): item is Notification => {
+  if (!item || typeof item !== 'object') {
+    return false;
+  }
+  
   return (
-    item &&
-    typeof item === 'object' &&
     typeof item.id === 'string' &&
     typeof item.title === 'string' &&
     typeof item.message === 'string' &&
@@ -293,6 +340,7 @@ export const getFlagColors = (flag: Flag) => {
 // Generates a "Penalizing" System Log
 export const generateFreezeEntry = (date: string, baselines: UserConfig['wearableBaselines']): MetricEntry => {
   return {
+    id: crypto.randomUUID(),
     date: date,
     isSystemGenerated: true,
     symptomName: "Cryostasis Protocol",

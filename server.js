@@ -16,6 +16,15 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 4000;
 const sessionSecret = process.env.SESSION_SECRET || 'dev-session-secret';
+
+// Security: Validate session secret in production
+if (process.env.NODE_ENV === 'production' && sessionSecret === 'dev-session-secret') {
+  console.error('[SECURITY] WARNING: Using default session secret in production! Set SESSION_SECRET env var.');
+  process.exit(1);
+}
+if (sessionSecret.length < 32) {
+  console.warn('[SECURITY] Session secret should be at least 32 characters for security.');
+}
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const googleClientId = process.env.GOOGLE_CLIENT_ID;
@@ -27,7 +36,28 @@ const oauthClient = (googleClientId && googleClientSecret) ? new OAuth2Client({
   redirectUri: googleRedirect
 }) : null;
 
-app.use(cors());
+// CORS configuration with whitelist
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:5173',
+  process.env.CLIENT_URL || 'https://flow-si70.onrender.com'
+].filter(Boolean);
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, Postman, etc.)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.warn('[CORS] Rejected origin:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json({ limit: '512kb' }));
 
 // Rate limiting: 100 requests per 15 minutes per IP
@@ -39,6 +69,15 @@ const limiter = rateLimit({
   message: { error: 'Too many requests, please try again later.' }
 });
 app.use('/api/', limiter);
+
+// Stricter rate limit for AI endpoints (20 per 15 minutes)
+const aiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many AI requests, please try again later.' }
+});
 
 // Minimal request logger for debugging prod vs. local flow
 app.use((req, _res, next) => {
@@ -209,6 +248,39 @@ app.put('/api/history/:date', verifyToken, async (req, res) => {
     const email = req.userToken.email;
     const { date } = req.params;
     const entry = req.body;
+    
+    // Validate date format (YYYY-MM-DD) to prevent SQL injection
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return res.status(400).json({ error: 'Invalid date format. Use YYYY-MM-DD' });
+    }
+    
+    // Validate date is actually valid
+    const parsedDate = new Date(date);
+    if (isNaN(parsedDate.getTime())) {
+      return res.status(400).json({ error: 'Invalid date value' });
+    }
+    
+    // Validate entry payload
+    if (!entry || typeof entry !== 'object') {
+      return res.status(400).json({ error: 'Invalid entry payload' });
+    }
+    
+    // Validate payload size (prevent DOS)
+    const payloadSize = JSON.stringify(entry).length;
+    if (payloadSize > 50000) {
+      return res.status(400).json({ error: 'Payload too large' });
+    }
+    
+    // Sanitize entry to prevent XSS
+    const sanitizeString = (str) => {
+      if (typeof str !== 'string') return str;
+      return str.replace(/[<>]/g, '').substring(0, 1000);
+    };
+    
+    if (entry.symptomName) {
+      entry.symptomName = sanitizeString(entry.symptomName);
+    }
+    
     const userRow = await runQuery('select id from users where email = $1', [email]);
     if (!userRow.rows.length) return res.status(404).json({ error: 'user not found' });
     const userId = userRow.rows[0].id;
@@ -233,6 +305,11 @@ app.delete('/api/history/:date', verifyToken, async (req, res) => {
   try {
     const email = req.userToken.email;
     const { date } = req.params;
+    
+    // Validate date format to prevent SQL injection
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return res.status(400).json({ error: 'Invalid date format. Use YYYY-MM-DD' });
+    }
     const userRow = await runQuery('select id from users where email = $1', [email]);
     if (!userRow.rows.length) return res.status(404).json({ error: 'user not found' });
     const userId = userRow.rows[0].id;
@@ -316,7 +393,7 @@ app.get('/api/auth/google/callback', async (req, res) => {
   }
 });
 
-app.post('/api/insight', verifyToken, async (req, res) => {
+app.post('/api/insight', aiLimiter, verifyToken, async (req, res) => {
   const apiKey = process.env.GEMINI_API_KEY;
   try {
     if (!apiKey) {

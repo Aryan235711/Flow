@@ -416,7 +416,13 @@ const getOrbTheme = (agingFactor: number) => {
     return () => {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
+        animationRef.current = undefined;
       }
+      // Clean up refs
+      timeRef.current = 0;
+      lastFrameTimeRef.current = 0;
+      lastRenderTimestampRef.current = 0;
+      shockwavesRef.current = [];
     };
   }, [theme]);
 

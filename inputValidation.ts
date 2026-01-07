@@ -106,7 +106,7 @@ export const validateTextInput = (value: string, maxLength = 100): ValidationRes
     return { isValid: false, error: 'Invalid characters detected' };
   }
 
-  return { isValid: true, value: sanitized };
+  return { isValid: true };
 };
 
 // Form validation state type

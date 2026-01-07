@@ -5,9 +5,9 @@ import {
   migrateNotifications,
   trackNotificationShown,
   trackNotificationDismissed,
-  getNotificationAnalytics
+  getNotificationAnalytics,
+  Notification
 } from '../utils';
-import { Notification } from '../types';
 
 // Mock localStorage
 const localStorageMock = {
@@ -89,12 +89,14 @@ describe('Notification Utilities', () => {
 
       const result = migrateNotifications(malformedData);
       
-      expect(result).toHaveLength(2);
+      expect(result).toHaveLength(3); // Should be 3 valid items (null filtered out)
       expect(result[0].id).toBeDefined();
       expect(result[0].title).toBe('Test');
       expect(result[0].type).toBe('SYSTEM'); // Default type
       expect(result[1].id).toBe('test');
       expect(result[1].type).toBe('AI');
+      expect(result[2].title).toBe('Another');
+      expect(result[2].type).toBe('SYSTEM'); // Invalid type becomes SYSTEM
     });
 
     it('should handle completely invalid data', () => {
