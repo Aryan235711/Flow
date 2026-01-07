@@ -118,10 +118,16 @@ const App = () => {
 
   const authFetch = useCallback(async (url: string, options: RequestInit = {}) => {
     if (!user.token) throw new Error('Missing auth token');
+    
+    // Use full API URL for native iOS app, relative URLs for web
+    const isNativeApp = !!(window as any).Capacitor;
+    const baseUrl = isNativeApp ? 'https://flow-si70.onrender.com' : '';
+    const fullUrl = url.startsWith('http') ? url : `${baseUrl}${url}`;
+    
     const headers = new Headers(options.headers || {});
     headers.set('Authorization', `Bearer ${user.token}`);
     if (options.body && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
-    return fetch(url, { ...options, headers });
+    return fetch(fullUrl, { ...options, headers });
   }, [user.token]);
 
   const addNotification = useCallback((title: string, message: string, type: Notification['type'] = 'AI') => {
@@ -369,8 +375,13 @@ const App = () => {
   const handleLogin = useCallback(async () => {
     triggerHaptic();
     setIsLoggingIn(true);
-    const redirectUri = `${window.location.origin}/auth/callback`;
-    const url = `/api/auth/google/start?redirect_uri=${encodeURIComponent(redirectUri)}`;
+    
+    // Use Render domain for both web and native app
+    const isNativeApp = !!(window as any).Capacitor;
+    const baseUrl = isNativeApp ? 'https://flow-si70.onrender.com' : '';
+    const redirectUri = `${baseUrl || window.location.origin}/auth/callback`;
+    const url = `${baseUrl}/api/auth/google/start?redirect_uri=${encodeURIComponent(redirectUri)}`;
+    
     console.log('[login] redirecting to', url);
     window.location.href = url;
   }, []);

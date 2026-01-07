@@ -143,7 +143,12 @@ export const useFlowAI = () => {
         }
       };
 
-      const res = await fetch('/api/insight', {
+      // Use full API URL for native iOS app, relative URLs for web
+      const isNativeApp = !!(window as any).Capacitor;
+      const baseUrl = isNativeApp ? 'https://flow-si70.onrender.com' : '';
+      const apiUrl = `${baseUrl}/api/insight`;
+
+      const res = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
