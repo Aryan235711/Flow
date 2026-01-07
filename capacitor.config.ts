@@ -6,7 +6,8 @@ const config: CapacitorConfig = {
   webDir: 'dist',
   ios: {
     contentInset: 'automatic',
-    backgroundColor: '#020617'
+    backgroundColor: '#020617',
+    scheme: 'flow'
   },
   server: {
     url: 'https://flow-si70.onrender.com',
@@ -16,11 +17,6 @@ const config: CapacitorConfig = {
     CapacitorHttp: {
       enabled: true
     }
-  },
-  ios: {
-    contentInset: 'automatic',
-    backgroundColor: '#020617',
-    scheme: 'flow'
   }
 };
 
