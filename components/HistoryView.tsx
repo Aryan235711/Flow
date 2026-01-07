@@ -262,24 +262,24 @@ export const HistoryView = memo(({ history, isMockData, onDelete, onEdit, isPrem
             exit={{ height: 0, opacity: 0 }}
             className="overflow-hidden"
           >
-            <div className="bg-teal-500/10 border border-teal-500/20 rounded-2xl md:rounded-[32px] p-4 md:p-8 mb-4 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
+            <div className="bg-teal-500/10 border border-teal-500/20 rounded-2xl md:rounded-[32px] p-6 md:p-10 mb-4 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="flex flex-col">
                   <label className="text-xs font-black text-teal-300/60 uppercase tracking-widest block mb-3">From Date</label>
                   <input 
                     type="date" 
                     value={startDate} 
                     onChange={(e) => setStartDate(e.target.value)} 
-                    className="w-full glass p-4 rounded-xl border border-teal-500/20 bg-teal-500/5 text-white text-sm font-bold focus:border-teal-500/50 focus:bg-teal-500/10 transition-all" 
+                    className="w-11/12 glass p-4 rounded-xl border border-teal-500/20 bg-teal-500/5 text-white text-sm font-bold focus:border-teal-500/50 focus:bg-teal-500/10 transition-all" 
                   />
                 </div>
-                <div>
+                <div className="flex flex-col">
                   <label className="text-xs font-black text-teal-300/60 uppercase tracking-widest block mb-3">To Date</label>
                   <input 
                     type="date" 
                     value={endDate} 
                     onChange={(e) => setEndDate(e.target.value)} 
-                    className="w-full glass p-4 rounded-xl border border-teal-500/20 bg-teal-500/5 text-white text-sm font-bold focus:border-teal-500/50 focus:bg-teal-500/10 transition-all" 
+                    className="w-11/12 glass p-4 rounded-xl border border-teal-500/20 bg-teal-500/5 text-white text-sm font-bold focus:border-teal-500/50 focus:bg-teal-500/10 transition-all" 
                   />
                 </div>
               </div>
