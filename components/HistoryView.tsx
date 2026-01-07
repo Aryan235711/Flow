@@ -288,14 +288,14 @@ export const HistoryView = memo(({ history, isMockData, onDelete, onEdit, isPrem
         )}
       </AnimatePresence>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="flex flex-wrap gap-4 justify-center md:justify-start">
         {history.length === 0 ? (
-          <div className="col-span-full text-center py-24 opacity-10">
+          <div className="w-full text-center py-24 opacity-10">
             <Database size={48} className="mx-auto mb-4" />
             <p className="text-sm uppercase tracking-widest font-black">Registry Empty</p>
           </div>
         ) : visibleHistory.map((entry, idx) => (
-           <div key={`${entry.date}-${entry.symptomName}-${idx}`} className="relative">
+           <div key={`${entry.date}-${entry.symptomName}-${idx}`} className="relative flex-1 min-w-0 max-w-full md:max-w-[calc(50%-0.5rem)]">
              <HistoryCard 
                entry={entry}
                idx={idx}
