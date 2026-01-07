@@ -62,7 +62,7 @@ export const FlippableCard = memo(({ children, backContent, title, icon: Icon, c
           
           <h4 className="text-xl font-black font-outfit mb-3 text-white">System Logic</h4>
           
-          <div className="overflow-y-auto max-h-[140px] px-2 mb-4 scrollbar-hide">
+          <div className="overflow-y-auto max-h-[250px] px-2 mb-4 scrollbar-hide">
              <p className="text-teal-200/50 leading-relaxed font-medium text-xs">
               {backContent}
             </p>
