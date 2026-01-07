@@ -64,6 +64,104 @@ export const clearAppStorage = () => {
   }
 };
 
+// Notification data validation and schema checking
+export const validateNotification = (notif: any): notif is Notification => {
+  return (
+    typeof notif === 'object' &&
+    notif !== null &&
+    typeof notif.id === 'string' &&
+    notif.id.length > 0 &&
+    typeof notif.title === 'string' &&
+    notif.title.length > 0 &&
+    typeof notif.message === 'string' &&
+    notif.message.length > 0 &&
+    typeof notif.time === 'string' &&
+    typeof notif.read === 'boolean' &&
+    ['AI', 'SYSTEM', 'STREAK', 'FREEZE'].includes(notif.type)
+  );
+};
+
+export const validateNotificationArray = (data: any): Notification[] => {
+  if (!Array.isArray(data)) return [];
+
+  return data
+    .filter(validateNotification)
+    .slice(0, 10); // Ensure max 10 notifications
+};
+
+// Enhanced safe storage with validation
+export const getValidatedNotifications = (): Notification[] => {
+  try {
+    const data = getSafeStorage(STORAGE_KEYS.NOTIFS, []);
+    return validateNotificationArray(data);
+  } catch (error) {
+    console.error('Failed to load notifications:', error);
+    return [];
+  }
+};
+
+// Notification analytics tracking
+export interface NotificationAnalytics {
+  totalShown: number;
+  totalDismissed: number;
+  totalRead: number;
+  typeBreakdown: Record<Notification['type'], { shown: number; dismissed: number; read: number }>;
+  avgTimeToDismiss: number;
+  lastUpdated: string;
+}
+
+export const getNotificationAnalytics = (): NotificationAnalytics => {
+  return getSafeStorage('notification_analytics', {
+    totalShown: 0,
+    totalDismissed: 0,
+    totalRead: 0,
+    typeBreakdown: {
+      AI: { shown: 0, dismissed: 0, read: 0 },
+      SYSTEM: { shown: 0, dismissed: 0, read: 0 },
+      STREAK: { shown: 0, dismissed: 0, read: 0 },
+      FREEZE: { shown: 0, dismissed: 0, read: 0 }
+    },
+    avgTimeToDismiss: 0,
+    lastUpdated: new Date().toISOString()
+  });
+};
+
+export const trackNotificationShown = (type: Notification['type']) => {
+  try {
+    const analytics = getNotificationAnalytics();
+    analytics.totalShown++;
+    analytics.typeBreakdown[type].shown++;
+    analytics.lastUpdated = new Date().toISOString();
+    setSafeStorage('notification_analytics', analytics);
+  } catch (error) {
+    console.warn('Failed to track notification shown:', error);
+  }
+};
+
+export const trackNotificationDismissed = (type: Notification['type']) => {
+  try {
+    const analytics = getNotificationAnalytics();
+    analytics.totalDismissed++;
+    analytics.typeBreakdown[type].dismissed++;
+    analytics.lastUpdated = new Date().toISOString();
+    setSafeStorage('notification_analytics', analytics);
+  } catch (error) {
+    console.warn('Failed to track notification dismissed:', error);
+  }
+};
+
+export const trackNotificationRead = (type: Notification['type']) => {
+  try {
+    const analytics = getNotificationAnalytics();
+    analytics.totalRead++;
+    analytics.typeBreakdown[type].read++;
+    analytics.lastUpdated = new Date().toISOString();
+    setSafeStorage('notification_analytics', analytics);
+  } catch (error) {
+    console.warn('Failed to track notification read:', error);
+  }
+};
+
 export const calculateFlag = (value: number, baseline: number, inverse = false): Flag => {
   const ratio = inverse ? baseline / value : value / baseline;
   if (ratio >= 0.95) return 'GREEN';

@@ -22,7 +22,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { AppStage, AppView, UserProfile, MetricEntry, UserConfig, Notification } from './types.ts';
-import { STORAGE_KEYS, DEFAULT_CONFIG, getSafeStorage, setSafeStorage, generateMockData, triggerHaptic, generateFreezeEntry, getLocalDate, clearAppStorage } from './utils.ts';
+import { STORAGE_KEYS, DEFAULT_CONFIG, getSafeStorage, setSafeStorage, generateMockData, triggerHaptic, generateFreezeEntry, getLocalDate, clearAppStorage, getValidatedNotifications, trackNotificationShown } from './utils.ts';
 import { BackgroundOrbs } from './components/BackgroundOrbs.tsx';
 import { Header } from './components/Header.tsx';
 import { Toast } from './components/Toast.tsx';
@@ -84,7 +84,7 @@ const App = () => {
   const [view, setView] = useState<AppView>('DASHBOARD');
   const [user, setUser] = useState<UserProfile>(() => getSafeStorage(STORAGE_KEYS.USER, { isAuthenticated: false, isPremium: true, name: '', email: '', picture: '', avatarSeed: 'Felix' }));
   const [history, setHistory] = useState<MetricEntry[]>(() => getSafeStorage(STORAGE_KEYS.HISTORY, []));
-  const [notifications, setNotifications] = useState<Notification[]>(() => enforceNotificationLimit(getSafeStorage(STORAGE_KEYS.NOTIFS, [])));
+  const [notifications, setNotifications] = useState<Notification[]>(() => getValidatedNotifications());
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   const isLocalDev = useMemo(() => {
@@ -154,6 +154,7 @@ const App = () => {
         setNotifications(prev => [newNotif, ...prev.slice(0, 10)]);
         setActiveToast(newNotif);
       }
+      trackNotificationShown(type);
       triggerHaptic();
     } catch (error) {
       console.error('Failed to add notification:', error);
