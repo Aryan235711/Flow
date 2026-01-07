@@ -36,7 +36,7 @@ const generateSampleData = (): DailyPlasticityData[] => {
   return sampleData.map(item => ({ ...item, total: item.memoryConsolidation + item.synapticPlasticity + item.cognitiveReserve + item.neuroplasticityIndex }));
 };
 
-const calculateDailyPlasticity = (dayData: MetricEntry[], config: UserConfig): DailyPlasticityData | null => {
+const calculateDailyPlasticity = (dayData: MetricEntry[]): DailyPlasticityData | null => {
 
   // Use the same calculation logic as before but for a single day's data
   const recentData = dayData.slice(-7).filter(e => e?.rawValues); // Use last 7 entries for stability
@@ -110,13 +110,6 @@ const calculateDailyPlasticity = (dayData: MetricEntry[], config: UserConfig): D
   };
 };
 
-const getPlasticityColor = (score: number): string => {
-  if (score >= 80) return 'text-emerald-400';
-  if (score >= 60) return 'text-teal-400';
-  if (score >= 40) return 'text-amber-400';
-  return 'text-rose-400';
-};
-
 export const NeuralPlasticityIndicators: React.FC<NeuralPlasticityIndicatorsProps> = memo(({
   history,
   config
@@ -144,7 +137,7 @@ export const NeuralPlasticityIndicators: React.FC<NeuralPlasticityIndicatorsProp
 
     // Calculate daily plasticity for each day
     const dailyData = last10Days
-      .map(dayData => calculateDailyPlasticity(dayData, config))
+      .map(dayData => calculateDailyPlasticity(dayData))
       .filter(Boolean) as DailyPlasticityData[];
 
     if (dailyData.length === 0) {
