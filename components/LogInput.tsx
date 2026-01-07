@@ -2,6 +2,7 @@ import React, { useState, useCallback, memo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Target, Coffee, Sun, Dumbbell, Zap, CloudFog, BatteryWarning, BrainCircuit, RefreshCw, Info } from 'lucide-react';
 import { MetricEntry, UserConfig, Flag } from '../types.ts';
+import { validateNumericInput, validateTimeInput, validateTextInput, VALIDATION_RULES, getInitialValidationState, isFormValid, FormValidationState } from '../inputValidation.ts';
 import { calculateFlag, triggerHaptic, getLocalDate } from '../utils.ts';
 
 // Minimal tooltip component
@@ -22,30 +23,27 @@ interface LogInputProps {
 }
 
 export const LogInput = memo(({ config, onSave, initialData }: LogInputProps) => {
-  // Default State
-  const defaultState = { 
-    sleep: '07:30', rhr: '65', hrv: '50', protein: '80', 
-    gut: 4, sun: 'Full', exercise: 'Medium', cognition: 'STEADY',
-    symptomScore: 1, symptomName: '' 
-  };
+  // Consistent default state function
+  const getDefaultState = useCallback((isEditing: boolean) => {
+    if (isEditing) {
+      return {
+        sleep: '', rhr: '', hrv: '', protein: '',
+        gut: 0, sun: '', exercise: '', cognition: '',
+        symptomScore: 0, symptomName: ''
+      };
+    }
+    return {
+      sleep: '07:30', rhr: '65', hrv: '50', protein: '80',
+      gut: 4, sun: 'Full', exercise: 'Medium', cognition: 'STEADY',
+      symptomScore: 1, symptomName: ''
+    };
+  }, []);
 
-  const [formData, setFormData] = useState(defaultState);
+  const [formData, setFormData] = useState(() => getDefaultState(!!initialData));
+  const [validationState, setValidationState] = useState(() => getInitialValidationState());
 
   // Hydrate form if editing
   useEffect(() => {
-    const freshDefault = {
-      sleep: '',
-      rhr: '',
-      hrv: '',
-      protein: '',
-      gut: 0,
-      sun: 0,
-      exercise: 0,
-      cognition: 0,
-      symptomScore: 0,
-      symptomName: ''
-    };
-    
     if (initialData) {
       // Convert decimal sleep back to HH:MM
       const h = Math.floor(initialData.rawValues.sleep);
@@ -65,42 +63,84 @@ export const LogInput = memo(({ config, onSave, initialData }: LogInputProps) =>
         symptomName: initialData.symptomName
       });
     } else {
-      setFormData(freshDefault);
+      setFormData(getDefaultState(false));
     }
-  }, [initialData]);
+    setValidationState(getInitialValidationState());
+  }, [initialData, getDefaultState]);
 
-  // Auto-masking for time input (HH:MM)
+  // Enhanced sleep input with validation
   const handleSleepChange = (val: string) => {
     const nums = val.replace(/\D/g, '');
     let formatted = nums;
-    if (nums.length > 4) return; 
+    if (nums.length > 4) return;
     if (nums.length > 2) {
       formatted = `${nums.slice(0, 2)}:${nums.slice(2)}`;
     }
+    
     setFormData(p => ({ ...p, sleep: formatted }));
+    
+    // Validate on change
+    const validation = validateTimeInput(formatted);
+    setValidationState(prev => ({
+      ...prev,
+      sleep: {
+        isValid: validation.isValid,
+        error: validation.error,
+        touched: true
+      }
+    }));
   };
 
   const updateField = (field: keyof typeof formData, val: any) => {
     triggerHaptic();
     setFormData(p => ({ ...p, [field]: val }));
+    
+    // Mark field as touched
+    setValidationState(prev => ({
+      ...prev,
+      [field]: { ...prev[field], touched: true }
+    }));
+  };
+
+  // Validate numeric input with real-time feedback
+  const handleNumericChange = (field: 'rhr' | 'hrv' | 'protein', value: string) => {
+    setFormData(p => ({ ...p, [field]: value }));
+    
+    const rules = VALIDATION_RULES[field];
+    const validation = validateNumericInput(value, rules);
+    
+    setValidationState(prev => ({
+      ...prev,
+      [field]: {
+        isValid: validation.isValid,
+        error: validation.error,
+        touched: true
+      }
+    }));
   };
 
   const handleSubmit = useCallback(() => {
     triggerHaptic();
 
+    // Validate all fields before submission
+    if (!isFormValid(validationState)) {
+      // Mark all fields as touched to show errors
+      setValidationState(prev => {
+        const updated = { ...prev };
+        Object.keys(updated).forEach(key => {
+          updated[key] = { ...updated[key], touched: true };
+        });
+        return updated;
+      });
+      return;
+    }
+
     // Auto-generate name if empty
     const finalName = formData.symptomName.trim() || `Log ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
     
-    // Robust parsing
-    let [h, m] = formData.sleep.split(':').map(n => parseInt(n || '0', 10));
-    if (isNaN(h)) h = 7;
-    if (isNaN(m)) m = 0;
-    
-    // Clamp values
-    h = Math.min(23, Math.max(0, h));
-    m = Math.min(59, Math.max(0, m));
-    
-    const decimalSleep = h + (m / 60);
+    // Use validated values
+    const sleepValidation = validateTimeInput(formData.sleep);
+    const decimalSleep = sleepValidation.value || 7.5;
     
     const processedState: Record<string, Flag> = {
       sleep: calculateFlag(decimalSleep, config.wearableBaselines.sleep),
@@ -114,7 +154,6 @@ export const LogInput = memo(({ config, onSave, initialData }: LogInputProps) =>
     
     onSave({ 
       id: initialData?.id || crypto.randomUUID(),
-      // Keep original date if editing, else use today's LOCAL date
       date: initialData?.date || getLocalDate(), 
       rawValues: { 
         ...formData, 
@@ -127,7 +166,7 @@ export const LogInput = memo(({ config, onSave, initialData }: LogInputProps) =>
       symptomScore: formData.symptomScore, 
       symptomName: finalName
     });
-  }, [formData, config, onSave, initialData]);
+  }, [formData, config, onSave, initialData, validationState]);
 
   const cogOptions = [
     { id: 'PEAK', label: 'Peak', icon: Zap, bg: 'bg-teal-500', text: 'text-white' },
@@ -202,9 +241,21 @@ export const LogInput = memo(({ config, onSave, initialData }: LogInputProps) =>
                   inputMode="decimal"
                   value={formData.sleep} 
                   onChange={(e) => handleSleepChange(e.target.value)} 
-                  className="w-full bg-transparent text-center text-3xl font-bold font-outfit outline-none text-white placeholder:text-white/10" 
+                  className={`w-full bg-transparent text-center text-3xl font-bold font-outfit outline-none placeholder:text-white/10 ${
+                    validationState.sleep.touched && !validationState.sleep.isValid 
+                      ? 'text-red-400 ring-2 ring-red-500/50' 
+                      : 'text-white'
+                  }`}
                   placeholder="00:00"
+                  aria-label="Sleep duration in hours and minutes"
+                  aria-invalid={validationState.sleep.touched && !validationState.sleep.isValid}
+                  aria-describedby={validationState.sleep.error ? 'sleep-error' : undefined}
                 />
+                {validationState.sleep.touched && validationState.sleep.error && (
+                  <div id="sleep-error" className="text-red-400 text-xs mt-2 font-medium">
+                    {validationState.sleep.error}
+                  </div>
+                )}
             </div>
             {[
               { k: 'rhr', l: 'RHR', t: 'numeric', tip: 'Resting heart rate (BPM)' },
@@ -222,9 +273,21 @@ export const LogInput = memo(({ config, onSave, initialData }: LogInputProps) =>
                   inputMode="decimal"
                   pattern="[0-9]*"
                   value={(formData as any)[i.k]} 
-                  onChange={(e) => setFormData(p => ({...p, [i.k]: e.target.value}))} 
-                  className="w-full bg-transparent text-center text-3xl font-bold font-outfit outline-none text-white placeholder:text-white/10" 
+                  onChange={(e) => handleNumericChange(i.k as 'rhr' | 'hrv' | 'protein', e.target.value)} 
+                  className={`w-full bg-transparent text-center text-3xl font-bold font-outfit outline-none placeholder:text-white/10 ${
+                    validationState[i.k]?.touched && !validationState[i.k]?.isValid 
+                      ? 'text-red-400 ring-2 ring-red-500/50' 
+                      : 'text-white'
+                  }`}
+                  aria-label={`${i.l} input`}
+                  aria-invalid={validationState[i.k]?.touched && !validationState[i.k]?.isValid}
+                  aria-describedby={validationState[i.k]?.error ? `${i.k}-error` : undefined}
                 />
+                {validationState[i.k]?.touched && validationState[i.k]?.error && (
+                  <div id={`${i.k}-error`} className="text-red-400 text-xs mt-2 font-medium">
+                    {validationState[i.k]?.error}
+                  </div>
+                )}
               </div>
             ))}
           </motion.section>

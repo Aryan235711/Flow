@@ -144,10 +144,15 @@ app.get('/api/me', verifyToken, async (req, res) => {
     const userRow = await runQuery('select * from users where email = $1', [email]);
     if (!userRow.rows.length) return res.status(404).json({ error: 'user not found' });
     const user = userRow.rows[0];
+    
+    // Check if user should be premium (environment override)
+    const premiumEmails = (process.env.PREMIUM_EMAILS || '').split(',').map(e => e.trim());
+    const isPremium = !!user.is_premium || premiumEmails.includes(email);
+    
     const cfg = await ensureConfig(user.id);
     const histCount = await runQuery('select count(*)::int as c from history where user_id = $1', [user.id]);
-    console.log('[api/me] user', email, 'history_count', histCount.rows[0]?.c ?? 0);
-    res.json({ user, config: cfg });
+    console.log('[api/me] user', email, 'history_count', histCount.rows[0]?.c ?? 0, 'premium', isPremium);
+    res.json({ user: { ...user, is_premium: isPremium }, config: cfg });
   } catch (e) {
     console.error('[api/me] error', e);
     res.status(500).json({ error: 'failed to load profile' });
@@ -285,6 +290,10 @@ app.get('/api/auth/google/callback', async (req, res) => {
 
     // Ensure user exists in DB and fetch premium flag
     const dbUser = await upsertUser({ email, name, picture, avatarSeed });
+    
+    // Check if user should be premium (environment override)
+    const premiumEmails = (process.env.PREMIUM_EMAILS || '').split(',').map(e => e.trim());
+    const isPremium = !!dbUser?.is_premium || premiumEmails.includes(email);
 
     const token = issueToken({ email, ts: Date.now() });
     const user = {
@@ -293,7 +302,7 @@ app.get('/api/auth/google/callback', async (req, res) => {
       avatarSeed,
       picture,
       isAuthenticated: true,
-      isPremium: !!dbUser?.is_premium,
+      isPremium: isPremium,
       token
     };
 
