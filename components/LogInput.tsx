@@ -6,10 +6,12 @@ import { validateNumericInput, validateTimeInput, validateTextInput, VALIDATION_
 import { calculateFlag, triggerHaptic, getLocalDate } from '../utils.ts';
 import { FormErrorBoundary } from './FormErrorBoundary.tsx';
 import { useDebounce } from '../hooks/useDebounce.ts';
+import { useGestures } from '../hooks/useGestures.ts';
 import { calculateSmartDefaults } from '../smartDefaults.ts';
 import { NumericInput } from './NumericInput.tsx';
 import { RatingScale } from './RatingScale.tsx';
 import { CognitiveStateSelector } from './CognitiveStateSelector.tsx';
+import { saveDraft, loadDraft, clearDraft, hasDraft } from '../formPersistence.ts';
 
 // Minimal tooltip component
 const Tooltip = ({ text }: { text: string }) => (
@@ -65,6 +67,39 @@ const LogInputForm = memo(({ config, onSave, initialData, history = [] }: LogInp
   
   // Memoize expensive calculations
   const isFormValidMemo = useMemo(() => isFormValid(validationState), [validationState]);
+  
+  // Gesture controls
+  const gestureRef = useGestures({
+    onSwipeUp: () => handleSubmit(),
+    onDoubleTap: () => {
+      if (hasDraft()) {
+        const draft = loadDraft();
+        if (draft) {
+          setFormData(draft.data);
+          triggerHaptic();
+        }
+      }
+    }
+  });
+
+  // Auto-save draft and load on mount
+  useEffect(() => {
+    // Load draft on mount for new entries
+    if (!initialData && hasDraft()) {
+      const draft = loadDraft();
+      if (draft) {
+        setFormData(draft.data);
+      }
+    }
+    
+    // Auto-save draft every 10 seconds for new entries
+    if (!initialData) {
+      const interval = setInterval(() => {
+        saveDraft(formData);
+      }, 10000);
+      return () => clearInterval(interval);
+    }
+  }, [formData, initialData]);
 
   // Hydrate form if editing
   useEffect(() => {
@@ -207,6 +242,9 @@ const LogInputForm = memo(({ config, onSave, initialData, history = [] }: LogInp
       exercise: formData.exercise === 'None' ? 'RED' : formData.exercise === 'Hard' ? 'GREEN' : 'YELLOW'
     };
     
+    // Clear draft on successful submission
+    clearDraft();
+    
     onSave({ 
       id: initialData?.id || crypto.randomUUID(),
       date: initialData?.date || getLocalDate(), 
@@ -237,6 +275,7 @@ const LogInputForm = memo(({ config, onSave, initialData, history = [] }: LogInp
 
   return (
     <motion.div 
+      ref={gestureRef}
       initial="hidden" 
       animate="visible" 
       variants={{ visible: { transition: { staggerChildren: 0.08 } } }}
