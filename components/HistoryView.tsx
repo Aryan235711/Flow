@@ -63,16 +63,16 @@ const DetailItem = memo(({ label, value, icon: Icon, color }: { label: string, v
 // Extracted Memoized Card to prevent list re-renders on expand
 const HistoryCard = memo(({ 
   entry, 
-  idx, 
+  idx,
   isExpanded, 
   onToggle, 
   onDelete, 
   onEdit 
 }: { 
   entry: MetricEntry; 
-  idx: number; 
+  idx: number;
   isExpanded: boolean; 
-  onToggle: (idx: number) => void; 
+  onToggle: (entry: MetricEntry) => void; 
   onDelete: (id: string) => void; 
   onEdit: (entry: MetricEntry, idx: number) => void; 
 }) => {
@@ -121,7 +121,7 @@ const HistoryCard = memo(({
       {/* Status Strip */}
       <div className={`absolute left-0 top-0 bottom-0 w-1 ${statusColor} opacity-50`} />
 
-      <div onClick={() => onToggle(idx)} className="p-4 pl-6 cursor-pointer touch-manipulation">
+      <div onClick={() => onToggle(entry)} className="p-4 pl-6 cursor-pointer touch-manipulation">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-4">
             <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg ${getCognitiveColor(entry.rawValues.cognition || 'STEADY')}`}>
@@ -195,14 +195,14 @@ const HistoryCard = memo(({
 });
 
 export const HistoryView = memo(({ history, isMockData, onDelete, onEdit, isPremium, onTriggerPaywall }: HistoryViewProps) => {
-  const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
+  const [expandedEntry, setExpandedEntry] = useState<MetricEntry | null>(null);
   const [showFilter, setShowFilter] = useState(false);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
 
-  const toggleExpand = useCallback((idx: number) => {
+  const toggleExpand = useCallback((entry: MetricEntry) => {
     triggerHaptic();
-    setExpandedIndex(prev => prev === idx ? null : idx);
+    setExpandedEntry(prev => prev === entry ? null : entry);
   }, []);
 
   const reversedHistory = history.slice().reverse();
@@ -302,10 +302,10 @@ export const HistoryView = memo(({ history, isMockData, onDelete, onEdit, isPrem
           </div>
         ) : visibleHistory.map((entry, idx) => (
            <HistoryCard 
-             key={`${entry.date}-${idx}`}
+             key={`${entry.date}-${entry.symptomName}-${idx}`}
              entry={entry}
              idx={idx}
-             isExpanded={expandedIndex === idx}
+             isExpanded={expandedEntry === entry}
              onToggle={toggleExpand}
              onDelete={onDelete}
              onEdit={onEdit}
