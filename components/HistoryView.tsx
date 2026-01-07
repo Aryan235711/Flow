@@ -197,6 +197,8 @@ const HistoryCard = memo(({
 export const HistoryView = memo(({ history, isMockData, onDelete, onEdit, isPremium, onTriggerPaywall }: HistoryViewProps) => {
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
   const [showFilter, setShowFilter] = useState(false);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
 
   const toggleExpand = useCallback((idx: number) => {
     triggerHaptic();
@@ -204,7 +206,16 @@ export const HistoryView = memo(({ history, isMockData, onDelete, onEdit, isPrem
   }, []);
 
   const reversedHistory = history.slice().reverse();
-  const visibleHistory = isPremium ? reversedHistory : reversedHistory.slice(0, 7);
+  const filteredHistory = reversedHistory.filter(entry => {
+    if (!startDate && !endDate) return true;
+    const entryDate = new Date(entry.date);
+    const start = startDate ? new Date(startDate) : null;
+    const end = endDate ? new Date(endDate) : null;
+    if (start && entryDate < start) return false;
+    if (end && entryDate > end) return false;
+    return true;
+  });
+  const visibleHistory = isPremium ? filteredHistory : filteredHistory.slice(0, 7);
   const hiddenCount = reversedHistory.length - visibleHistory.length;
 
   const handleFilterClick = () => {
@@ -251,8 +262,33 @@ export const HistoryView = memo(({ history, isMockData, onDelete, onEdit, isPrem
             exit={{ height: 0, opacity: 0 }}
             className="overflow-hidden"
           >
-            <div className="bg-teal-500/10 border border-teal-500/20 rounded-2xl md:rounded-[32px] p-4 md:p-8 mb-4">
-              <p className="text-xs md:text-sm font-bold text-teal-300 text-center">Date Filtering Enabled</p>
+            <div className="bg-teal-500/10 border border-teal-500/20 rounded-2xl md:rounded-[32px] p-4 md:p-8 mb-4 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-black text-teal-300/60 uppercase tracking-widest block mb-2">From Date</label>
+                  <input 
+                    type="date" 
+                    value={startDate} 
+                    onChange={(e) => setStartDate(e.target.value)} 
+                    className="w-full glass p-3 rounded-xl border border-teal-500/20 bg-teal-500/5 text-white text-sm font-bold focus:border-teal-500/50 focus:bg-teal-500/10 transition-all" 
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-black text-teal-300/60 uppercase tracking-widest block mb-2">To Date</label>
+                  <input 
+                    type="date" 
+                    value={endDate} 
+                    onChange={(e) => setEndDate(e.target.value)} 
+                    className="w-full glass p-3 rounded-xl border border-teal-500/20 bg-teal-500/5 text-white text-sm font-bold focus:border-teal-500/50 focus:bg-teal-500/10 transition-all" 
+                  />
+                </div>
+              </div>
+              <button 
+                onClick={() => { setStartDate(''); setEndDate(''); }}
+                className="w-full py-3 bg-teal-500/20 hover:bg-teal-500/30 text-teal-300 font-black rounded-xl transition-colors active:scale-95"
+              >
+                Clear Filter
+              </button>
             </div>
           </motion.div>
         )}
