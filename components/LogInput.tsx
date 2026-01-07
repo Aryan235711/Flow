@@ -63,7 +63,7 @@ const LogInputForm = memo(({ config, onSave, initialData, history = [] }: LogInp
   const [validationState, setValidationState] = useState(() => getInitialValidationState());
   
   // Debounce form data for validation to improve performance
-  const debouncedFormData = useDebounce(formData, 300);
+  const debouncedFormData = useDebounce(formData, 150);
   
   // Memoize expensive calculations
   const isFormValidMemo = useMemo(() => isFormValid(validationState), [validationState]);
@@ -209,7 +209,11 @@ const LogInputForm = memo(({ config, onSave, initialData, history = [] }: LogInp
     }));
   }, [debouncedFormData.protein]);
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
   const handleSubmit = useCallback(() => {
+    if (isSubmitting) return; // Prevent multiple clicks
+    
     triggerHaptic();
 
     // Validate all fields before submission
@@ -224,6 +228,8 @@ const LogInputForm = memo(({ config, onSave, initialData, history = [] }: LogInp
       });
       return;
     }
+
+    setIsSubmitting(true);
 
     // Auto-generate name if empty
     const finalName = (formData.symptomName || '').trim() || `Log ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
@@ -245,7 +251,7 @@ const LogInputForm = memo(({ config, onSave, initialData, history = [] }: LogInp
     // Clear draft on successful submission
     clearDraft();
     
-    onSave({ 
+    const entry = { 
       id: initialData?.id || crypto.randomUUID(),
       date: initialData?.date || getLocalDate(), 
       rawValues: { 
@@ -258,8 +264,14 @@ const LogInputForm = memo(({ config, onSave, initialData, history = [] }: LogInp
       processedState, 
       symptomScore: formData.symptomScore, 
       symptomName: finalName
-    });
-  }, [formData, config, onSave, initialData, isFormValidMemo]);
+    };
+    
+    // Call onSave immediately for instant UI feedback
+    onSave(entry);
+    
+    // Reset submitting state after a short delay
+    setTimeout(() => setIsSubmitting(false), 500);
+  }, [formData, config, onSave, initialData, isFormValidMemo, isSubmitting]);
 
   const cogOptions = [
     { id: 'PEAK', label: 'Peak', icon: Zap, bg: 'bg-teal-500', text: 'text-white' },
@@ -485,16 +497,16 @@ const LogInputForm = memo(({ config, onSave, initialData, history = [] }: LogInp
          variants={sectionVariants}
          whileTap={{ scale: 0.95 }}
          onClick={handleSubmit} 
-         disabled={!isFormValidMemo}
+         disabled={!isFormValidMemo || isSubmitting}
          className={`w-full py-8 md:py-10 font-black rounded-[32px] md:rounded-[40px] text-xl md:text-2xl shadow-2xl transition-all font-outfit uppercase tracking-wider relative overflow-hidden touch-manipulation flex items-center justify-center gap-4 ${
-           isFormValidMemo 
+           isFormValidMemo && !isSubmitting
              ? 'bg-gradient-to-r from-teal-500 to-cyan-500 text-white hover:shadow-teal-500/40' 
              : 'bg-gray-600/50 text-gray-400 cursor-not-allowed'
          }`}
          aria-label={initialData ? 'Update biometric entry' : 'Save new biometric entry'}
          aria-describedby="submit-help"
       >
-        <span className="relative z-10">{initialData ? 'UPDATE ENTRY' : 'COMMIT BIOMETRIC BASELINE'}</span>
+        <span className="relative z-10">{isSubmitting ? 'PROCESSING...' : initialData ? 'UPDATE ENTRY' : 'COMMIT BIOMETRIC BASELINE'}</span>
         {initialData && <RefreshCw size={24} className="relative z-10" />}
         <div className="absolute inset-0 bg-white/10 opacity-0 hover:opacity-100 transition-opacity" />
       </motion.button>
