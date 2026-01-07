@@ -14,27 +14,26 @@ export const GoalSettings = memo(({ config, onSave, onClose }: GoalSettingsProps
   const [localConfig, setLocalConfig] = useState<UserConfig>(JSON.parse(JSON.stringify(config)));
 
   const handleChange = (section: keyof UserConfig, key: string, value: string) => {
-    let numValue = parseFloat(value);
-
-    // Enhanced validation with better error handling
-    if (isNaN(numValue) || !isFinite(numValue)) {
-      // Don't update if invalid input
+    // Allow empty string for better editing experience
+    if (value === '') {
+      setLocalConfig(prev => ({
+        ...prev,
+        [section]: {
+          ...prev[section],
+          [key]: ''
+        }
+      }));
       return;
     }
 
-    // Stricter safety clamps with better bounds
-    const clamps = {
-      sleep: { min: 4, max: 12 },
-      rhr: { min: 40, max: 120 },
-      hrv: { min: 20, max: 150 },
-      protein: { min: 20, max: 300 }
-    };
+    const numValue = parseFloat(value);
 
-    const clamp = clamps[key as keyof typeof clamps];
-    if (clamp) {
-      numValue = Math.min(clamp.max, Math.max(clamp.min, numValue));
+    // Only validate if it's a valid number
+    if (isNaN(numValue) || !isFinite(numValue)) {
+      return;
     }
 
+    // Store the raw value without clamping during editing
     setLocalConfig(prev => ({
       ...prev,
       [section]: {
@@ -45,7 +44,33 @@ export const GoalSettings = memo(({ config, onSave, onClose }: GoalSettingsProps
   };
 
   const handleSave = () => {
-    onSave(localConfig);
+    // Apply validation and clamping only on save
+    const clamps = {
+      sleep: { min: 4, max: 12 },
+      rhr: { min: 40, max: 120 },
+      hrv: { min: 20, max: 150 },
+      protein: { min: 20, max: 300 }
+    };
+
+    const validatedConfig = { ...localConfig };
+    
+    // Validate wearable baselines
+    Object.keys(validatedConfig.wearableBaselines).forEach(key => {
+      const value = validatedConfig.wearableBaselines[key as keyof typeof validatedConfig.wearableBaselines];
+      const clamp = clamps[key as keyof typeof clamps];
+      if (clamp && typeof value === 'number') {
+        validatedConfig.wearableBaselines[key as keyof typeof validatedConfig.wearableBaselines] = 
+          Math.min(clamp.max, Math.max(clamp.min, value));
+      }
+    });
+    
+    // Validate manual targets
+    if (typeof validatedConfig.manualTargets.protein === 'number') {
+      const clamp = clamps.protein;
+      validatedConfig.manualTargets.protein = Math.min(clamp.max, Math.max(clamp.min, validatedConfig.manualTargets.protein));
+    }
+
+    onSave(validatedConfig);
     onClose();
   };
 
