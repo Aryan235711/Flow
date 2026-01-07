@@ -8,7 +8,7 @@ import { calculateFlag, triggerHaptic, getLocalDate } from '../utils.ts';
 const Tooltip = ({ text }: { text: string }) => (
   <div className="relative group">
     <Info size={12} className="text-indigo-400/40 hover:text-indigo-400/60 transition-colors cursor-help" />
-    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-[#020617] text-white text-xs font-medium rounded-lg border border-white/10 shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
+    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-[#020617] text-white text-xs font-medium rounded-lg border border-white/10 shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-[9999]">
       {text}
       <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-[#020617]"></div>
     </div>
@@ -162,7 +162,7 @@ export const LogInput = memo(({ config, onSave, initialData }: LogInputProps) =>
             <div className="flex items-center gap-3">
               <Target size={20} className="text-teal-400" />
               <h3 className="text-[11px] font-black text-teal-300/40 uppercase tracking-[0.3em] font-outfit">Neural Load</h3>
-              <Tooltip text="Rate your overall symptom intensity (1=minimal, 5=severe)" />
+              <Tooltip text="How intense are your symptoms today?" />
             </div>
             
             <div className="flex justify-between gap-2 p-1.5 bg-white/5 rounded-[24px]" role="radiogroup" aria-label="Load intensity">
@@ -190,7 +190,7 @@ export const LogInput = memo(({ config, onSave, initialData }: LogInputProps) =>
 
           {/* NUMERICAL METRICS GRID */}
           <motion.section variants={sectionVariants} className="grid grid-cols-2 md:grid-cols-2 gap-4">
-            <div className="glass rounded-[28px] p-6 text-center border-white/5 shadow-lg relative overflow-hidden group focus-within:ring-2 ring-indigo-500/30 transition-all">
+            <div className="glass rounded-[28px] p-6 text-center border-white/5 shadow-lg relative group focus-within:ring-2 ring-indigo-500/30 transition-all">
                 <div className="absolute inset-0 bg-indigo-500/5 opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none" />
                 <div className="flex items-center justify-center gap-2 mb-3">
                   <label className="text-[10px] font-black text-indigo-400/30 uppercase font-outfit tracking-widest">Sleep (HH:MM)</label>
@@ -206,11 +206,11 @@ export const LogInput = memo(({ config, onSave, initialData }: LogInputProps) =>
                 />
             </div>
             {[
-              { k: 'rhr', l: 'RHR', t: 'numeric', tip: 'Resting heart rate in beats per minute' },
-              { k: 'hrv', l: 'HRV', t: 'numeric', tip: 'Heart rate variability score' },
-              { k: 'protein', l: 'Protein (g)', t: 'numeric', tip: 'Grams of protein consumed today' }
+              { k: 'rhr', l: 'RHR', t: 'numeric', tip: 'Resting heart rate (BPM)' },
+              { k: 'hrv', l: 'HRV', t: 'numeric', tip: 'Heart rate variability' },
+              { k: 'protein', l: 'Protein (g)', t: 'numeric', tip: 'Protein intake today' }
             ].map(i => (
-              <div key={i.k} className="glass rounded-[28px] p-6 text-center border-white/5 shadow-lg relative overflow-hidden group focus-within:ring-2 ring-indigo-500/30 transition-all">
+              <div key={i.k} className="glass rounded-[28px] p-6 text-center border-white/5 shadow-lg relative group focus-within:ring-2 ring-indigo-500/30 transition-all">
                 <div className="absolute inset-0 bg-indigo-500/5 opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none" />
                 <div className="flex items-center justify-center gap-2 mb-3">
                   <label className="text-[10px] font-black text-indigo-400/30 uppercase font-outfit tracking-widest">{i.l}</label>
@@ -258,7 +258,7 @@ export const LogInput = memo(({ config, onSave, initialData }: LogInputProps) =>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <label className="text-[10px] font-black text-indigo-200/40 uppercase tracking-widest flex items-center gap-2"><Coffee size={14}/> Gut Stability</label>
-                  <Tooltip text="Digestive health and bowel regularity (1=poor, 5=excellent)" />
+                  <Tooltip text="How healthy is your digestion?" />
                 </div>
                 <span className="text-indigo-400 font-bold">{formData.gut}/5</span>
               </div>
