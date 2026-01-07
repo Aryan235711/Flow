@@ -64,12 +64,20 @@ const PageTransition = ({ children, className }: { children: React.ReactNode; cl
 );
 
 const App = () => {
+  // Enforce notification limit on load
+  const enforceNotificationLimit = useCallback((notifications: Notification[]) => {
+    return notifications.slice(0, 10);
+  }, []);
+
   // Safe initialization
   const [stage, setStage] = useState<AppStage>(() => getSafeStorage(STORAGE_KEYS.STAGE, 'AUTH'));
   const [view, setView] = useState<AppView>('DASHBOARD');
   const [user, setUser] = useState<UserProfile>(() => getSafeStorage(STORAGE_KEYS.USER, { isAuthenticated: false, isPremium: true, name: '', email: '', picture: '', avatarSeed: 'Felix' }));
   const [history, setHistory] = useState<MetricEntry[]>(() => getSafeStorage(STORAGE_KEYS.HISTORY, []));
-  const [notifications, setNotifications] = useState<Notification[]>(() => getSafeStorage(STORAGE_KEYS.NOTIFS, []));
+  const [notifications, setNotifications] = useState<Notification[]>(() => {
+    const stored = getSafeStorage(STORAGE_KEYS.NOTIFS, []);
+    return Array.isArray(stored) ? enforceNotificationLimit(stored) : [];
+  });
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   const isLocalDev = useMemo(() => {
@@ -102,6 +110,7 @@ const App = () => {
   const hasRunSystemCheck = useRef(false);
   const prevHistoryLength = useRef(history.length);
   const mockNoticeShown = useRef(false);
+  const mountedRef = useRef(true);
 
   const authFetch = useCallback(async (url: string, options: RequestInit = {}) => {
     if (!user.token) throw new Error('Missing auth token');
@@ -112,22 +121,56 @@ const App = () => {
   }, [user.token]);
 
   const addNotification = useCallback((title: string, message: string, type: Notification['type'] = 'AI') => {
-    const now = new Date();
-    const today = new Date().toDateString();
-    const notifDate = now.toDateString();
-    const timeStr = notifDate === today ? now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : `${now.toLocaleDateString([], { month: 'short', day: 'numeric' })} ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
-    const newNotif: Notification = { id: Date.now().toString(), title, message, time: timeStr, read: false, type };
-    setNotifications(prev => [newNotif, ...prev.slice(0, 10)]);
-    setActiveToast(newNotif); 
-    triggerHaptic();
+    try {
+      // Input sanitization and validation
+      if (!title || typeof title !== 'string' || title.length > 100) {
+        console.warn('[notification] Invalid title provided');
+        return;
+      }
+      if (!message || typeof message !== 'string' || message.length > 500) {
+        console.warn('[notification] Invalid message provided');
+        return;
+      }
+      
+      // Basic XSS prevention - remove potentially dangerous characters
+      const sanitizeText = (text: string) => text.replace(/[<>\"'&]/g, '');
+      const sanitizedTitle = sanitizeText(title);
+      const sanitizedMessage = sanitizeText(message);
+      
+      const now = new Date();
+      const today = new Date().toDateString();
+      const notifDate = now.toDateString();
+      const timeStr = notifDate === today ? now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : `${now.toLocaleDateString([], { month: 'short', day: 'numeric' })} ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+      const newNotif: Notification = { id: crypto.randomUUID(), title: sanitizedTitle, message: sanitizedMessage, time: timeStr, read: false, type };
+      setNotifications(prev => [newNotif, ...prev.slice(0, 9)]); // Keep only 9 previous + 1 new = max 10
+      setActiveToast(newNotif);
+      triggerHaptic();
+    } catch (error) {
+      console.error('[notification] Failed to add notification:', error);
+      // Fallback: show a generic error notification if possible
+      try {
+        const errorNotif: Notification = { 
+          id: crypto.randomUUID(), 
+          title: 'System Alert', 
+          message: 'Notification system encountered an error.', 
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), 
+          read: false, 
+          type: 'SYSTEM' 
+        };
+        setActiveToast(errorNotif);
+      } catch (fallbackError) {
+        console.error('[notification] Fallback notification also failed:', fallbackError);
+      }
+    }
   }, []);
 
-  // Always operate in premium mode
+  // Component mount tracking for race condition prevention
   useEffect(() => {
-    if (!user.isPremium) {
-      setUser(prev => ({ ...prev, isPremium: true }));
-    }
-  }, [user.isPremium]);
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   // Persistence
   useEffect(() => setSafeStorage(STORAGE_KEYS.STAGE, stage), [stage]);
@@ -215,12 +258,16 @@ const App = () => {
           }
         }));
         setTimeout(() => {
-           addNotification("Cryostasis Activated", `Missed sync detected. Streak frozen.`, "FREEZE");
+          if (mountedRef.current) {
+            addNotification("Cryostasis Activated", `Missed sync detected. Streak frozen.`, "FREEZE");
+          }
         }, 1500);
       }
     } else if (!hasLogToday) {
        setTimeout(() => {
-        addNotification("Protocol Pending", "Log metrics to maintain streak.", "SYSTEM");
+        if (mountedRef.current) {
+          addNotification("Protocol Pending", "Log metrics to maintain streak.", "SYSTEM");
+        }
       }, 2000);
     } 
 
@@ -230,8 +277,10 @@ const App = () => {
       const oneDay = 24 * 60 * 60 * 1000;
       if (now - lastUpsell > oneDay) {
         setTimeout(() => {
-           addNotification("Features Locked", "Deep history archive & AI analysis locked.", "SYSTEM");
-           setSafeStorage('last_upsell', now);
+          if (mountedRef.current) {
+            addNotification("Features Locked", "Deep history archive & AI analysis locked.", "SYSTEM");
+            setSafeStorage('last_upsell', now);
+          }
         }, 5000);
       }
     }
@@ -242,7 +291,9 @@ const App = () => {
     if (history.length > prevHistoryLength.current) {
         if (history.length >= 3 && history.length % 3 === 0) {
              setTimeout(() => {
-                addNotification("Neural Tunnel Ready", "Sufficient data for new AI insights.", "AI");
+               if (mountedRef.current) {
+                 addNotification("Neural Tunnel Ready", "Sufficient data for new AI insights.", "AI");
+               }
              }, 1000);
         }
     }
