@@ -1,6 +1,6 @@
 import React, { useState, useCallback, memo, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Target, Coffee, Sun, Dumbbell, RefreshCw, Info } from 'lucide-react';
+import { Target, Coffee, Sun, Dumbbell, Zap, CloudFog, BatteryWarning, BrainCircuit, RefreshCw, Info } from 'lucide-react';
 import { MetricEntry, UserConfig, Flag } from '../types.ts';
 import { validateNumericInput, validateTimeInput, validateTextInput, VALIDATION_RULES, getInitialValidationState, isFormValid, FormValidationState } from '../inputValidation.ts';
 import { calculateFlag, triggerHaptic, getLocalDate } from '../utils.ts';
@@ -50,7 +50,11 @@ const LogInputForm = memo(({ config, onSave, initialData, history = [] }: LogInp
         symptomScore: 0, symptomName: ''
       };
     }
-    return smartDefaults;
+    return {
+      ...smartDefaults,
+      symptomScore: 1,
+      symptomName: ''
+    };
   }, [smartDefaults]);
 
   const [formData, setFormData] = useState(() => getDefaultState(!!initialData));
@@ -187,7 +191,7 @@ const LogInputForm = memo(({ config, onSave, initialData, history = [] }: LogInp
     }
 
     // Auto-generate name if empty
-    const finalName = formData.symptomName.trim() || `Log ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    const finalName = (formData.symptomName || '').trim() || `Log ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
     
     // Use validated values
     const sleepValidation = validateTimeInput(formData.sleep);
