@@ -4,6 +4,7 @@ import { Target, Coffee, Sun, Dumbbell, Zap, CloudFog, BatteryWarning, BrainCirc
 import { MetricEntry, UserConfig, Flag } from '../types.ts';
 import { validateNumericInput, validateTimeInput, validateTextInput, VALIDATION_RULES, getInitialValidationState, isFormValid, FormValidationState } from '../inputValidation.ts';
 import { calculateFlag, triggerHaptic, getLocalDate } from '../utils.ts';
+import { FormErrorBoundary } from './FormErrorBoundary.tsx';
 
 // Minimal tooltip component
 const Tooltip = ({ text }: { text: string }) => (
@@ -23,6 +24,14 @@ interface LogInputProps {
 }
 
 export const LogInput = memo(({ config, onSave, initialData }: LogInputProps) => {
+  return (
+    <FormErrorBoundary>
+      <LogInputForm config={config} onSave={onSave} initialData={initialData} />
+    </FormErrorBoundary>
+  );
+});
+
+const LogInputForm = memo(({ config, onSave, initialData }: LogInputProps) => {
   // Consistent default state function
   const getDefaultState = useCallback((isEditing: boolean) => {
     if (isEditing) {
@@ -205,14 +214,23 @@ export const LogInput = memo(({ config, onSave, initialData }: LogInputProps) =>
               <Tooltip text="How intense are your symptoms today?" />
             </div>
             
-            <div className="flex justify-between gap-2 p-1.5 bg-white/5 rounded-[24px]" role="radiogroup" aria-label="Load intensity">
+            <div className="flex justify-between gap-2 p-1.5 bg-white/5 rounded-[24px]" role="radiogroup" aria-label="Neural load intensity from 1 to 5">
               {[1,2,3,4,5].map(v => {
                 const colors = ['bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-lime-500', 'bg-green-500'];
                 return (
                   <button 
                     key={v} 
-                    onClick={() => updateField('symptomScore', v)} 
+                    onClick={() => {
+                      updateField('symptomScore', v);
+                      setValidationState(prev => ({
+                        ...prev,
+                        symptomScore: { isValid: true, touched: true }
+                      }));
+                    }} 
                     className={`flex-1 h-14 rounded-[18px] font-black text-lg transition-all active:scale-95 touch-manipulation ${formData.symptomScore === v ? `${colors[v-1]} text-white shadow-lg scale-105` : 'text-teal-300/20'}`}
+                    role="radio"
+                    aria-checked={formData.symptomScore === v}
+                    aria-label={`Neural load level ${v} of 5`}
                   >
                     {v}
                   </button>
@@ -223,9 +241,26 @@ export const LogInput = memo(({ config, onSave, initialData }: LogInputProps) =>
             <input 
               placeholder="Log Name (Optional)" 
               value={formData.symptomName} 
-              onChange={(e) => setFormData(p => ({...p, symptomName: e.target.value}))} 
+              onChange={(e) => {
+                const validation = validateTextInput(e.target.value);
+                setFormData(p => ({...p, symptomName: e.target.value}));
+                setValidationState(prev => ({
+                  ...prev,
+                  symptomName: {
+                    isValid: validation.isValid,
+                    error: validation.error,
+                    touched: true
+                  }
+                }));
+              }} 
               className="w-full bg-white/5 p-6 rounded-[24px] outline-none border border-white/5 focus:border-indigo-500/50 focus:bg-white/10 transition-all font-bold text-white text-xl placeholder:text-white/20" 
+              aria-label="Log entry name"
+              aria-describedby="log-name-help"
+              maxLength={100}
             />
+            <div id="log-name-help" className="sr-only">
+              Optional name for this biometric entry. Will auto-generate if left empty.
+            </div>
           </motion.section>
 
           {/* NUMERICAL METRICS GRID */}
@@ -373,12 +408,25 @@ export const LogInput = memo(({ config, onSave, initialData }: LogInputProps) =>
          variants={sectionVariants}
          whileTap={{ scale: 0.95 }}
          onClick={handleSubmit} 
-         className="w-full py-8 md:py-10 bg-gradient-to-r from-teal-500 to-cyan-500 text-white font-black rounded-[32px] md:rounded-[40px] text-xl md:text-2xl shadow-2xl transition-all font-outfit uppercase tracking-wider relative overflow-hidden touch-manipulation flex items-center justify-center gap-4 hover:shadow-teal-500/40"
+         disabled={!isFormValid(validationState)}
+         className={`w-full py-8 md:py-10 font-black rounded-[32px] md:rounded-[40px] text-xl md:text-2xl shadow-2xl transition-all font-outfit uppercase tracking-wider relative overflow-hidden touch-manipulation flex items-center justify-center gap-4 ${
+           isFormValid(validationState) 
+             ? 'bg-gradient-to-r from-teal-500 to-cyan-500 text-white hover:shadow-teal-500/40' 
+             : 'bg-gray-600/50 text-gray-400 cursor-not-allowed'
+         }`}
+         aria-label={initialData ? 'Update biometric entry' : 'Save new biometric entry'}
+         aria-describedby="submit-help"
       >
         <span className="relative z-10">{initialData ? 'UPDATE ENTRY' : 'COMMIT BIOMETRIC BASELINE'}</span>
         {initialData && <RefreshCw size={24} className="relative z-10" />}
         <div className="absolute inset-0 bg-white/10 opacity-0 hover:opacity-100 transition-opacity" />
       </motion.button>
+      
+      <div id="submit-help" className="sr-only">
+        {isFormValid(validationState) 
+          ? 'All fields are valid. Click to save your biometric data.' 
+          : 'Please fix the errors above before submitting.'}
+      </div>
     </motion.div>
   );
 });
