@@ -263,23 +263,23 @@ export const HistoryView = memo(({ history, isMockData, onDelete, onEdit, isPrem
             className="overflow-hidden"
           >
             <div className="bg-teal-500/10 border border-teal-500/20 rounded-2xl md:rounded-[32px] p-4 md:p-8 mb-4 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="text-xs font-black text-teal-300/60 uppercase tracking-widest block mb-2">From Date</label>
+                  <label className="text-xs font-black text-teal-300/60 uppercase tracking-widest block mb-3">From Date</label>
                   <input 
                     type="date" 
                     value={startDate} 
                     onChange={(e) => setStartDate(e.target.value)} 
-                    className="w-full glass p-3 rounded-xl border border-teal-500/20 bg-teal-500/5 text-white text-sm font-bold focus:border-teal-500/50 focus:bg-teal-500/10 transition-all" 
+                    className="w-full glass p-4 rounded-xl border border-teal-500/20 bg-teal-500/5 text-white text-sm font-bold focus:border-teal-500/50 focus:bg-teal-500/10 transition-all" 
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-black text-teal-300/60 uppercase tracking-widest block mb-2">To Date</label>
+                  <label className="text-xs font-black text-teal-300/60 uppercase tracking-widest block mb-3">To Date</label>
                   <input 
                     type="date" 
                     value={endDate} 
                     onChange={(e) => setEndDate(e.target.value)} 
-                    className="w-full glass p-3 rounded-xl border border-teal-500/20 bg-teal-500/5 text-white text-sm font-bold focus:border-teal-500/50 focus:bg-teal-500/10 transition-all" 
+                    className="w-full glass p-4 rounded-xl border border-teal-500/20 bg-teal-500/5 text-white text-sm font-bold focus:border-teal-500/50 focus:bg-teal-500/10 transition-all" 
                   />
                 </div>
               </div>
