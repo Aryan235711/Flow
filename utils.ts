@@ -114,6 +114,46 @@ export const validateUserConfig = (config: any): UserConfig => {
   return validated;
 };
 
+// Enhanced notification validation with migration support
+export interface NotificationMigration {
+  version: number;
+  migrate: (data: any) => Notification[];
+}
+
+const NOTIFICATION_MIGRATIONS: NotificationMigration[] = [
+  {
+    version: 1,
+    migrate: (data: any): Notification[] => {
+      if (!Array.isArray(data)) return [];
+      return data
+        .filter(item => item && typeof item === 'object')
+        .map(item => ({
+          id: item.id || crypto.randomUUID(),
+          title: String(item.title || 'Unknown').substring(0, 100),
+          message: String(item.message || '').substring(0, 500),
+          time: String(item.time || new Date().toLocaleTimeString()),
+          read: Boolean(item.read),
+          type: ['AI', 'SYSTEM', 'STREAK', 'FREEZE'].includes(item.type) ? item.type : 'SYSTEM'
+        }))
+        .slice(0, 10);
+    }
+  }
+];
+
+export const migrateNotifications = (data: any): Notification[] => {
+  try {
+    // Apply all migrations in sequence
+    let migrated = data;
+    for (const migration of NOTIFICATION_MIGRATIONS) {
+      migrated = migration.migrate(migrated);
+    }
+    return migrated;
+  } catch (error) {
+    console.warn('Notification migration failed, using empty array:', error);
+    return [];
+  }
+};
+
 export const validateNotification = (item: any): item is Notification => {
   return (
     item &&
@@ -135,13 +175,28 @@ export const validateNotificationArray = (data: any): Notification[] => {
     .slice(0, 10); // Ensure max 10 notifications
 };
 
-// Enhanced safe storage with validation
+// Enhanced safe storage with validation and migration
 export const getValidatedNotifications = (): Notification[] => {
   try {
-    const data = getSafeStorage(STORAGE_KEYS.NOTIFS, []);
-    return validateNotificationArray(data);
+    const rawData = localStorage.getItem(STORAGE_KEYS.NOTIFS);
+    if (!rawData) return [];
+    
+    const parsed = JSON.parse(rawData);
+    
+    // Check if data needs migration
+    if (!Array.isArray(parsed) || parsed.some(item => !validateNotification(item))) {
+      console.log('Migrating notification data...');
+      const migrated = migrateNotifications(parsed);
+      // Save migrated data back to storage
+      setSafeStorage(STORAGE_KEYS.NOTIFS, migrated);
+      return migrated;
+    }
+    
+    return validateNotificationArray(parsed);
   } catch (error) {
-    console.error('Failed to load notifications:', error);
+    console.error('Failed to load notifications, resetting:', error);
+    // Clear corrupted data and start fresh
+    localStorage.removeItem(STORAGE_KEYS.NOTIFS);
     return [];
   }
 };

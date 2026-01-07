@@ -49,16 +49,28 @@ export const Toast = memo(({ notification, onDismiss }: ToastProps) => {
             dragConstraints={{ top: 0, bottom: 0 }}
             dragElastic={{ top: 0.1, bottom: 0.1 }}
             onDragEnd={(e, info) => {
-              // Improved swipe threshold - more forgiving for mobile users
-              if (Math.abs(info.offset.y) > 80) { // Increased from 50 to 80
+              // Improved swipe threshold - increased from 50px to 80px for better mobile UX
+              const threshold = 80;
+              if (Math.abs(info.offset.y) > threshold) {
                 if (notification) {
                   trackNotificationDismissed(notification.type);
+                  // Announce dismissal to screen readers
+                  const announcement = document.getElementById('action-feedback');
+                  if (announcement) {
+                    announcement.textContent = `Notification dismissed: ${notification.title}`;
+                    setTimeout(() => {
+                      if (announcement) announcement.textContent = '';
+                    }, 1000);
+                  }
                 }
                 triggerHaptic(); // Add haptic feedback for swipe dismissal
                 onDismiss();
               }
             }}
             className="bg-[#0a1128]/90 backdrop-blur-md border border-teal-500/30 text-white px-5 py-3 rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] flex items-center gap-4 max-w-sm w-full pointer-events-auto cursor-grab active:cursor-grabbing"
+            role="alert"
+            aria-live="assertive"
+            aria-label={`${notification.type} notification: ${notification.title}`}
           >
             <div className={`
               w-10 h-10 rounded-xl flex items-center justify-center shrink-0

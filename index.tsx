@@ -17,13 +17,17 @@ import {
   Crown,
   RefreshCcw,
   Edit2,
-  Fingerprint
+  Fingerprint,
+  BarChart3
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Browser } from '@capacitor/browser';
 import { Capacitor } from '@capacitor/core';
 
+import { notificationScheduler } from './notificationScheduler.ts';
+import { pushNotificationManager } from './pushNotifications.ts';
+import { AnalyticsDashboard } from './components/AnalyticsDashboard.tsx';
 import { AppStage, AppView, UserProfile, MetricEntry, UserConfig, Notification } from './types.ts';
 import { STORAGE_KEYS, DEFAULT_CONFIG, getSafeStorage, setSafeStorage, generateMockData, triggerHaptic, generateFreezeEntry, getLocalDate, clearAppStorage, getValidatedNotifications, trackNotificationShown, validateUserConfig } from './utils.ts';
 import { BackgroundOrbs } from './components/BackgroundOrbs.tsx';
@@ -108,6 +112,7 @@ const App = () => {
   const [showNotifs, setShowNotifs] = useState(false);
   const [showGoals, setShowGoals] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
+  const [showAnalytics, setShowAnalytics] = useState(false);
   const [activeToast, setActiveToast] = useState<Notification | null>(null);
   
   const [entryToEdit, setEntryToEdit] = useState<MetricEntry | null>(null);
@@ -178,6 +183,29 @@ const App = () => {
     }
   }, []);
 
+  // Initialize push notifications
+  useEffect(() => {
+    if (stage === 'MAIN' && user.isAuthenticated) {
+      pushNotificationManager.initialize();
+    }
+  }, [stage, user.isAuthenticated]);
+
+  // Listen for scheduled notifications
+  useEffect(() => {
+    const handleScheduledNotification = (event: CustomEvent) => {
+      const notification = event.detail as Notification;
+      if (mountedRef.current) {
+        setNotifications(prev => [notification, ...prev.slice(0, 9)]);
+        setActiveToast(notification);
+      }
+    };
+
+    window.addEventListener('scheduledNotification', handleScheduledNotification as EventListener);
+    return () => {
+      window.removeEventListener('scheduledNotification', handleScheduledNotification as EventListener);
+    };
+  }, []);
+
   // Component mount tracking for race condition prevention
   useEffect(() => {
     mountedRef.current = true;
@@ -227,7 +255,10 @@ const App = () => {
   const mockHistory = useMemo(() => generateMockData(), []);
   const isMockData = useMemo(() => history.length === 0, [history.length]);
   const displayHistory = useMemo(() => isMockData ? mockHistory : history, [isMockData, mockHistory, history]);
-  const unreadCount = useMemo(() => notifications.filter(n => !n.read).length, [notifications]);
+  // Memoized unread count to prevent unnecessary recalculations
+  const unreadCount = useMemo(() => {
+    return notifications.filter(n => !n.read).length;
+  }, [notifications]);
 
   // SYSTEM MAINTENANCE PIPELINE
   useEffect(() => {
@@ -889,9 +920,24 @@ const App = () => {
       <div className="max-w-md md:max-w-4xl lg:max-w-6xl mx-auto min-h-screen bg-[#020617] text-white font-quicksand overflow-x-hidden selection:bg-teal-500/30">
       
       {/* ARIA Live Region for Screen Reader Announcements */}
-      <div aria-live="polite" aria-atomic="true" className="sr-only" role="status">
+      <div 
+        aria-live="polite" 
+        aria-atomic="true" 
+        className="sr-only" 
+        role="status"
+        id="notification-announcements"
+      >
         {activeToast && `${activeToast.title}: ${activeToast.message}`}
       </div>
+
+      {/* ARIA Live Region for Action Feedback */}
+      <div 
+        aria-live="assertive" 
+        aria-atomic="true" 
+        className="sr-only" 
+        role="alert"
+        id="action-feedback"
+      />
 
       <Header 
         user={user} 
@@ -978,6 +1024,10 @@ const App = () => {
           />
         )}
 
+        {showAnalytics && (
+          <AnalyticsDashboard onClose={() => setShowAnalytics(false)} />
+        )}
+
         {showProfile && (
           <motion.div 
             initial={{ x: '100%', opacity: 0.5 }} 
@@ -1035,6 +1085,13 @@ const App = () => {
                   </button>
                 )}
 
+                <button onClick={() => { setShowProfile(false); setShowAnalytics(true); }} className="w-full p-6 glass rounded-[30px] flex items-center justify-between border-white/5 hover:bg-white/5 transition-all group active:scale-95">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 bg-indigo-500/20 rounded-xl flex items-center justify-center text-indigo-400"><BarChart3 size={20} /></div>
+                    <span className="font-bold font-outfit">Analytics Dashboard</span>
+                  </div>
+                </button>
+
                 <button onClick={handleGoalClick} className="w-full p-6 glass rounded-[30px] flex items-center justify-between border-white/5 hover:bg-white/5 transition-all group active:scale-95">
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 bg-teal-500/20 rounded-xl flex items-center justify-center text-teal-400"><Target size={20} /></div>
@@ -1086,10 +1143,19 @@ const App = () => {
                        dragConstraints={{ left: 0, right: 0 }}
                        dragElastic={0.1}
                        onDragEnd={(e, info) => {
-                         const threshold = 0.5; // 50% threshold
+                         // Improved swipe threshold - increased from 50% to 60% for better mobile UX
+                         const threshold = 0.6; // 60% threshold
                          const element = e.target as HTMLElement;
                          const width = element.offsetWidth;
                          if (Math.abs(info.offset.x) > width * threshold) {
+                           // Announce dismissal to screen readers
+                           const announcement = document.getElementById('action-feedback');
+                           if (announcement) {
+                             announcement.textContent = `Notification dismissed: ${n.title}`;
+                             setTimeout(() => {
+                               if (announcement) announcement.textContent = '';
+                             }, 1000);
+                           }
                            setNotifications(prev => prev.filter(notification => notification.id !== n.id));
                          }
                        }}
