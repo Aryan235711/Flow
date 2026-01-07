@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { App as CapacitorApp } from '@capacitor/app';
+import { Browser } from '@capacitor/browser';
 
 import { AppStage, AppView, UserProfile, MetricEntry, UserConfig, Notification } from './types.ts';
 import { STORAGE_KEYS, DEFAULT_CONFIG, getSafeStorage, setSafeStorage, generateMockData, triggerHaptic, generateFreezeEntry, getLocalDate, clearAppStorage, getValidatedNotifications, trackNotificationShown, validateUserConfig } from './utils.ts';
@@ -361,8 +362,17 @@ const App = () => {
 
     CapacitorApp.addListener('appUrlOpen', handleAppUrlOpen);
     
+    // Listen for browser close events (user might cancel OAuth)
+    const handleBrowserFinished = () => {
+      console.log('[browser] finished - checking if login was cancelled');
+      setIsLoggingIn(false);
+    };
+    
+    Browser.addListener('browserFinished', handleBrowserFinished);
+    
     return () => {
       CapacitorApp.removeAllListeners();
+      Browser.removeAllListeners();
     };
   }, [addNotification]);
 
@@ -437,7 +447,14 @@ const App = () => {
     const url = `${baseUrl}/api/auth/google/start?redirect_uri=${encodeURIComponent(redirectUri)}`;
     
     console.log('[login] redirecting to', url, 'isNative:', isNativeApp);
-    window.location.href = url;
+    
+    if (isNativeApp) {
+      // For native apps, open OAuth in system browser
+      await Browser.open({ url });
+    } else {
+      // For web, use regular navigation
+      window.location.href = url;
+    }
   }, []);
 
   const handleSignOut = useCallback(() => {
