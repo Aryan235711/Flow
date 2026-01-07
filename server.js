@@ -313,24 +313,77 @@ app.post('/api/insight', verifyToken, async (req, res) => {
     if (!apiKey) {
       return res.status(500).json({ error: 'API key missing' });
     }
-    const { history = [], config } = req.body || {};
+
+    const {
+      history = [],
+      config,
+      userProfile,
+      processedInsights,
+      dataSummary
+    } = req.body || {};
+
     if (!Array.isArray(history) || !config) {
       return res.status(400).json({ error: 'Invalid payload' });
     }
 
     const ai = new GoogleGenAI({ apiKey });
-    const last5 = history.slice(-5);
 
+    // Enhanced prompt using comprehensive data
     const prompt = `
-      Analyze the last 5 days of telemetry: ${JSON.stringify(last5)}.
-      USER CONFIG CONTEXT:
+      NEURAL ANALYSIS ENGINE - COMPREHENSIVE BIOMETRIC ASSESSMENT
+
+      USER PROFILE:
+      - Name: ${userProfile?.name || 'User'}
+      - Premium Status: ${userProfile?.isPremium ? 'Active' : 'Standard'}
+      - Days Active: ${userProfile?.daysActive || 0}
+
+      DATA SUMMARY:
+      - Total Historical Entries: ${dataSummary?.totalEntries || 0}
+      - Sampled Entries: ${dataSummary?.sampledEntries || 0}
+      - Date Range: ${dataSummary?.dateRange ? `${dataSummary.dateRange.oldest} to ${dataSummary.dateRange.newest}` : 'N/A'}
+
+      HEALTH METRICS (30-DAY AVERAGE):
+      - Sleep Quality: ${processedInsights?.healthMetrics?.averages?.sleep?.toFixed(1) || 'N/A'}h
+      - HRV Score: ${processedInsights?.healthMetrics?.averages?.hrv?.toFixed(1) || 'N/A'}ms
+      - Protein Intake: ${processedInsights?.healthMetrics?.averages?.protein?.toFixed(0) || 'N/A'}g
+
+      TRENDS (7-DAY):
+      - Sleep Trend: ${processedInsights?.healthMetrics?.trends?.sleep?.toFixed(1) || 'N/A'}h
+      - HRV Trend: ${processedInsights?.healthMetrics?.trends?.hrv?.toFixed(1) || 'N/A'}ms
+
+      CONSISTENCY METRICS:
+      - Sleep Consistency: ${processedInsights?.healthMetrics?.consistency?.sleep?.toFixed(1) || 'N/A'}%
+
+      SYMPTOM ANALYSIS:
+      - Symptom Frequency: ${processedInsights?.healthMetrics?.symptoms?.frequency?.toFixed(1) || 'N/A'}%
+
+      NEURAL PLASTICITY INDICATORS:
+      - Memory Consolidation: ${processedInsights?.healthMetrics?.neuralPlasticity?.memoryConsolidation?.toFixed(1) || 'N/A'}%
+      - Synaptic Plasticity: ${processedInsights?.healthMetrics?.neuralPlasticity?.synapticPlasticity?.toFixed(1) || 'N/A'}%
+      - Cognitive Reserve: ${processedInsights?.healthMetrics?.neuralPlasticity?.cognitiveReserve?.toFixed(1) || 'N/A'}%
+      - Overall Neural Health: ${processedInsights?.healthMetrics?.neuralPlasticity?.overall?.toFixed(1) || 'N/A'}%
+
+      VITALITY METRICS:
+      - Biological Age Estimate: ${processedInsights?.healthMetrics?.vitality?.biologicalAge?.toFixed(1) || 'N/A'} years
+      - Aging Factor: ${processedInsights?.healthMetrics?.vitality?.agingFactor?.toFixed(2) || 'N/A'}x
+      - Health Score: ${processedInsights?.healthMetrics?.vitality?.healthScore?.toFixed(1) || 'N/A'}%
+
+      CURRENT STREAK: ${processedInsights?.streak || 0} days
+
+      USER CONFIGURATION:
       - Sleep Target: ${config.wearableBaselines?.sleep}h
       - Baseline HRV: ${config.wearableBaselines?.hrv}ms
       - RHR Goal: ${config.wearableBaselines?.rhr}bpm
       - Protein Target: ${config.manualTargets?.protein}g
+
+      RECENT TELEMETRY SAMPLE:
+      ${JSON.stringify(history.slice(-7), null, 2)}
+
       TASK:
-      Provide 1 specific metabolic optimization insight based on deviations.
-      Keep it to exactly 2 sentences. Use a clinical, high-performance tone.
+      Provide 1 specific, actionable metabolic optimization insight based on comprehensive biometric analysis.
+      Focus on neural plasticity, vitality trends, and symptom correlations.
+      Keep it to exactly 2 sentences. Use clinical, high-performance tone.
+      Prioritize insights that leverage the neural plasticity and vitality data.
     `;
 
     const response = await ai.models.generateContent({
@@ -339,11 +392,11 @@ app.post('/api/insight', verifyToken, async (req, res) => {
       config: {
         temperature: 0.7,
         topP: 0.95,
-        systemInstruction: 'You are the Flow System AI, a high-performance biological telemetry analyst. Your output is clinical, precise, and devoid of fluff.'
+        systemInstruction: 'You are the Flow System AI, a high-performance biological telemetry analyst specializing in neural plasticity and metabolic optimization. Your output is clinical, precise, data-driven, and devoid of fluff. Focus on actionable insights that integrate neural health, vitality metrics, and long-term biological optimization.'
       }
     });
 
-    const text = response.text || 'Metrics indicate metabolic stability. Maintain current baseline protocols.';
+    const text = response.text || 'Comprehensive biometric analysis indicates metabolic stability. Neural plasticity markers suggest optimal cognitive performance protocols are maintained.';
     res.json({ insight: text });
   } catch (err) {
     console.error('Insight error', err);

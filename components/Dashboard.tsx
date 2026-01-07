@@ -177,12 +177,18 @@ export const Dashboard = memo(({ history, config, onAddNotif, isMockData, user, 
       setIsExpanded(true);
       return;
     }
-    setIsExpanded(true); 
-    const insight = await getInsight(history, config);
+    setIsExpanded(true);
+    const insight = await getInsight(history, config, user, {
+      streak,
+      chartData,
+      driftData,
+      latest,
+      todayEntry
+    });
     setAiText(insight);
     setHasGenerated(true);
     onAddNotif("Cortex Updated", "New correlation detected.", "AI");
-  }, [history, config, getInsight, onAddNotif, hasGenerated, user.isPremium, onTriggerPaywall]);
+  }, [history, config, user, getInsight, onAddNotif, hasGenerated, user.isPremium, onTriggerPaywall, streak, chartData, driftData, latest, todayEntry]);
 
   const staggerChildren: Variants = { show: { transition: { staggerChildren: 0.08 } } };
   const fadeUp: Variants = { 

@@ -112,7 +112,11 @@ const App = () => {
   }, [user.token]);
 
   const addNotification = useCallback((title: string, message: string, type: Notification['type'] = 'AI') => {
-    const newNotif: Notification = { id: Date.now().toString(), title, message, time: 'Now', read: false, type };
+    const now = new Date();
+    const today = new Date().toDateString();
+    const notifDate = now.toDateString();
+    const timeStr = notifDate === today ? now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : `${now.toLocaleDateString([], { month: 'short', day: 'numeric' })} ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    const newNotif: Notification = { id: Date.now().toString(), title, message, time: timeStr, read: false, type };
     setNotifications(prev => [newNotif, ...prev.slice(0, 10)]);
     setActiveToast(newNotif); 
     triggerHaptic();
@@ -322,26 +326,17 @@ const App = () => {
     setNotifications([]);
   }, []);
 
-  const handleDeleteEntry = useCallback((index: number) => {
+  const handleDeleteEntry = useCallback((date: string) => {
     triggerHaptic();
     const remove = async () => {
       try {
-        const entry = history[history.length - 1 - index];
-        if (entry?.date && user.token) {
-          await authFetch(`/api/history/${entry.date}`, { method: 'DELETE' });
+        if (user.token) {
+          await authFetch(`/api/history/${date}`, { method: 'DELETE' });
         }
       } catch (e) {
         console.error('[history/delete] remote delete failed', e);
       }
-      setHistory(prev => {
-        const newHistory = [...prev];
-        const realIndex = prev.length - 1 - index;
-        if (realIndex >= 0 && realIndex < prev.length) {
-           newHistory.splice(realIndex, 1);
-           return newHistory;
-        }
-        return prev;
-      });
+      setHistory(prev => prev.filter(entry => entry.date !== date));
     };
     remove();
     addNotification('Record Expunged', 'Telemetry entry deleted.', 'SYSTEM');
@@ -903,35 +898,46 @@ const App = () => {
             <div className="space-y-4 flex-1 overflow-y-auto scrollbar-hide pb-24">
               {notifications.length === 0 ? (
                 <div className="text-center py-20 opacity-10"><Bell size={48} className="mx-auto mb-4" /><p className="text-sm uppercase tracking-widest font-black">No Active Insights</p></div>
-              ) : notifications.map((n, idx) => (
-                <motion.div 
-                   key={idx} 
-                   drag="x"
-                   dragConstraints={{ left: -1000, right: 0 }}
-                   dragElastic={{ left: 0.2, right: 0 }}
-                   onDragEnd={(e, info) => {
-                     if (info.offset.x < -100) {
-                       setNotifications(prev => prev.filter((_, i) => i !== idx));
-                     }
-                   }}
-                   initial={{ opacity: 0, y: 20 }}
-                   animate={{ opacity: 1, y: 0 }}
-                   exit={{ opacity: 0, x: -300 }}
-                   transition={{ delay: idx * 0.05 }}
-                   className={`glass p-6 rounded-[30px] border-white/5 space-y-2 shadow-lg cursor-grab active:cursor-grabbing ${!n.read ? 'border-l-4 border-l-teal-500' : ''}`}
-                >
-                  <div className="flex justify-between">
-                    <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${
-                        n.type === 'AI' ? 'bg-indigo-500/20 text-indigo-400' : 
-                        n.type === 'FREEZE' ? 'bg-cyan-500/20 text-cyan-400' :
-                        n.type === 'STREAK' ? 'bg-amber-500/20 text-amber-500' :
-                        'bg-emerald-500/20 text-emerald-400'
-                    }`}>{n.type} Insight</span>
-                    <span className="text-[9px] text-white/10">{n.time}</span>
-                  </div>
-                  <h4 className="text-lg font-bold font-outfit">{n.title}</h4><p className="text-teal-200/30 text-xs leading-relaxed">{n.message}</p>
-                </motion.div>
-              ))}
+              ) : (
+                <AnimatePresence>
+                  {notifications.map((n, idx) => (
+                    <motion.div 
+                       key={n.id} 
+                       drag="x"
+                       dragConstraints={{ left: 0, right: 0 }}
+                       dragElastic={0.1}
+                       onDragEnd={(e, info) => {
+                         const threshold = 0.5; // 50% threshold
+                         const element = e.target as HTMLElement;
+                         const width = element.offsetWidth;
+                         if (Math.abs(info.offset.x) > width * threshold) {
+                           setNotifications(prev => prev.filter(notification => notification.id !== n.id));
+                         }
+                       }}
+                       initial={{ opacity: 0, y: 20 }}
+                       animate={{ opacity: 1, y: 0, x: 0 }}
+                       exit={{ opacity: 0, x: -300, scale: 0.8 }}
+                       transition={{ 
+                         delay: idx * 0.05,
+                         exit: { duration: 0.3, ease: "easeOut" },
+                         drag: { duration: 0.2 }
+                       }}
+                       className={`glass p-6 rounded-[30px] border-white/5 space-y-2 shadow-lg cursor-grab active:cursor-grabbing ${!n.read ? 'border-l-4 border-l-teal-500' : ''}`}
+                    >
+                      <div className="flex justify-between">
+                        <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${
+                            n.type === 'AI' ? 'bg-indigo-500/20 text-indigo-400' : 
+                            n.type === 'FREEZE' ? 'bg-cyan-500/20 text-cyan-400' :
+                            n.type === 'STREAK' ? 'bg-amber-500/20 text-amber-500' :
+                            'bg-emerald-500/20 text-emerald-400'
+                        }`}>{n.type} Insight</span>
+                        <span className="text-[9px] text-white/10">{n.time}</span>
+                      </div>
+                      <h4 className="text-lg font-bold font-outfit">{n.title}</h4><p className="text-teal-200/30 text-xs leading-relaxed">{n.message}</p>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              )}
             </div>
           </motion.div>
         )}

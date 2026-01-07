@@ -4,6 +4,22 @@ import { useFlowAI } from '../hooks/useFlowAI';
 import { DEFAULT_CONFIG, generateMockData } from '../utils';
 
 const mockHistory = generateMockData();
+const mockUser = {
+  name: 'Test User',
+  email: 'test@example.com',
+  picture: '',
+  avatarSeed: 'Felix',
+  isAuthenticated: true,
+  isPremium: true
+};
+
+const mockAdditionalData = {
+  streak: 5,
+  chartData: [],
+  driftData: [],
+  latest: mockHistory[0],
+  todayEntry: mockHistory[0]
+};
 
 describe('useFlowAI', () => {
   beforeEach(() => {
@@ -17,7 +33,7 @@ describe('useFlowAI', () => {
     const { result } = renderHook(() => useFlowAI());
     let insight: string | undefined;
     await act(async () => {
-      insight = await result.current.getInsight(mockHistory, DEFAULT_CONFIG);
+      insight = await result.current.getInsight(mockHistory, DEFAULT_CONFIG, mockUser, mockAdditionalData);
     });
     expect(global.fetch).toHaveBeenCalledWith('/api/insight', expect.anything());
     expect(insight).toBe('Test insight');
@@ -28,7 +44,7 @@ describe('useFlowAI', () => {
     const { result } = renderHook(() => useFlowAI());
     let insight: string | undefined;
     await act(async () => {
-      insight = await result.current.getInsight(mockHistory, DEFAULT_CONFIG);
+      insight = await result.current.getInsight(mockHistory, DEFAULT_CONFIG, mockUser, mockAdditionalData);
     });
     expect(insight).toMatch(/Network latency/);
   });

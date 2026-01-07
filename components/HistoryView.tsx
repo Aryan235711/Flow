@@ -8,7 +8,7 @@ import { triggerHaptic } from '../utils.ts';
 interface HistoryViewProps {
   history: MetricEntry[];
   isMockData: boolean;
-  onDelete: (index: number) => void;
+  onDelete: (date: string) => void;
   onEdit: (entry: MetricEntry, index: number) => void;
   isPremium: boolean;
   onTriggerPaywall: () => void;
@@ -73,7 +73,7 @@ const HistoryCard = memo(({
   idx: number; 
   isExpanded: boolean; 
   onToggle: (idx: number) => void; 
-  onDelete: (idx: number) => void; 
+  onDelete: (id: string) => void; 
   onEdit: (entry: MetricEntry, idx: number) => void; 
 }) => {
   const calculateScore = (entry: MetricEntry) => {
@@ -178,7 +178,7 @@ const HistoryCard = memo(({
                   onClick={(e) => {
                     e.stopPropagation();
                     if (window.confirm("Permanently delete this telemetry record?")) {
-                      onDelete(idx);
+                      onDelete(entry.date);
                     }
                   }}
                   className={`p-3 rounded-2xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 flex items-center justify-center gap-2 transition-colors active:scale-95 touch-manipulation ${(!entry.isSystemGenerated) ? 'w-auto px-4' : 'w-full'}`}
