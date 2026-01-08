@@ -6,7 +6,8 @@ interface NumericInputProps {
   label: string;
   value: string;
   onChange: (value: string) => void;
-  onTouch: () => void;
+  onTouch?: () => void;
+  onBlur?: () => void;
   isValid?: boolean;
   error?: string;
   touched?: boolean;
@@ -24,7 +25,7 @@ const Tooltip = ({ text }: { text: string }) => (
   </div>
 );
 
-export const NumericInput = memo(({ label, value, onChange, onTouch, isValid, error, touched, tooltip, placeholder }: NumericInputProps) => {
+export const NumericInput = memo(({ label, value, onChange, onTouch, onBlur, isValid, error, touched, tooltip, placeholder }: NumericInputProps) => {
   return (
     <div className={`glass rounded-[28px] p-6 text-center shadow-lg relative group transition-all ${
       touched && !isValid 
@@ -60,8 +61,9 @@ export const NumericInput = memo(({ label, value, onChange, onTouch, isValid, er
         value={value} 
         onChange={(e) => {
           onChange(e.target.value);
-          onTouch();
-        }} 
+          onTouch?.(); // Optional call
+        }}
+        onBlur={onBlur}
         className={`w-full bg-transparent text-center text-3xl font-bold font-outfit outline-none placeholder:text-white/10 transition-colors ${
           touched && !isValid 
             ? 'text-red-400' 

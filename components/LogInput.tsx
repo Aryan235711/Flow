@@ -62,8 +62,8 @@ const LogInputForm = memo(({ config, onSave, initialData, history = [] }: LogInp
   const [formData, setFormData] = useState(() => getDefaultState(!!initialData));
   const [validationState, setValidationState] = useState(() => getInitialValidationState());
   
-  // Debounce form data for validation to improve performance
-  const debouncedFormData = useDebounce(formData, 150);
+  // Debounce form data for validation only on blur, not during typing
+  const debouncedFormData = useDebounce(formData, 1000); // Increased to 1 second to reduce updates
   
   // Memoize expensive calculations
   const isFormValidMemo = useMemo(() => isFormValid(validationState), [validationState]);
@@ -82,22 +82,50 @@ const LogInputForm = memo(({ config, onSave, initialData, history = [] }: LogInp
     }
   });
 
-  // Auto-save draft and load on mount
+  // Load draft with user consent
   useEffect(() => {
-    // Load draft on mount for new entries
     if (!initialData && hasDraft()) {
-      const draft = loadDraft();
-      if (draft) {
-        setFormData(draft.data);
+      const shouldLoad = window.confirm("Resume previous draft?");
+      if (shouldLoad) {
+        const draft = loadDraft();
+        if (draft) {
+          setFormData(draft.data);
+        }
+      } else {
+        clearDraft();
       }
     }
-    
-    // Auto-save draft every 10 seconds for new entries
+  }, [initialData]);
+
+  // Auto-save draft only during inactivity for new entries
+  useEffect(() => {
     if (!initialData) {
-      const interval = setInterval(() => {
-        saveDraft(formData);
-      }, 10000);
-      return () => clearInterval(interval);
+      let inactivityTimer: NodeJS.Timeout;
+      
+      const resetTimer = () => {
+        clearTimeout(inactivityTimer);
+        inactivityTimer = setTimeout(() => {
+          saveDraft(formData); // Only save after 2 minutes of inactivity
+        }, 120000); // 2 minutes of inactivity
+      };
+      
+      // Reset timer on any form interaction
+      const handleActivity = () => resetTimer();
+      
+      // Start initial timer
+      resetTimer();
+      
+      // Listen for user activity
+      document.addEventListener('keydown', handleActivity);
+      document.addEventListener('click', handleActivity);
+      document.addEventListener('touchstart', handleActivity);
+      
+      return () => {
+        clearTimeout(inactivityTimer);
+        document.removeEventListener('keydown', handleActivity);
+        document.removeEventListener('click', handleActivity);
+        document.removeEventListener('touchstart', handleActivity);
+      };
     }
   }, [formData, initialData]);
 
@@ -138,6 +166,7 @@ const LogInputForm = memo(({ config, onSave, initialData, history = [] }: LogInp
     }
     
     setFormData(p => ({ ...p, sleep: formatted }));
+    // Don't mark as touched during typing
   }, []);
   
   // Debounced validation effect for sleep
@@ -154,14 +183,10 @@ const LogInputForm = memo(({ config, onSave, initialData, history = [] }: LogInp
   }, [debouncedFormData.sleep]);
 
   const updateField = useCallback((field: keyof typeof formData, val: any) => {
-    triggerHaptic();
+    // Remove haptic feedback during typing - only on submit
     setFormData(p => ({ ...p, [field]: val }));
     
-    // Mark field as touched immediately for better UX
-    setValidationState(prev => ({
-      ...prev,
-      [field]: { ...prev[field], touched: true }
-    }));
+    // Don't mark field as touched immediately - only on blur
   }, []);
 
   // Optimized numeric input handler with debounced validation
@@ -211,6 +236,39 @@ const LogInputForm = memo(({ config, onSave, initialData, history = [] }: LogInp
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   
+  // Blur-based validation handlers
+  const handleFieldBlur = useCallback((field: string, value: any) => {
+    let validation;
+    switch (field) {
+      case 'sleep':
+        validation = validateTimeInput(value);
+        break;
+      case 'rhr':
+        validation = validateNumericInput(value, VALIDATION_RULES.rhr);
+        break;
+      case 'hrv':
+        validation = validateNumericInput(value, VALIDATION_RULES.hrv);
+        break;
+      case 'protein':
+        validation = validateNumericInput(value, VALIDATION_RULES.protein);
+        break;
+      case 'symptomName':
+        validation = validateTextInput(value);
+        break;
+      default:
+        validation = { isValid: true };
+    }
+    
+    setValidationState(prev => ({
+      ...prev,
+      [field]: {
+        isValid: validation.isValid,
+        error: validation.error,
+        touched: true
+      }
+    }));
+  }, []);
+
   const handleSubmit = useCallback(() => {
     if (isSubmitting) return; // Prevent multiple clicks
     
@@ -317,11 +375,12 @@ const LogInputForm = memo(({ config, onSave, initialData, history = [] }: LogInp
             <RatingScale
               value={formData.symptomScore}
               onChange={(v) => {
-                updateField('symptomScore', v);
+                setFormData(p => ({ ...p, symptomScore: v }));
                 setValidationState(prev => ({
                   ...prev,
                   symptomScore: { isValid: true, touched: true }
                 }));
+                triggerHaptic(); // Only haptic on rating selection
               }}
               ariaLabel="Neural load intensity from 1 to 5"
             />
@@ -330,17 +389,9 @@ const LogInputForm = memo(({ config, onSave, initialData, history = [] }: LogInp
               placeholder="Log Name (Optional)" 
               value={formData.symptomName} 
               onChange={(e) => {
-                const validation = validateTextInput(e.target.value);
                 setFormData(p => ({...p, symptomName: e.target.value}));
-                setValidationState(prev => ({
-                  ...prev,
-                  symptomName: {
-                    isValid: validation.isValid,
-                    error: validation.error,
-                    touched: true
-                  }
-                }));
-              }} 
+              }}
+              onBlur={(e) => handleFieldBlur('symptomName', e.target.value)}
               className="w-full bg-white/5 p-6 rounded-[24px] outline-none border border-white/5 focus:border-indigo-500/50 focus:bg-white/10 transition-all font-bold text-white text-xl placeholder:text-white/20" 
               aria-label="Log entry name"
               aria-describedby="log-name-help"
@@ -386,11 +437,8 @@ const LogInputForm = memo(({ config, onSave, initialData, history = [] }: LogInp
                   value={formData.sleep} 
                   onChange={(e) => {
                     handleSleepChange(e.target.value);
-                    setValidationState(prev => ({
-                      ...prev,
-                      sleep: { ...prev.sleep, touched: true }
-                    }));
-                  }} 
+                  }}
+                  onBlur={(e) => handleFieldBlur('sleep', e.target.value)}
                   className={`w-full bg-transparent text-center text-3xl font-bold font-outfit outline-none placeholder:text-white/10 transition-colors ${
                     validationState.sleep.touched && !validationState.sleep.isValid 
                       ? 'text-red-400' 
@@ -418,7 +466,7 @@ const LogInputForm = memo(({ config, onSave, initialData, history = [] }: LogInp
               label="RHR"
               value={formData.rhr}
               onChange={(value) => handleNumericChange('rhr', value)}
-              onTouch={() => setValidationState(prev => ({ ...prev, rhr: { ...prev.rhr, touched: true } }))}
+              onBlur={() => handleFieldBlur('rhr', formData.rhr)}
               isValid={validationState.rhr?.isValid}
               error={validationState.rhr?.error}
               touched={validationState.rhr?.touched}
@@ -428,7 +476,7 @@ const LogInputForm = memo(({ config, onSave, initialData, history = [] }: LogInp
               label="HRV"
               value={formData.hrv}
               onChange={(value) => handleNumericChange('hrv', value)}
-              onTouch={() => setValidationState(prev => ({ ...prev, hrv: { ...prev.hrv, touched: true } }))}
+              onBlur={() => handleFieldBlur('hrv', formData.hrv)}
               isValid={validationState.hrv?.isValid}
               error={validationState.hrv?.error}
               touched={validationState.hrv?.touched}
@@ -438,7 +486,7 @@ const LogInputForm = memo(({ config, onSave, initialData, history = [] }: LogInp
               label="Protein (g)"
               value={formData.protein}
               onChange={(value) => handleNumericChange('protein', value)}
-              onTouch={() => setValidationState(prev => ({ ...prev, protein: { ...prev.protein, touched: true } }))}
+              onBlur={() => handleFieldBlur('protein', formData.protein)}
               isValid={validationState.protein?.isValid}
               error={validationState.protein?.error}
               touched={validationState.protein?.touched}
